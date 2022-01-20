@@ -1,7 +1,6 @@
 package frc.robot.controls;
 
 import edu.wpi.first.wpilibj.SpeedController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class CompliantControl {
     private SpeedController m_motor;

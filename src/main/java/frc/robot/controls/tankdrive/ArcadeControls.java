@@ -1,23 +1,22 @@
 package frc.robot.controls.tankdrive;
 
-import edu.wpi.first.wpilibj.Joystick;
+import frc.robot.controls.DoubleJoystick;
 import frc.robot.controls.DriveControlBase;
 import frc.robot.drive.DifferentialDriveEx;
-import frc.robot.hardware.HardwareMap;
 
 public class ArcadeControls extends DriveControlBase {
     private DifferentialDriveEx m_drive;
-    private Joystick m_joystick;
+    private DoubleJoystick m_joystick;
 
-    public ArcadeControls(DifferentialDriveEx drive, Joystick joystick) {
+    public ArcadeControls(DifferentialDriveEx drive, DoubleJoystick joystick) {
         m_drive = drive;
         m_joystick = joystick;
-        addHid(m_joystick);
+        addHid(m_joystick.getHID());
     }
 
     @Override
     public void update() {
-        m_drive.arcadeDrive(m_joystick.getY(), -m_joystick.getX()/2);
+        m_drive.arcadeDrive(m_joystick.getY(), -m_joystick.getX()/1.5);
     }
 
     @Override

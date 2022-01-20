@@ -1,10 +1,10 @@
 package frc.robot.hardware.pixycam;
 
-import java.io.IOException;
-
 import frc.robot.utils.Pointer;
 import frc.robot.utils.pixycam.Block;
 import frc.robot.utils.pixycam.PixyError;
+
+import java.io.IOException;
 
 /**
  * This class is for interfacing with the pixycam, and internally operates on JNI
@@ -91,7 +91,7 @@ public class Pixy2 {
      * @param prog program name; can be partial string if it is unique
      * @return result code; <0 if error
      */
-    public byte changeProg(String prog) { return changeProg(pixy.address, prog); };
+    public byte changeProg(String prog) { return changeProg(pixy.address, prog); }
 
     private native byte setCameraBrightness(long pixyPtr, int brightness);
 

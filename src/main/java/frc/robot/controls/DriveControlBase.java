@@ -1,11 +1,11 @@
 package frc.robot.controls;
 
+import edu.wpi.first.wpilibj.GenericHID;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import edu.wpi.first.wpilibj.GenericHID;
 
 /**
  * Common base class for controls
@@ -32,7 +32,7 @@ public abstract class DriveControlBase {
             }
             return v;
         });
-    };
+    }
 
     /**
      * Adds a HID device to have the last value cached each time update() is called

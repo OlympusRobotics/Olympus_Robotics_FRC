@@ -17,7 +17,7 @@ public class DancepadControls extends DriveControlBase {
     @Override
     public void update() {
         int angle = m_dancepad.getPOV();
-        m_mecanumDrive.drivePolar(speedMultiplier, (double) (angle > 180 ? 360 - angle : -angle), 0);
+        m_mecanumDrive.drivePolar(speedMultiplier, angle > 180 ? 360 - angle : -angle, 0);
     }
 
     @Override

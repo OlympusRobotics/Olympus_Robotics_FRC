@@ -1,13 +1,15 @@
 package frc.robot.controls;
 
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.SpeedController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.controller.PIDController;
+
+//import edu.wpi.first.wpilibj.PIDController;
 
 public class LiftControl {
     private SpeedController m_lift;
     public Encoder m_encoder;
+    @SuppressWarnings("removal")
     private PIDController m_pidController;
     private double m_target;
     private static final double Ku = -0.03;
@@ -28,7 +30,7 @@ public class LiftControl {
         m_pidController.enable();
         **/
     }
-    /** 
+    /**
     public void increase(double increment) {
         System.out.println(m_encoder.get());
         System.out.println(m_target);

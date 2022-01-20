@@ -1,20 +1,18 @@
 package frc.robot.hardware;
 
 public enum HardwareIDs {
-    kFrontLeftMotor(2),
+    kFrontLeftMotor(0),
     kFrontRightMotor(1),
-    kRearLeftMotor(3),
-    kRearRightMotor(4),
-    kPulleyMotor1(5),
-    kPulleyMotor2(6),
-    kIntakeMotor(2),
-    kOutputMotor1(0),
-    kOutputMotor2(1),
-    kBeltMotor(3),
+    kRearLeftMotor(2),
+    kRearRightMotor(3),
+    kIntakeMotor(4),
+    kOutputMotor1(5),
+    kOutputMotor2(6),
+    kBeltMotor(7),
     kCompressor(0),
     kLeftJoystick(1),
-    kRightJoystick(2),
-    kController(0);
+    kRightJoystick(0),
+    kController(2);
 
     public final int value;
 
