@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="dbc12734-448f-4f5d-98a7-2eb7902c3408" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/DoubleJoystick.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/Robot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/Robot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/controls/CompliantControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/CompliantControl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/controls/DriveControlBase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/DriveControlBase.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/controls/LiftControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/LiftControl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/controls/PistonControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/PistonControl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/controls/mecanumdrive/DancepadControls.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/mecanumdrive/DancepadControls.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/controls/tankdrive/ArcadeControls.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/tankdrive/ArcadeControls.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/controls/tankdrive/CurvatureControls.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/controls/tankdrive/CurvatureControls.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/HardwareIDs.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/HardwareIDs.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/HardwareMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/HardwareMap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/JoystickMap.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/JoystickMap.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/pixycam/Pixy2.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/frc/robot/hardware/pixycam/Pixy2.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeInsightWorkspaceSettings">
+    <option name="optimizeImportsOnTheFly" value="true" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1WRpDo8mKvS0xsGVlfazrKMPnFe" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../testing/olympus_robotics_frc" />
+    <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Robotics\Documents\FRC Code\FRC 2020 Code\src\main\java\frc\robot\controls" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Robotics\Documents\FRC Code" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Gradle.Build &amp; Deploy Robot" />
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="dbc12734-448f-4f5d-98a7-2eb7902c3408" name="Default Changelist" comment="" />
+      <created>1579122144358</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1579122144358</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1642797167146">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1642797167146" />
+    <state width="1921" height="278" key="GridCell.Tab.0.bottom" timestamp="1642712412227">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1921" height="278" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1642712412227" />
+    <state width="1921" height="278" key="GridCell.Tab.0.center" timestamp="1642712412226">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1921" height="278" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1642712412226" />
+    <state width="1921" height="278" key="GridCell.Tab.0.left" timestamp="1642712412226">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1921" height="278" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1642712412226" />
+    <state width="1921" height="278" key="GridCell.Tab.0.right" timestamp="1642712412227">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1921" height="278" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1642712412227" />
+    <state x="616" y="240" key="run.anything.popup" timestamp="1638568416520">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="616" y="240" key="run.anything.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1638568416520" />
+  </component>
+  <component name="WpiLibVersionService">
+    <option name="lastChecked" value="20220121153228" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpilibj/wpilibj-java/2020.2.2/8dee1e19d0f236bf459bd77de457069acdbf7cd/wpilibj-java-2020.2.2-sources.jar!/edu/wpi/first/wpilibj/Joystick.java</url>
+          <line>71</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
