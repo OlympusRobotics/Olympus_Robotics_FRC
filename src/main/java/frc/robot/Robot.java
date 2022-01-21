@@ -12,6 +12,9 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.controls.DriveControlBase;
+import frc.robot.controls.tankdrive.ArcadeControls;
+import frc.robot.controls.tankdrive.CurvatureControls;
+import frc.robot.controls.tankdrive.TankControls;
 import frc.robot.hardware.HardwareMap;
 import frc.robot.hardware.HardwareMapEx;
 
@@ -31,21 +34,30 @@ public class Robot extends IterativeRobot {
      * String kCustomAuto = "My Auto"; private String m_autoSelected; private final
      * SendableChooser<String> m_chooser = new SendableChooser<>();
      **/
-    /*private static TankControls s_tankControls = new TankControls(HardwareMap.kDrive, HardwareMap.kRightJoystick,
+    private static TankControls s_tankControls = new TankControls(HardwareMap.kDrive, HardwareMap.kLeftJoystick,
             HardwareMap.kRightJoystick);
-    private static ArcadeControls s_arcadeControls = new ArcadeControls(HardwareMap.kDrive, HardwareMap.kRightJoystick);
+    private static ArcadeControls s_arcadeControls = new ArcadeControls(HardwareMap.kDrive, HardwareMap.kDoubleJoystick);
     private static CurvatureControls s_curvatureControls = new CurvatureControls(HardwareMap.kDrive,
-            HardwareMap.kRightJoystick);*/
+            HardwareMap.kDoubleJoystick);
     private static DriveControlBase s_driveBase;
     private static Map<Class<? extends DriveControlBase>, DriveControlBase> s_driveClassMap = new HashMap<Class<? extends DriveControlBase>, DriveControlBase>();
     private static volatile SendableChooser<Boolean> s_debugEnabled = new SendableChooser<Boolean>();
     private static long m_lastTime = System.nanoTime();
 
+    /**Piston Yes**/
+    public boolean Ptoggled = false;
+
+    /**Changes the driving mode to Cameron's (only if true)**/
+    public boolean Cmode = false;
+
+    /**The Bar piston is active if set to true (motor is up)**/
+    public boolean BarPistonUp = false;
+
     static {
-        //s_driveClassMap.put(TankControls.class, s_tankControls);
-        //s_driveClassMap.put(ArcadeControls.class, s_arcadeControls);
-        //s_driveClassMap.put(CurvatureControls.class, s_curvatureControls);
-        //s_driveBase = s_driveClassMap.get(DriveControlBase.getDefaultControlSystem());
+        s_driveClassMap.put(TankControls.class, s_tankControls);
+        s_driveClassMap.put(ArcadeControls.class, s_arcadeControls);
+        s_driveClassMap.put(CurvatureControls.class, s_curvatureControls);
+        s_driveBase = s_driveClassMap.get(DriveControlBase.getDefaultControlSystem());
         s_debugEnabled.setDefaultOption("False", false);
         s_debugEnabled.addOption("True", true);
     }
@@ -54,7 +66,7 @@ public class Robot extends IterativeRobot {
      * Puts advanced debug information to smart dashboard
      */
     private static final void putDebug() {
-        //SmartDashboard.putNumber("Compressor current", HardwareMapEx.kCompressor.getCompressorCurrent());
+        SmartDashboard.putNumber("Compressor current", HardwareMapEx.kCompressor.getCompressorCurrent());
         SmartDashboard.putNumber("PDP temperature", HardwareMapEx.kPowerDistributionPanel.getTemperature());
         SmartDashboard.putNumber("PDP current", HardwareMapEx.kPowerDistributionPanel.getTotalCurrent());
         SmartDashboard.putNumber("PDP energy", HardwareMapEx.kPowerDistributionPanel.getTotalEnergy());
@@ -77,6 +89,11 @@ public class Robot extends IterativeRobot {
         SmartDashboard.putData(s_debugEnabled);
     }
 
+    @Override
+    public void teleopInit() {
+        HardwareMap.kPiston.set(true);
+    }
+
     /**
      * This function is called every robot packet, no matter the mode. Use this for
      * items like diagnostics that you want ran during disabled, autonomous,
@@ -88,43 +105,82 @@ public class Robot extends IterativeRobot {
      */
 
     public void mainPeriodic() {
-        //SmartDashboard.putString("Current control system", s_driveBase.getName());
-        //s_driveBase.update();
-        //Class<? extends DriveControlBase> switchControlSystem = s_driveBase.changeRequested();
-        //if (switchControlSystem != null) {
-        //    s_driveBase = s_driveClassMap.get(switchControlSystem);
-        //}
+        SmartDashboard.putString("Current control system", s_driveBase.getName());
+        s_driveBase.update();
+        Class<? extends DriveControlBase> switchControlSystem = s_driveBase.changeRequested();
+        if (switchControlSystem != null) {
+            s_driveBase = s_driveClassMap.get(switchControlSystem);
+        }
+
+        if (HardwareMap.kXbox.getTriggerAxis(GenericHID.Hand.kRight) > 0.1) HardwareMap.kIntakeMotor.set(0.4);
+        else if (HardwareMap.kXbox.getBumper(GenericHID.Hand.kRight)) HardwareMap.kIntakeMotor.set(-0.4);
+        else HardwareMap.kIntakeMotor.set(0.0);
+
+        if (HardwareMap.kXbox.getTriggerAxis(GenericHID.Hand.kLeft) > 0.1) HardwareMap.kBeltMotor.set(1.0);
+        else if (HardwareMap.kXbox.getBumper(GenericHID.Hand.kLeft)) HardwareMap.kBeltMotor.set(-1.0);
+        else HardwareMap.kBeltMotor.set(0.0);
+        /**shooter motor**/
         if (HardwareMap.kXbox.getAButton()) {
-            HardwareMap.kIntakeMotor.set(0.3);
+            HardwareMap.kOutputMotor1.set(1.0);
+            HardwareMap.kOutputMotor2.set(1.0);
         }
-        else if (HardwareMap.kXbox.getBButton()) {
-            HardwareMap.kIntakeMotor.set(-0.3);
-        }
-        else {
-            HardwareMap.kIntakeMotor.set(0.0);
-        }
-
-        if (HardwareMap.kXbox.getXButton()) {
-            HardwareMap.kBeltMotor.set(1.0);
-        }
-        else if (HardwareMap.kXbox.getYButton()) {
-            HardwareMap.kBeltMotor.set(-1.0);
-        }
-        else {
-            HardwareMap.kBeltMotor.set(0.0);
-        }
-
-        if (Math.abs(HardwareMap.kXbox.getY(GenericHID.Hand.kLeft)) > 0.1) {
-            HardwareMap.kOutputMotor1.set(HardwareMap.kXbox.getY(GenericHID.Hand.kLeft));
-            HardwareMap.kOutputMotor2.set(HardwareMap.kXbox.getY(GenericHID.Hand.kLeft));
-        }
+        else if (HardwareMap.kXbox.getBButton()){
+            HardwareMap.kOutputMotor1.set(-1.0);
+            HardwareMap.kOutputMotor2.set(-1.0);
+         }
         else {
             HardwareMap.kOutputMotor1.set(0.0);
             HardwareMap.kOutputMotor2.set(0.0);
         }
-        if (System.nanoTime() - m_lastTime > 1e7) {
-            m_lastTime = System.nanoTime();
+        if(HardwareMap.kRightJoystick.getRawButton(4)){
+            Cmode = !Cmode;
         }
+        if(HardwareMap.kRightJoystick.getTwist() < 0){
+            if(Cmode == true){
+                HardwareMap.kFrontRightMotor.set(1.0);
+                HardwareMap.kRearRightMotor.set(1.0);
+            }
+        }
+        else if(HardwareMap.kRightJoystick.getTwist() > 0){
+            if(Cmode == true){
+                HardwareMap.kFrontLeftMotor.set(-1.0);
+                HardwareMap.kRearLeftMotor.set(-1.0);
+            }
+        }
+        /**only press once at a time - holding will break it**/
+        if (HardwareMap.kXbox.getYButton()) {
+            Ptoggled = !Ptoggled;
+            wait(100);
+        }
+        if(Ptoggled == true){
+            HardwareMap.kPiston.set(false);
+        }
+        else {
+            HardwareMap.kPiston.set(true);
+        }
+        /**Controller stick inputs:
+         * getY > 0 = stick down
+         * getY < 0 = stick up
+         * getX < 0 = stick left
+         * getX > 0 = stick right
+         */
+        /**if(HardwareMap.kXbox.getXButton()){
+            BarPistonUp = !BarPistonUp;
+        }
+        if(BarPistonUp == false){
+            wait(100);
+            HardwareMap.kBarPiston.set(false);
+        }
+        else{
+            HardwareMap.kBarPiston.set(true);
+        }**/
+        /**
+        if (System.nanoTime() - m_lastTime > 1e9) {
+            if (HardwareMap.kXbox.getYButton()) HardwareMap.kPiston.set(!HardwareMap.kPiston.get());
+                PistonControl.set(true);
+
+            m_lastTime = System.nanoTime();
+        }**/
     }
 
     /**
@@ -167,5 +223,17 @@ public class Robot extends IterativeRobot {
     public void testPeriodic() {
         mainPeriodic();
         putDebug();
+    }
+
+    public static void wait(int ms)
+    {
+        try
+        {
+            Thread.sleep(ms);
+        }
+        catch (InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+        }
     }
 }

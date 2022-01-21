@@ -1,24 +1,21 @@
+
 package frc.robot.controls;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-
+import edu.wpi.first.wpilibj.Solenoid;
 public class PistonControl {
-    private DoubleSolenoid m_piston;
+    private static Solenoid m_piston;
 
-    public PistonControl(DoubleSolenoid piston) {
+
+    public PistonControl(Solenoid piston) {
         m_piston = piston;
-        m_piston.set(DoubleSolenoid.Value.kOff);
+        m_piston.set(false);
     }
-    public void forward() {
-        m_piston.set(DoubleSolenoid.Value.kForward);
+    public static void set(boolean value) {
+        m_piston.set(value);
     }
-    public void reverse() {
-        m_piston.set(DoubleSolenoid.Value.kReverse);
-    }
-    public void off() {
-        m_piston.set(DoubleSolenoid.Value.kOff);
-    }
-    public DoubleSolenoid.Value getState() {
+
+    public boolean get() {
         return m_piston.get();
     }
 }
+
