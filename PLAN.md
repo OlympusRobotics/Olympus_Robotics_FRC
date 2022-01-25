@@ -4,7 +4,5 @@ Make drive mode - tank control, arcade, curvature
 Get HID inputs
 Set motors to inputs
 
-#
-
 # stuff to do
 figure out smartdashboard
