@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 
 #include "Robot.h"
+#include "iostream"
 
 #include <fmt/core.h>
 
@@ -56,7 +57,10 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+  fmt::print("TeleopInit\n");
+  std::cout << "test" << std::endl;
+}
 
 void Robot::TeleopPeriodic() {}
 
