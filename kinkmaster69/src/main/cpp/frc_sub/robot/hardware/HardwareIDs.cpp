@@ -1,7 +1,7 @@
 using namespace std;
 
 
-enum HardWareIDs {
+enum HardwareIDs {
     
     frontLeftMotor = 0,
     frontRightMotor = 1,
@@ -10,6 +10,9 @@ enum HardWareIDs {
     intakeMotor = 4,
     outputMotor1 = 5,
     outputMotor2 = 6,
-    beltMotor = 7
-
+    beltMotor = 7,
+    rightJoystick = 0,
+    leftJoystick = 1,
+    xBox = 2,
+    solenoid = 0
 };
