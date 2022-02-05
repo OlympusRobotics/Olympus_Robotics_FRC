@@ -11,6 +11,11 @@
 
 #include "frc_sub/robot/hardware/HardwareMap.cpp"
 
+#include "ctre/phoenix/motorcontrol/ControlMode.h"
+
+bool cMode = false;
+bool pToggled = false;
+
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
@@ -52,11 +57,12 @@ void Robot::AutonomousInit() {
 }
 
 void Robot::AutonomousPeriodic() {
-  if (m_autoSelected == kAutoNameCustom) {
+  /*if (m_autoSelected == kAutoNameCustom) {
     // Custom Auto goes here
   } else {
     // Default Auto goes here
-  }
+  }*/
+  mainPeriodic();
 }
 
 void Robot::TeleopInit() {
@@ -64,7 +70,7 @@ void Robot::TeleopInit() {
   std::cout << "test" << std::endl;
 }
 
-void Robot::TeleopPeriodic() {}
+void Robot::TeleopPeriodic() {mainPeriodic();}
 
 void Robot::DisabledInit() {}
 
@@ -72,10 +78,55 @@ void Robot::DisabledPeriodic() {}
 
 void Robot::TestInit() {}
 
-void Robot::TestPeriodic() {}
+void Robot::TestPeriodic() {mainPeriodic();}
 
 void mainPeriodic() {
-  if(HardwareMap::xBox::))
+  HardwareMap HardwareMap;
+
+  //This is the motor in the front that picks up the balls
+  if(HardwareMap.xBox.GetRightTriggerAxis() > 0.1) HardwareMap.intakeMotor.Set(ControlMode::PercentOutput, .4);
+  else if(HardwareMap.xBox.GetRightBumper()) HardwareMap.intakeMotor.Set(ControlMode::PercentOutput, -.4);
+  else HardwareMap.intakeMotor.Set(ControlMode::PercentOutput, 0.0);
+
+  //This is that belt thing that brings the balls to the shooting wheel
+  if(HardwareMap.xBox.GetLeftTriggerAxis() > 0.1) HardwareMap.beltMotor.Set(ControlMode::PercentOutput, 1.0);
+  else if(HardwareMap.xBox.GetLeftBumper()) HardwareMap.beltMotor.Set(ControlMode::PercentOutput, -1.0);
+  else HardwareMap.beltMotor.Set(ControlMode::PercentOutput, 0.0);
+
+  //These are for the shooter wheels
+  if(HardwareMap.xBox.GetAButton()){
+    HardwareMap.outputMotor1.Set(ControlMode::PercentOutput, 1.0);
+    HardwareMap.outputMotor2.Set(ControlMode::PercentOutput, 1.0);
+  }
+  else if(HardwareMap.xBox.GetBButton()){
+    HardwareMap.outputMotor1.Set(ControlMode::PercentOutput, -1.0);
+    HardwareMap.outputMotor2.Set(ControlMode::PercentOutput, -1.0);
+  }
+  else {
+    HardwareMap.outputMotor1.Set(ControlMode::PercentOutput, 0.0);
+    HardwareMap.outputMotor2.Set(ControlMode::PercentOutput, 0.0);
+  }
+
+  //Drift mode toggle
+  if(HardwareMap.rightJoystick.GetRawButton(4)) cMode = !cMode;
+
+  if(HardwareMap.rightJoystick.GetTwist() < 0 && cMode) {
+    HardwareMap.frontRightMotor.Set(ControlMode::PercentOutput, 1.0);
+    HardwareMap.frontLeftMotor.Set(ControlMode::PercentOutput, 1.0);
+  }
+  else if(HardwareMap.rightJoystick.GetTwist() > 0 && cMode) {
+    HardwareMap.frontRightMotor.Set(ControlMode::PercentOutput, -1.0);
+    HardwareMap.frontLeftMotor.Set(ControlMode::PercentOutput, -1.0);
+  }
+  else {
+    HardwareMap.frontRightMotor.Set(ControlMode::PercentOutput, 0.0);
+    HardwareMap.frontLeftMotor.Set(ControlMode::PercentOutput, 0.0);
+  }
+
+  if (HardwareMap.xBox.GetYButton()){
+    pToggled = !pToggled;
+    sleep(100);
+  }
 }
 
 #ifndef RUNNING_FRC_TESTS
