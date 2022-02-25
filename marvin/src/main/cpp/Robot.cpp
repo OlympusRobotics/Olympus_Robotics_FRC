@@ -8,10 +8,36 @@
 
 #include <frc/smartdashboard/SmartDashboard.h>
 
+#include "hardware/HardwareMap.cpp"
+#include "ctre/phoenix/motorcontrol/ControlMode.h"
+
+HardwareMap hw;
+
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
+  
+}
+
+void mainPeriodic(){
+  
+  //forward/backward on joysticks
+  double joystickY = hw.leftJoystick.GetY() + hw.rightJoystick.GetY();
+  //clipped to be between -1 and 1
+  joystickY = joystickY > 1 ? 1 : joystickY;
+  joystickY = joystickY < -1 ? -1 : joystickY;
+  
+  double joystickX = hw.leftJoystick.GetX() + hw.rightJoystick.GetX();
+  //clipped to be between -1 and 1
+  joystickX = joystickX > 1 ? 1 : joystickX;
+  joystickX = joystickX < -1 ? -1 : joystickX;
+  
+  
+  hw.frontLeftMotor.Set(ControlMode::PercentOutput, -joystickY);
+  hw.backLeftMotor.Set(ControlMode::PercentOutput, -joystickY);
+  hw.frontRightMotor.Set(ControlMode::PercentOutput, joystickY);
+  hw.backRightMotor.Set(ControlMode::PercentOutput, joystickY);
   
 }
 
@@ -59,7 +85,7 @@ void Robot::AutonomousPeriodic() {
 
 void Robot::TeleopInit() {}
 
-void Robot::TeleopPeriodic() {}
+void Robot::TeleopPeriodic() {mainPeriodic();}
 
 void Robot::DisabledInit() {}
 
