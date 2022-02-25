@@ -23,22 +23,55 @@ void Robot::RobotInit() {
 void mainPeriodic(){
   
   //forward/backward on joysticks
-  double joystickY = hw.leftJoystick.GetY() + hw.rightJoystick.GetY();
-  //clipped to be between -1 and 1
-  joystickY = joystickY > 1 ? 1 : joystickY;
-  joystickY = joystickY < -1 ? -1 : joystickY;
+  //double joystickY = hw.leftJoystick.GetY() < 0 || hw.rightJoystick.GetY() < 0 ? std::min(hw.leftJoystick.GetY(), hw.rightJoystick.GetY()) : std::max(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());
+
+  double joystickY;
+  if (hw.leftJoystick.GetY() < 0 || hw.rightJoystick.GetY() < 0){
+    joystickY = std::min(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());
+  } else {
+    joystickY = std::max(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());
+  }
+
+  double turningSensitivity = 0.128;
+
+  double joystickX = hw.leftJoystick.GetX() < 0 || hw.rightJoystick.GetX() < 0 ? std::min(hw.leftJoystick.GetX(), hw.rightJoystick.GetX()) : std::max(hw.leftJoystick.GetX(), hw.rightJoystick.GetX());
   
-  double joystickX = hw.leftJoystick.GetX() + hw.rightJoystick.GetX();
-  //clipped to be between -1 and 1
-  joystickX = joystickX > 1 ? 1 : joystickX;
-  joystickX = joystickX < -1 ? -1 : joystickX;
-  
-  
-  hw.frontLeftMotor.Set(ControlMode::PercentOutput, -joystickY);
-  hw.backLeftMotor.Set(ControlMode::PercentOutput, -joystickY);
-  hw.frontRightMotor.Set(ControlMode::PercentOutput, joystickY);
-  hw.backRightMotor.Set(ControlMode::PercentOutput, joystickY);
-  
+  // deadzone
+  if (abs(joystickX) < 0.1) {
+    joystickX = 0.0;
+  }
+
+  double leftMotorPower = joystickY + joystickX * turningSensitivity;
+  //clipping so it's betweeen -1 and 1
+  /*
+  leftMotorPower = leftMotorPower > 1 ? 1 : leftMotorPower;
+  leftMotorPower = leftMotorPower < -1 ? -1 : leftMotorPower;
+  */
+
+  if (leftMotorPower > 1) {
+    leftMotorPower = 1;
+  } else if (leftMotorPower < -1) {
+    leftMotorPower = -1;
+  }
+
+  double rightMotorPower = -joystickY + joystickX * turningSensitivity;
+  //clipping
+  /*
+  rightMotorPower = rightMotorPower > 1 ? 1 : rightMotorPower;
+  rightMotorPower = rightMotorPower < -1 ? -1 : rightMotorPower;
+  */
+
+  if (rightMotorPower > 1) {
+    rightMotorPower = 1;
+  } else if (rightMotorPower < -1) {
+    rightMotorPower = -1;
+  }
+
+
+  hw.frontLeftMotor.Set(ControlMode::PercentOutput, leftMotorPower);
+  hw.backLeftMotor.Set(ControlMode::PercentOutput, leftMotorPower);
+  hw.frontRightMotor.Set(ControlMode::PercentOutput, rightMotorPower);
+  hw.backRightMotor.Set(ControlMode::PercentOutput, rightMotorPower);
 }
 
 /**
