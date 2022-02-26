@@ -10,6 +10,7 @@
 
 #include "hardware/HardwareMap.cpp"
 #include "ctre/phoenix/motorcontrol/ControlMode.h"
+#include <cameraserver/CameraServer.h>
 
 HardwareMap hw;
 bool cMode = false; //drifting - called cMode for cameron's mode
@@ -18,40 +19,49 @@ void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-  
+
+  frc::CameraServer::GetInstance()->StartAutomaticCapture();
 }
 
 void mainPeriodic(){
-  
+    
+  //hw.compressor.Start();
+
   //this makes it so you can use either joystick - just takes the most extreme one
   //forward = +, backward = -
-  double joystickY;
-  if (hw.leftJoystick.GetY() < 0 || hw.rightJoystick.GetY() < 0) joystickY = std::min(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());
-  else joystickY = std::max(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());
+  double joystickY = hw.rightJoystick.GetY();
+  /*if (hw.leftJoystick.GetY() < 0 || hw.rightJoystick.GetY() < 0) joystickY = std::min(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());
+  else joystickY = std::max(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());*/
+
+  double sens = .3;
 
   //right = +, left = -
-  double joystickX;
-  if(hw.leftJoystick.GetX() < 0 || hw.rightJoystick.GetX() < 0) joystickX = std::min(hw.leftJoystick.GetX(), hw.rightJoystick.GetX());
-  else joystickX = std::max(hw.leftJoystick.GetX(), hw.rightJoystick.GetX());
+  double joystickX = sens * hw.rightJoystick.GetX();
+  if (joystickX * joystickX < .02 ){
+    joystickX = 0;
+  }
+
+  /*if(hw.leftJoystick.GetX() < 0 || hw.rightJoystick.GetX() < 0) joystickX = std::min(hw.leftJoystick.GetX(), hw.rightJoystick.GetX());
+  else joystickX = std::max(hw.leftJoystick.GetX(), hw.rightJoystick.GetX());*/
 
   //if you didn't already know you can twist the joysticks
   //right = +, left = -
-  double joystickTwist;
+  double joystickTwist = 0.0;
   if (hw.leftJoystick.GetTwist() < 0 || hw.rightJoystick.GetTwist() < 0) joystickTwist = std::min(hw.leftJoystick.GetTwist(), hw.rightJoystick.GetTwist());
   else joystickTwist = std::max(hw.leftJoystick.GetTwist(), hw.rightJoystick.GetTwist());
   
-  double turningSensitivity = 0.128; //changes turning speed
+  //double turningSensitivity = 0.128; //changes turning speed
 
   // deadzone
-  if (abs(joystickX) < 0.1) joystickX = 0.0;
+  //if (abs(joystickX) < 0.1) joystickX = 0.0;
 
-  double leftMotorPower = joystickY + joystickX * turningSensitivity;
+  double leftMotorPower = joystickY + joystickX;// * turningSensitivity;
   //clipping so it's betweeen -1 and 1
   leftMotorPower = leftMotorPower > 1 ? 1 : leftMotorPower;
   leftMotorPower = leftMotorPower < -1 ? -1 : leftMotorPower;
   
   //right motors are negative since they face the opposite direction
-  double rightMotorPower = -joystickY + joystickX * turningSensitivity;
+  double rightMotorPower = -joystickY + joystickX;// * turningSensitivity;
   //clipping
   rightMotorPower = rightMotorPower > 1 ? 1 : rightMotorPower;
   rightMotorPower = rightMotorPower < -1 ? -1 : rightMotorPower;

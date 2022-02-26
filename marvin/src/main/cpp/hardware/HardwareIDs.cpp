@@ -3,7 +3,8 @@ enum HardwareIDs {
     bLM = 1,
     fRM = 2,
     bRM = 3,
-    lJ = 0,
-    rJ = 1,
-    xBox = 2
+    rJ = 0,
+    lJ = 1,
+    xBox = 2,
+    grabberSolenoid = 0
 };
