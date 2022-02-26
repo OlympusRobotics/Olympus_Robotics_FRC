@@ -17,4 +17,7 @@ class HardwareMap {
         frc::Joystick leftJoystick{HardwareIDs::lJ};
         frc::Joystick rightJoystick{HardwareIDs::rJ};
         frc::XboxController xBox{HardwareIDs::xBox};
+
+        //pneumatics
+
 };
