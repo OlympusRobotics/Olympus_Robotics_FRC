@@ -49,13 +49,13 @@ void mainPeriodic(){
   // deadzone
   //if (abs(joystickX) < 0.1) joystickX = 0.0;
 
-  double leftMotorPower = joystickY + joystickX;// * turningSensitivity;
+  double leftMotorPower = joystickY + joystickX;
   //clipping so it's betweeen -1 and 1
   leftMotorPower = leftMotorPower > 1 ? 1 : leftMotorPower;
   leftMotorPower = leftMotorPower < -1 ? -1 : leftMotorPower;
   
   //right motors are negative since they face the opposite direction
-  double rightMotorPower = -joystickY + joystickX;// * turningSensitivity;
+  double rightMotorPower = -joystickY + joystickX;
   //clipping
   rightMotorPower = rightMotorPower > 1 ? 1 : rightMotorPower;
   rightMotorPower = rightMotorPower < -1 ? -1 : rightMotorPower;
