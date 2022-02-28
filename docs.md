@@ -12,3 +12,9 @@ fmt::print("text\n");
 ```
 https://store.ctr-electronics.com/documentation
 ```
+
+## xBox controller mapping
+```
+hw.xBox.GetXButton() = left trigger
+hw.xBox.GetYButton() = right trigger
+```
