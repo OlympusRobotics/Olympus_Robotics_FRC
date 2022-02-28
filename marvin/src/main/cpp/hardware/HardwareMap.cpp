@@ -3,6 +3,7 @@
 #include <frc/DoubleSolenoid.h>
 #include <frc/Joystick.h>
 #include <frc/PneumaticsControlModule.h>
+#include <frc/Compressor.h>
 #include "HardwareIDs.cpp"
 
 class HardwareMap {
@@ -20,5 +21,7 @@ class HardwareMap {
         frc::XboxController xBox{HardwareIDs::xBox};
 
         // pnematics or however u spell it
-        frc::DoubleSolenoid grabberSolenoid{frc::PneumaticsModuleType::CTREPCM, 0, 1};
+        frc::DoubleSolenoid grabberSolenoid{4, frc::PneumaticsModuleType::CTREPCM, 0, 1};
+        frc::DoubleSolenoid liftSolenoid{4, frc::PneumaticsModuleType::CTREPCM, 2, 3};
+
 };

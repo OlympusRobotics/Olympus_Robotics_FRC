@@ -21,7 +21,6 @@ class Robot : public frc::TimedRobot {
   void DisabledPeriodic() override;
   void TestInit() override;
   void TestPeriodic() override;
-  HardwareMap hw;
 
  private:
   frc::SendableChooser<std::string> m_chooser;

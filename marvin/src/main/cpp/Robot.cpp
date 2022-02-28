@@ -4,15 +4,16 @@
 #include "ctre/phoenix/motorcontrol/ControlMode.h"
 #include <cameraserver/CameraServer.h>
 
+HardwareMap hw;
 bool cMode = false; //drifting - called cMode for cameron's mode
-
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-  hw.grabberSolenoid.Set(frc::DoubleSolenoid::Value::kOff);
 
   frc::CameraServer::GetInstance()->StartAutomaticCapture();
+  hw.grabberSolenoid.Set(frc::DoubleSolenoid::Value::kReverse);
+  hw.liftSolenoid.Set(frc::DoubleSolenoid::Value::kReverse);
 }
 
 
@@ -63,6 +64,14 @@ void Robot::TeleopInit() {}
 
 // Called every 20 ms when enabled on teleop
 void Robot::TeleopPeriodic() {    
+
+  if (hw.xBox.GetAButton()) {
+    hw.backLeftMotor.Set(ControlMode::PercentOutput, 1);
+  }
+
+  if (hw.xBox.GetYButton()) {
+    hw.liftSolenoid.Toggle();
+  }
 
   //this makes it so you can use either joystick - just takes the most extreme one
   //forward = +, backward = -
