@@ -33,22 +33,16 @@ void mainPeriodic(){
   /*if (hw.leftJoystick.GetY() < 0 || hw.rightJoystick.GetY() < 0) joystickY = std::min(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());
   else joystickY = std::max(hw.leftJoystick.GetY(), hw.rightJoystick.GetY());*/
 
-  double sens = .3;
+  double sens = .3; //limits turning speed
 
   //right = +, left = -
   double joystickX = sens * hw.rightJoystick.GetX();
-  if (joystickX * joystickX < .02 ){
-    joystickX = 0;
-  }
-
-  /*if(hw.leftJoystick.GetX() < 0 || hw.rightJoystick.GetX() < 0) joystickX = std::min(hw.leftJoystick.GetX(), hw.rightJoystick.GetX());
-  else joystickX = std::max(hw.leftJoystick.GetX(), hw.rightJoystick.GetX());*/
+  
+  if (joystickX * joystickX < .02 ) joystickX = 0;
 
   //if you didn't already know you can twist the joysticks
   //right = +, left = -
-  double joystickTwist = 0.0;
-  if (hw.leftJoystick.GetTwist() < 0 || hw.rightJoystick.GetTwist() < 0) joystickTwist = std::min(hw.leftJoystick.GetTwist(), hw.rightJoystick.GetTwist());
-  else joystickTwist = std::max(hw.leftJoystick.GetTwist(), hw.rightJoystick.GetTwist());
+  double joystickTwist = hw.rightJoystick.GetTwist();
   
   //double turningSensitivity = 0.128; //changes turning speed
 
