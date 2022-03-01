@@ -27,5 +27,7 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameDefault = "Default";
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
+  int counter = 0;
+  const int time = 10; // time between xbox button presses
 
 };
