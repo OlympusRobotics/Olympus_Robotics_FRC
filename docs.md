@@ -19,3 +19,13 @@ https://store.ctr-electronics.com/documentation
 hw.xBox.GetXButton() = left trigger
 hw.xBox.GetYButton() = right trigger
 ```
+
+# Control logic
+Robot.cpp is the main file.
+    - Hardware map creates objects of all motors, hid devices, pneumatics, etc.
+    - Normal driving
+        - Driving is proportionally powered by the y axis of the right joystick
+        - Turning is capped at the sens variable for better driving.
+    - Drift mode
+        - Allows for turning while driving
+        - Twisting the joystick sets one side of the wheels to full power while the other stays proportional - left twist for left side, etc 
