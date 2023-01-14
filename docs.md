@@ -1,5 +1,16 @@
 # Documentation for robot
 
+## installation and updating
+```
+- go to wpilib, download the newest iso. Mount and execute.
+- ./gradlew build
+```
+
+## Phoenix Dependencies
+```
+- in vscode overview, under 3rd party libs find the phoenix maven link - go to cmd palette vscode - Manage Vendor Libraries - install new libraries online - enter link
+```
+
 ## output
 Type riolog into command palette
 ```
@@ -20,7 +31,7 @@ hw.xBox.GetXButton() = left trigger
 hw.xBox.GetYButton() = right trigger
 ```
 
-# Control logic
+# Control logic 2022
 Robot.cpp is the main file.
     - Hardware map creates objects of all motors, hid devices, pneumatics, etc.
     - Normal driving
