@@ -9,8 +9,23 @@
 #include "Constants.cpp"
 #include <ctre/Phoenix.h>
 #include <cmath>
-#include "frc/AnalogGyro.h"
-#include "frc/I2C.h"
+#include <vector>
+
+
+// useful variables
+double starting_angle = 0;
+double seconds = 3;
+std::vector<double> averageVector;
+frc::AnalogInput pins{0};
+frc::DigitalInput armLimit {0};
+frc::DoubleSolenoid claw{frc::PneumaticsModuleType::CTREPCM, 0, 2};
+
+rev::CANSparkMax armHeight1{12, rev::CANSparkMax::MotorType::kBrushed};
+rev::CANSparkMax armHeight2{13, rev::CANSparkMax::MotorType::kBrushed};
+VictorSPX armExtension = {16};
+//rev::CANSparkMax armExtension{14, rev::CANSparkMax::MotorType::kBrushed};
+rev::CANSparkMax clawMotor0{14, rev::CANSparkMax::MotorType::kBrushed};
+rev::CANSparkMax clawMotor1{15, rev::CANSparkMax::MotorType::kBrushed};
 
 
 void configMotor(TalonSRX &motor)
@@ -28,7 +43,7 @@ void configMotor(TalonSRX &motor)
   motor.Config_kF(0, 0.0);
   motor.Config_kP(0, 20);
   motor.Config_kI(0, 0.0);
-  motor.Config_kD(0, 1);
+  motor.Config_kD(0, 2);
   //motor.SetSelectedSensorPosition(0);
   motor.SetInverted(true);
 } 
@@ -61,8 +76,7 @@ void Robot::DisabledPeriodic() {}
  * This autonomous runs the autonomous command selected by your {@link
  * RobotContainer} class.
  */
-void Robot::AutonomousInit()
-{
+void Robot::AutonomousInit() {
   m_autonomousCommand = m_container.GetAutonomousCommand();
 
   if (m_autonomousCommand)
@@ -71,10 +85,46 @@ void Robot::AutonomousInit()
   }
 }
 
-void Robot::AutonomousPeriodic() {}
+void Robot::AutonomousPeriodic() {
+  double drivePower = .5;
+  double wheelPowers[8] = {drivePower,0,drivePower,0, drivePower,0,drivePower,0};
+  double dogcalibration[4] = {1,.69420,1,.69420};
+  if (seconds > 0 ){
+    hw::frontLeftDrive.Set(ControlMode::PercentOutput, wheelPowers[0] * dogcalibration[0]);
+    hw::frontLeftRotation.Set(ControlMode::Position, wheelPowers[1] + 128 + 512); // +45
 
-void Robot::TeleopInit()
-{
+    hw::frontRightDrive.Set(ControlMode::PercentOutput, wheelPowers[2] * dogcalibration[1]);
+    hw::frontRightRotation.Set(ControlMode::Position,  wheelPowers[3] - 128 + 512); // -45
+
+    hw::backLeftDrive.Set(ControlMode::PercentOutput, wheelPowers[4] * dogcalibration[2]);
+    hw::backLeftRotation.Set(ControlMode::Position, wheelPowers[5] - 128 + 512); // -45
+
+    hw::backRightDrive.Set(ControlMode::PercentOutput, wheelPowers[6] * dogcalibration[3]);
+    hw::backRightRotation.Set(ControlMode::Position,  wheelPowers[7] + 256 + 16 + 512); // +90
+
+    seconds -= .02;
+  }
+  else {
+    hw::frontLeftDrive.Set(ControlMode::PercentOutput, 0);
+    hw::frontLeftRotation.Set(ControlMode::Position, wheelPowers[1] + 128 + 512); // +45
+
+    hw::frontRightDrive.Set(ControlMode::PercentOutput, 0);
+    hw::frontRightRotation.Set(ControlMode::Position,  wheelPowers[3] - 128 + 512); // -45
+
+    hw::backLeftDrive.Set(ControlMode::PercentOutput, 0);
+    hw::backLeftRotation.Set(ControlMode::Position, wheelPowers[5] - 128 + 512); // -45
+
+    hw::backRightDrive.Set(ControlMode::PercentOutput, 0);
+    hw::backRightRotation.Set(ControlMode::Position,  wheelPowers[7] + 256 + 16 + 512); // +90
+
+  }
+}
+
+void Robot::TeleopInit() {
+  armLimitPos = 0;
+  switchHit = false;
+  goingToPos = 0;
+
   // This makes sure that the autonomous stops running when
   // teleop starts running. If you want the autonomous to
   // continue until interrupted by another command, remove
@@ -85,23 +135,27 @@ void Robot::TeleopInit()
   }
 
   // Can ID Wheel Locations on the robot
-  //        Top
+  //          Top
   // Left   0 1   Right
-  //        2 3
-  //      Bottom
+  //          2 3
+  //        Bottom
 
   // 0 - 3 Rotation motors
   // 4 - 7 Drive motors
+  pins.SetOversampleBits(0);
+  pins.SetAverageBits(10);
 
+  starting_angle = ((double)pins.GetValue() / constants::GYROMAX) * 2 * constants::TIMSCONSTANT + constants::TIMSCONSTANT/2;
+  //for(int i = 0; i < constants::slidingPWMWindowSize; i++) averageVector.push_back(starting_angle);
+
+  claw.Set(frc::DoubleSolenoid::Value::kReverse);
   configMotor(hw::frontRightRotation);
   configMotor(hw::frontLeftRotation);
   configMotor(hw::backLeftRotation);
   configMotor(hw::backRightRotation);
-
 }
 
-double ClosestAng(double a, double b)
-{
+double ClosestAng(double a, double b) {
   // Returns closest of two angles
   // TODO optimize - full radians
   a = a * (360 / (2 * constants::TIMSCONSTANT));
@@ -114,7 +168,7 @@ double ClosestAng(double a, double b)
   return dir * ((constants::TIMSCONSTANT * 2) / 360);
 }
 
-void ClosestDir(double a, double b, double v, double *returnArray){
+void ClosestDir(double a, double b, double v, double *returnArray) {
   double normal = ClosestAng(a, b);
   double flipped = ClosestAng(a, b + constants::TIMSCONSTANT);
   if (abs(normal) <= abs(flipped)){
@@ -127,55 +181,82 @@ void ClosestDir(double a, double b, double v, double *returnArray){
   }
 }
 
-double RHO(double x, double y){
+double RHO(double x, double y) {
   return pow((x * x + y * y), .5);
 }
 
-double PHI(double x, double y){
+double PHI(double x, double y) {
   return atan2(y, x);
 }
 
-
 // Math funcs
-/* TODO FUCK
-double *CalculateSwerve(double Vx, double Vy, double w)
-{
-  // Calculates the rotation angles needed for swerve drive
-  double a = Vx + w * (constants::ROBOTLENGTH / 2);
-  double b = Vy + w * (constants::ROBOTWIDTH / 2);
-  double c = Vx - w * (constants::ROBOTLENGTH / 2);
-  double d = Vy - w * (constants::ROBOTWIDTH / 2);
 
-  double wheels[8] = {
-      Cart2Pol(a, b)[0], (Cart2Pol(a, b)[1] / (2 * 3.1415192)) * 1023,
-      Cart2Pol(c, b)[0], (Cart2Pol(c, b)[1] / (2 * 3.1415192)) * 1023,
-      Cart2Pol(a, d)[0], (Cart2Pol(a, d)[1] / (2 * 3.1415192)) * 1023,
-      Cart2Pol(c, d)[0], (Cart2Pol(c, d)[1] / (2 * 3.1415192)) * 1023};
+double oldError = 0;
+double setAngle = 0;
+bool set = 0;
+void Robot::TeleopPeriodic() {
 
-  return wheels;
-}
-
-
- * This function is called periodically during operator control.
- */
-void Robot::TeleopPeriodic()
-{
   // hw::Rotation.Set(ControlMode::PercentOutput, .3);
   //  READ JOYSTICK DATA
-  double Vx = hw::rightJoystick.GetX();
-  double Vy = -hw::rightJoystick.GetY();
-  // right = +, left = -
-  double w = 4*hw::rightJoystick.GetTwist();
+  double gyro_radians = (pins.GetAverageValue() / constants::GYROMAX) * 2 * constants::TIMSCONSTANT + constants::TIMSCONSTANT / 2 - starting_angle;
+  double Vx = 1.5 * hw::rightJoystick.GetX();
+  double Vy = - 1.5 * hw::rightJoystick.GetY();
 
-  if (Vx * Vx < .2){
+  // field oriented swerve
+  double temp = Vy * cos(gyro_radians) + Vx * sin(gyro_radians);
+  Vx = -Vy * sin(gyro_radians) + Vx * cos(gyro_radians);
+  Vy = temp;
+  // right = +, left = -
+  double w = 3 * hw::rightJoystick.GetTwist();
+
+  
+  if (hw::rightJoystick.GetRawButton(1)){
+    setAngle = 0;
+    double pos_gyro_rad = gyro_radians;
+    
+    
+    if (pos_gyro_rad >= constants::TIMSCONSTANT && pos_gyro_rad <= 2 * constants::TIMSCONSTANT){
+      pos_gyro_rad -= 2 * constants::TIMSCONSTANT;
+    }
+    
+
+    double error = setAngle - pos_gyro_rad;
+
+
+    
+    if (error*error > 0){
+      w = 4 * error;// - 300 * (oldError - error)/20;
+      
+      oldError = error;
+
+    }
+  }
+  else if (hw::rightJoystick.GetRawButton(2)){
+    setAngle = constants::TIMSCONSTANT;
+    double pos_gyro_rad = gyro_radians;
+
+    double error = setAngle - pos_gyro_rad;
+    
+    if (error*error > 0){
+      w = 4 * error;// - 300 * (oldError - error)/20;
+      
+      oldError = error;
+
+    }
+  }
+
+  // Deadzones
+  /*
+  if (Vx * Vx < .001){
     Vx = 0;
   }
-  if (Vy * Vy < .2){
+  if (Vy * Vy < .001){
     Vy = 0;
   }
-  if (w * w < .2){
+  if (w * w < .001){
     w = 0;
   }
+  */
 
   //512 = pi
   int rotationOffset = 0;
@@ -187,68 +268,44 @@ void Robot::TeleopPeriodic()
   // 1, 3, 5, 7
   // 4,5,6,7
   // Calculates the rotation angles needed for swerve drive
-  double a = Vx + w * (constants::ROBOTLENGTH / 2);
-  double b = Vy + w * (constants::ROBOTWIDTH / 2);
-  double c = Vx - w * (constants::ROBOTLENGTH / 2);
-  double d = Vy - w * (constants::ROBOTWIDTH / 2);
-  
+  double a = Vx - w * (constants::ROBOTLENGTH / 2);
+  double b = Vx + w * (constants::ROBOTLENGTH / 2);
+  double c = Vy - w * (constants::ROBOTWIDTH / 2);
+  double d = Vy + w * (constants::ROBOTWIDTH / 2);
+
   // working section
-  double FLAG = -1;
-  if (w == 0){
-    FLAG = 1;
-  }
-  
-  /*
-  double wheelPowers[8] = {
-      RHO(a, b), ((PHI(a, b) / (2 * 3.1415192)) * 1023),
-      FLAG*RHO(c, b), ((PHI(c, b) / (2 * 3.1415192)) * 1023),
-      RHO(a, d), ((PHI(a, d) / (2 * 3.1415192)) * 1023),
-      RHO(c, d), ((PHI(c, d) / (2 * 3.1415192)) * 1023)// + 545
-  };
-  */
-
-
   // left, right, left, right
   double buffer[2]; // power, angle
   double wheelPowers[8];
- // call function with arguments a, b, v
-  ClosestDir(((hw::frontLeftRotation.GetSelectedSensorPosition() - 128 - 512) / 1023) * (2 * constants::TIMSCONSTANT), PHI(a,b),RHO(a, b),buffer);
+  // call function with arguments a, b, v
+  ClosestDir(((hw::frontLeftRotation.GetSelectedSensorPosition() - 128 - 512) / 1023) * (2 * constants::TIMSCONSTANT), PHI(b,d),RHO(b,d),buffer);
   wheelPowers[0] = buffer[0];
   wheelPowers[1] = ((hw::frontLeftRotation.GetSelectedSensorPosition() - 128 - 512)) + ((buffer[1] / (2 * 3.1415192)) * 1023);//buffer[1];
-  ClosestDir(((hw::frontRightRotation.GetSelectedSensorPosition() + 128 - 512) / 1023) * (2 * constants::TIMSCONSTANT), PHI(c,b),RHO(c, b),buffer);
-  wheelPowers[2] = FLAG*buffer[0];
+  ClosestDir(((hw::frontRightRotation.GetSelectedSensorPosition() + 128 - 512) / 1023) * (2 * constants::TIMSCONSTANT), PHI(b,c),RHO(b,c),buffer);
+  wheelPowers[2] = buffer[0];
   wheelPowers[3] = ((hw::frontRightRotation.GetSelectedSensorPosition() + 128 - 512)) + ((buffer[1] / (2 * 3.1415192)) * 1023);//buffer[1];
   ClosestDir(((hw::backLeftRotation.GetSelectedSensorPosition() + 128 - 512) / 1023) * (2 * constants::TIMSCONSTANT), PHI(a,d),RHO(a,d),buffer);
   wheelPowers[4] = buffer[0];
   wheelPowers[5] = ((hw::backLeftRotation.GetSelectedSensorPosition() + 128 - 512)) + ((buffer[1] / (2 * 3.1415192)) * 1023);//buffer[1];
-  ClosestDir(((hw::backRightRotation.GetSelectedSensorPosition() - 256 - 16 - 512) / 1023) * (2 * constants::TIMSCONSTANT), PHI(c,d),RHO(c,d),buffer);
+  ClosestDir(((hw::backRightRotation.GetSelectedSensorPosition() - 256 - 16 - 512) / 1023) * (2 * constants::TIMSCONSTANT), PHI(a,c),RHO(a,c),buffer);
   wheelPowers[6] = buffer[0];
   wheelPowers[7] = (hw::backRightRotation.GetSelectedSensorPosition() - 256 - 16 - 512) + ((buffer[1] / (2 * 3.1415192)) * 1023);//buffer[1];
 
 
-  std::cout << wheelPowers[7] << std::endl;
-  
-  
-  // 0x28
-
-
-  // AB CD - Drive, Rotation
-  //std::cout << *wheelPowers << std::endl;
-
-  double A = 0;
+  double dogcalibration[4] = {1,1,1,1};//{1,.69420,1,.69420};
   double changeDir = 1;
-
+  // Make wheels stay where they are
   if (Vx * Vx + Vy*Vy + w*w != 0){
-    hw::frontLeftDrive.Set(ControlMode::PercentOutput, wheelPowers[0] + A);
+    hw::frontLeftDrive.Set(ControlMode::PercentOutput, wheelPowers[0] * dogcalibration[0]);
     hw::frontLeftRotation.Set(ControlMode::Position, changeDir * wheelPowers[1] + 128 + 512); // +45
 
-    hw::frontRightDrive.Set(ControlMode::PercentOutput, wheelPowers[2] + A);
+    hw::frontRightDrive.Set(ControlMode::PercentOutput, wheelPowers[2] * dogcalibration[1]);
     hw::frontRightRotation.Set(ControlMode::Position, changeDir * wheelPowers[3] - 128 + 512); // -45
 
-    hw::backLeftDrive.Set(ControlMode::PercentOutput, wheelPowers[4] + A);
+    hw::backLeftDrive.Set(ControlMode::PercentOutput, wheelPowers[4] * dogcalibration[2]);
     hw::backLeftRotation.Set(ControlMode::Position, changeDir * wheelPowers[5] - 128 + 512); // -45
 
-    hw::backRightDrive.Set(ControlMode::PercentOutput, wheelPowers[6] + A);
+    hw::backRightDrive.Set(ControlMode::PercentOutput, wheelPowers[6] * dogcalibration[3]);
     hw::backRightRotation.Set(ControlMode::Position, changeDir * wheelPowers[7] + 256 + 16 + 512); // +90
   }
   else{
@@ -257,28 +314,83 @@ void Robot::TeleopPeriodic()
     hw::backLeftDrive.Set(ControlMode::PercentOutput, 0);
     hw::backRightDrive.Set(ControlMode::PercentOutput,0);
   }
-  /*
-  for (int i = 0; i<4; i++){
-    hw::controllers[i].Set(ControlMode::Position, WheelPowers[2 * i]);
-    if (i == 3){
-      hw::D3.Set(ControlMode::PercentOutput, WheelPowers[2 * i + 1]);
-      break;
-    }
-    hw::controllers[i + 4].Set(ControlMode::PercentOutput, WheelPowers[2 * i + 1]);
+  
+
+  //arm
+  int armConstant = .3;//.2;
+  if (hw::xBox.GetLeftY()){
+    armHeight1.Set(armConstant-.4 * hw::xBox.GetLeftY());
+    armHeight2.Set(armConstant-.4 * hw::xBox.GetLeftY());
   }
-  */
+  else{
+    armHeight1.Set(armConstant-.4 * hw::xBox.GetLeftY());
+    armHeight2.Set(armConstant-.4 * hw::xBox.GetLeftY());
+  }
 
+  double armInput = .7 * hw::xBox.GetRightTriggerAxis() -.7 *  hw::xBox.GetLeftTriggerAxis();
+  armExtension.Set(ControlMode::PercentOutput, armInput);
+  
   /*
-  hw::R0.Set(ControlMode::Position, 1024);
-  hw::R1.Set(ControlMode::Position, 1024);
-  hw::R2.Set(ControlMode::Position, 1024);
-  hw::R3.Set(ControlMode::Position, 1024);
+  armExtension.Set(ControlMode::PercentOutput, 0);
+  double armInput = .7 * hw::xBox.GetRightTriggerAxis() -.7 *  hw::xBox.GetLeftTriggerAxis();
+  if (armInput > 0 ){
+    if (armLimitPos <= 4){
+      armExtension.Set(ControlMode::PercentOutput, armInput);
+    }
+  }
+  else{
+    if (armLimitPos > 0){
+      armExtension.Set(ControlMode::PercentOutput, armInput);
+    }
+  }
+
+  if (hw::xBox.GetLeftBumper()) {
+    goingToPos = 2;
+  }
+
+  if (hw::xBox.GetRightBumper()) {
+    goingToPos = 1;
+  }
+
+  if (goingToPos == 1 && armInput <= 4) {
+    armExtension.Set(ControlMode::PercentOutput, -.2);
+  }
+  else if (goingToPos == 2 && armInput > 0) {
+    armExtension.Set(ControlMode::PercentOutput, .2);
+  }
+  else {
+    armInput = 0;
+  }
+  std::cout << armLimitPos << std::endl;
   */
 
-  //std::cout << hw::frontRightRotation.GetSelectedSensorPosition() << std::endl;
-  //std::cout << hw::backRightRotation.GetSelectedSensorPosition() << std::endl;
-  //std::cout << hw::frontLeftRotation.GetSelectedSensorPosition() << std::endl;
-  //std::cout << hw::backLeftRotation.GetSelectedSensorPosition() << std::endl;
+
+  // update encoder pos 
+  /*
+  if (armLimit.Get() && !switchHit) {
+    if (armExtension.GetMotorOutputPercent() > 0) {
+      armLimitPos++;
+    }
+    else {
+      armLimitPos--;
+    }
+    switchHit = true;
+  }
+  else {
+    if (!armLimit.Get()) {
+    switchHit = false;
+    }
+  }*/
+
+  //flywheel
+ // clawMotor0.Set(-hw::xBox.GetRightY());
+  //clawMotor1.Set(-hw::xBox.GetRightY());
+
+  
+  //pneumatics
+  if(hw::xBox.GetXButtonPressed()) claw.Toggle(); //close
+  else if(hw::xBox.GetBButtonPressed()) claw.Toggle(); //open
+  
 }
 
 /**
@@ -297,8 +409,7 @@ void Robot::SimulationInit() {}
 void Robot::SimulationPeriodic() {}
 
 #ifndef RUNNING_FRC_TESTS
-int main()
-{
+int main() {
   return frc::StartRobot<Robot>();
 }
 #endif
