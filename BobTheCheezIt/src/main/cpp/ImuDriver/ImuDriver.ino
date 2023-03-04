@@ -28,33 +28,33 @@
 */
 
 /* Set the delay between fresh samples */
-uint16_t BNO055_SAMPLERATE_DELAY_MS = 100;
+uint16_t BNO055_SAMPLERATE_DELAY_MS = 10;
+
 
 // Check I2C device address and correct line below (by default address is 0x29 or 0x28)
 //                                   id, address
-Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28, &Wire);
-
+Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28);
+int pin = 3; 
 void setup(void)
 {
   Serial.begin(115200);
-
-  while (!Serial) delay(10);  // wait for serial port to open!
-
-  Serial.println("Orientation Sensor Test"); Serial.println("");
-
-  /* Initialise the sensor */
+  Serial.println("Orientation Sensor Test"); Serial.println("TESITNG");
+  
   if (!bno.begin())
   {
-    /* There was a problem detecting the BNO055 ... check your connections */
+    
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
     while (1);
   }
-
+  
   delay(1000);
+  pinMode(pin, OUTPUT);
+  
 }
 
 void loop(void)
 {
+  Serial.println("");
   //could add VECTOR_ACCELEROMETER, VECTOR_MAGNETOMETER,VECTOR_GRAVITY...
   sensors_event_t orientationData , angVelocityData , linearAccelData, magnetometerData, accelerometerData, gravityData;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -64,7 +64,8 @@ void loop(void)
   bno.getEvent(&accelerometerData, Adafruit_BNO055::VECTOR_ACCELEROMETER);
   bno.getEvent(&gravityData, Adafruit_BNO055::VECTOR_GRAVITY);
 
-  printEvent(&orientationData);
+  //Serial.print(int(orientationData.orientation.x/(float)360.0 * 255));
+  /*printEvent(&orientationData);
   printEvent(&angVelocityData);
   printEvent(&linearAccelData);
   printEvent(&magnetometerData);
@@ -73,8 +74,8 @@ void loop(void)
 
   int8_t boardTemp = bno.getTemp();
   Serial.println();
-  Serial.print(F("temperature: "));
   Serial.println(boardTemp);
+  Serial.print(F("temperature: "));
 
   uint8_t system, gyro, accel, mag = 0;
   bno.getCalibration(&system, &gyro, &accel, &mag);
@@ -90,6 +91,10 @@ void loop(void)
 
   Serial.println("--");
   delay(BNO055_SAMPLERATE_DELAY_MS);
+  Serial.println("end loop");*/
+
+  Serial.println(int(orientationData.orientation.x/(float)360.0 * 255));
+  analogWrite(pin, int(orientationData.orientation.x/(float)360.0 * 255));
 }
 
 void printEvent(sensors_event_t* event) {
@@ -142,8 +147,8 @@ void printEvent(sensors_event_t* event) {
 
   Serial.print("\tx= ");
   Serial.print(x);
-  Serial.print(" |\ty= ");
+  /*Serial.print(" |\ty= ");
   Serial.print(y);
   Serial.print(" |\tz= ");
-  Serial.println(z);
+  Serial.println(z);*/
 }
