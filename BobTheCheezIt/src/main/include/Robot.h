@@ -30,5 +30,9 @@ class Robot : public frc::TimedRobot {
   // doesn't have undefined behavior and potentially crash.
   std::optional<frc2::CommandPtr> m_autonomousCommand;
 
+  int armLimitPos = 0;
+  int goingToPos = 0; // 0 is no set pos, 1 is extended, 2 is retracted
+  bool switchHit = false;
+
   RobotContainer m_container;
 };
