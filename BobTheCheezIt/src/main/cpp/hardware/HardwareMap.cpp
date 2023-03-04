@@ -8,22 +8,14 @@
 #include "networktables/NetworkTableInstance.h"
 #include "networktables/NetworkTableEntry.h"
 #include "networktables/NetworkTableValue.h"
+#include <frc/AnalogInput.h>
+#include "rev/CANSparkMax.h"
+#include "Robot.h"
+#include "frc/DoubleSolenoid.h"
+#include "frc/Compressor.h"
+#include "frc/DigitalInput.h"
 
 namespace hw{
-    
-    // static TalonSRX R0 = {0};
-    // static TalonSRX R1 = {1};
-    // static TalonSRX R2 = {2};
-    // static TalonSRX R3 = {3};
-
-    // static TalonSRX D0 = {4};
-    // static TalonSRX D1 = {5};
-    // static TalonSRX D2 = {6};
-    
-
-    
-
-   // static TalonSRX controllers[] = {1,2,3,4,5,8};
     // rotation motor
     static TalonSRX frontLeftRotation = {1};
     static TalonSRX frontRightRotation = {2};
@@ -35,12 +27,24 @@ namespace hw{
     static VictorSPX frontRightDrive = {6};
     static VictorSPX backLeftDrive = {7};
     static TalonSRX backRightDrive = {8};
-    static int test = 0;
-
-    // controllers
+    
     static frc::Joystick rightJoystick{0};
     static frc::XboxController xBox{1};
 
-    //static std::shared_ptr<nt::NetworkTable> table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
+    // controllers
+    
+
+
+
+
+    static std::shared_ptr<nt::NetworkTable> table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
+
+    
+
+    
+    
+
+    //static frc::AnalogInput pins{0};
+    //static frc::Compressor compressor{0, frc::PneumaticsModuleType::CTREPCM};
 
 }   
