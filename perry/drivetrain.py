@@ -101,10 +101,10 @@ class DriveTrain(commands2.Subsystem):
         
         # Configure the AutoBuilder last
         AutoBuilder.configureHolonomic(
-            self.testGetPose, # Robot pose supplier
+            self.odometry.getPose, # Robot pose supplier
             self.odometry.resetPosition, # Method to reset odometry (will be called if your auto has a starting pose)
             self.getChassisSpeed, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            self.testDrive, # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+            self.driveFromChassisSpeeds, # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
             HolonomicPathFollowerConfig( # HolonomicPathFollowerConfig, this should likely live in your Constants class
                 PIDConstants(1.0, 0.0, 0.0), # Translation PID constants
                 PIDConstants(1.0, 0.0, 0.0), # Rotation PID constants
@@ -154,7 +154,6 @@ class DriveTrain(commands2.Subsystem):
         )
 
     def periodic(self) -> None:
-        print("FUCK")
         self.updateOdometry()
 
     def testDrive(self, speeds: ChassisSpeeds) -> None:

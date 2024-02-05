@@ -16,13 +16,12 @@ class MyRobot(wpilib.TimedRobot):
         should be used for any initialization code.
         """
         self.robotContainer = RobotContainer()
-        self.drivetrain=self.robotContainer.drivetrain
-
+        
     def autonomousInit(self):
-        """This function is run once each time the robot enters autonomous mode.""""""
+        """This function is run once each time the robot enters autonomous mode."""
         self.command = self.robotContainer.getAutoCommand()
         if self.command:
-            self.command.schedule()"""
+            self.command.schedule()
 
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
