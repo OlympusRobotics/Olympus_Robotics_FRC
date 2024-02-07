@@ -7,8 +7,8 @@ from wpimath.geometry import Rotation2d
 import wpilib.drive
 from wpilib import DriverStation
 from robotcontainer import RobotContainer
-
-class MyRobot(wpilib.TimedRobot):
+import commands2
+class MyRobot(commands2.TimedCommandRobot):
 
     def robotInit(self):
         """
@@ -16,10 +16,11 @@ class MyRobot(wpilib.TimedRobot):
         should be used for any initialization code.
         """
         self.robotContainer = RobotContainer()
-        
+
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
         self.command = self.robotContainer.getAutoCommand()
+
         if self.command:
             self.command.schedule()
 
@@ -38,7 +39,7 @@ class MyRobot(wpilib.TimedRobot):
         """This function is called once each time the robot enters teleoperated mode."""
 
         
-        self.drivetrain.gyro.set_yaw(0)        
+        self.robotContainer.drivetrain.gyro.set_yaw(0)        
 
         
         """self.backLeftRotation.set(-self.BleftPID.calculate(self.BleftEnc.get_absolute_position()._value, 5.0))
@@ -59,7 +60,7 @@ class MyRobot(wpilib.TimedRobot):
         yspeed = self.joystick.getY()
         tspeed = self.joystick.getTwist()
 
-        yaw = -self.drivetrain.gyro.get_yaw().value_as_double
+        yaw = -self.robotContainer.drivetrain.gyro.get_yaw().value_as_double
         
 
 
@@ -91,7 +92,7 @@ class MyRobot(wpilib.TimedRobot):
             self.frontRightRotation.set(0)            
         else:
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(xspeed, yspeed, -tspeed, Rotation2d(heading))
-            self.drivetrain.driveFromChassisSpeeds(speeds)
+            self.robotContainer.drivetrain.driveFromChassisSpeeds(speeds)
 
     # Convert to module states
             
