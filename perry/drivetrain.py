@@ -12,7 +12,6 @@ import phoenix6 as ctre
 from wpilib import DriverStation
 from wpilib import SmartDashboard, Field2d
 
-
 def lratio(angle):
     """converts -pi, pi to -.5,.5"""
     return ((angle/math.pi)*-.5)

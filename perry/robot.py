@@ -1,11 +1,9 @@
+import math
 import wpilib
 import wpilib.drive
-from wpimath import controller
-import math
 from wpimath.kinematics import ChassisSpeeds
 from wpimath.geometry import Rotation2d
 import wpilib.drive
-from wpilib import DriverStation
 from robotcontainer import RobotContainer
 import commands2
 class MyRobot(commands2.TimedCommandRobot):
@@ -39,6 +37,7 @@ class MyRobot(commands2.TimedCommandRobot):
         """This function is called once each time the robot enters teleoperated mode."""
 
         
+        print("test")
         self.robotContainer.drivetrain.gyro.set_yaw(0)        
 
         
@@ -52,7 +51,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopPeriodic(self):
         """This function is called periodically during teleoperated mode."""
-        #self.fuckyouhenry.set (1.0)
 
         self.joystick = wpilib.Joystick(0)
 
