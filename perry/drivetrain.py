@@ -12,6 +12,7 @@ import phoenix6 as ctre
 from wpilib import DriverStation
 from wpilib import SmartDashboard, Field2d
 
+
 def lratio(angle):
     """converts -pi, pi to -.5,.5"""
     return ((angle/math.pi)*-.5)
@@ -87,7 +88,7 @@ class DriveTrain(commands2.Subsystem):
         self.BleftPID = controller.PIDController(Kp,0,.000)
         self.BleftPID.enableContinuousInput(-.5,.5)
         self.BleftPID.setSetpoint(0.0)
-        self.BrightPID = controller.PIDController(3.5,0,.000)
+        self.BrightPID = controller.PIDController(Kp,0,.000)
         self.BrightPID.enableContinuousInput(-.5,.5)
         self.BrightPID.setSetpoint(0.0)
         self.FleftPID = controller.PIDController(Kp,0,.000)
@@ -100,6 +101,7 @@ class DriveTrain(commands2.Subsystem):
 
 
         self.gyro = ctre.hardware.Pigeon2(14)
+        self.gyro.set_yaw(0)
 
         
         frontrightlocation = Translation2d(.381, .381) 
@@ -131,25 +133,7 @@ class DriveTrain(commands2.Subsystem):
         )
         
 
-        
-        # Configure the AutoBuilder last
-        AutoBuilder.configureHolonomic(
-            self.getPose, # Robot pose supplier
-            self.odometry.resetPosition, # Method to reset odometry (will be called if your auto has a starting pose)
-            self.getChassisSpeed, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            self.driveFromChassisSpeeds, # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-            HolonomicPathFollowerConfig( # HolonomicPathFollowerConfig, this should likely live in your Constants class
-                PIDConstants(.5, 0.0, 0.0), # Translation PID constants
-                PIDConstants(-0.5, 0.0, 0.0), # Rotation PID constants
-                1, # Max module speed, in m/s
-                0.4, # Drive base radius in meters. Distance from robot center to furthest module.
-                ReplanningConfig() # Default path replanning config. See the API for the options here
-            ),
-            self.shouldFlipPath, # Supplier to control path flipping based on alliance color
-            self# Reference to this subsystem to set requirements
-        )
-
-        SmartDashboard.putData("penis", self.field)
+        #SmartDashboard.putData("penis", self.field)
         
     def getAutonomousCommand(self):
         self.gyro.set_yaw(0)
@@ -158,9 +142,24 @@ class DriveTrain(commands2.Subsystem):
 
         # Create a path following command using AutoBuilder. This will also trigger event markers.
         return AutoBuilder.followPath(path)
+    
+    def resetPose(self, pose):
+        print("RESET POSE")
+        self.odometry.resetPosition(
+            Rotation2d(0),
+            (
+                getSwerveModPos(self.FleftEnc, self.frontLeftDriveEnc),
+                getSwerveModPos(self.FrightEnc, self.frontRightDriveEnc),
+                getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
+                getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
+            ),
+            pose
+        )
 
     def getPose(self):
+        print("FUCKFUCKFUCKFUCKFUCKFUCK")
         return(self.odometry.getPose())
+
 
 
     def shouldFlipPath(self):
@@ -178,7 +177,7 @@ class DriveTrain(commands2.Subsystem):
 
     def updateOdometry(self) -> None:
         
-        yaw = deg2Rot2d(self.gyro.get_yaw())
+        yaw = Rotation2d(0)#deg2Rot2d(self.gyro.get_yaw())
         # print(f"{yaw=}")
         a = self.odometry.update(
             yaw,
@@ -200,11 +199,26 @@ class DriveTrain(commands2.Subsystem):
     def testGetPose(self) -> Pose2d:
         return Pose2d()
                    
+    def resetMotors(self) -> None:
+ 
+        self.backLeftRotation.set(0)
+        self.frontLeftRotation.set(0)
+        self.backRightRotation.set(0)
+        self.frontRightRotation.set(0)
+
+        self.backLeftDrive.set(0)
+        self.backRightDrive.set(0)
+        self.frontLeftDrive.set(0)
+        self.frontRightDrive.set(0)
+
+       
     def driveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
 
-        self.lastChassisSpeed = speeds
         
-        speeds = ChassisSpeeds(speeds.vx, -speeds.vy, -speeds.omega)
+        
+        #speeds = ChassisSpeeds(speeds.vx, -speeds.vy, -speeds.omega) #-speeds.omega
+        #speeds = ChassisSpeeds(speeds.vx, -speeds.vy, 0)#-speeds.omega) #-speeds.omega
+        self.lastChassisSpeed = speeds
         frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
 
         frontLeftOptimized = SwerveModuleState.optimize(frontLeft,
@@ -228,9 +242,10 @@ class DriveTrain(commands2.Subsystem):
 
         
 
-        if random.random() < .1:
-            #print(self.odometry.getPose())
-            #print(f"{speeds}\n")
+        if random.random() < .3:
+            print(self.odometry.getPose())
+            print(f"{speeds}\n")
+
             #print(lratio(backRightOptimized.angle.radians()))
             #print(self.BrightEnc.get_absolute_position()._value)
-            print(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, lratio(backRightOptimized.angle.radians())))
+
