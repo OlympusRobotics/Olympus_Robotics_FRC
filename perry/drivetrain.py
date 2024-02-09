@@ -11,7 +11,7 @@ from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 import phoenix6 as ctre
 from wpilib import DriverStation
 from wpilib import SmartDashboard, Field2d
-
+import ntcore
 
 def lratio(angle):
     """converts -pi, pi to -.5,.5"""
@@ -24,6 +24,9 @@ def FUCKticks2rad(something):
     return something * 2* math.pi
 
 def deg2Rot2d(deg) -> Rotation2d:
+    yaw = deg.value_as_double/360
+    return Rotation2d(yaw * math.pi * 2)
+    """
     yaw = -deg.value_as_double
 
     if yaw < 0:
@@ -32,7 +35,7 @@ def deg2Rot2d(deg) -> Rotation2d:
     yaw = yaw/360
 
 
-    return Rotation2d(yaw * (math.pi*2))
+    return Rotation2d(yaw * (math.pi*2))"""
 
 def deg2Rot2da(deg) -> Rotation2d:
     yaw = -deg.value_as_double
@@ -47,6 +50,7 @@ def deg2Rot2da(deg) -> Rotation2d:
     return Rotation2d(h2 * (math.pi*2))
 
 def getSwerveModPos(rotEnc : ctre.hardware.CANcoder, driveEnc: rev.SparkRelativeEncoder) -> SwerveModulePosition:
+
     return SwerveModulePosition(
         driveEnc.getPosition()*.3191858,
         Rotation2d(FUCKticks2rad(rotEnc.get_position().value_as_double))
@@ -57,7 +61,7 @@ class DriveTrain(commands2.Subsystem):
     def __init__(self) -> None:
         super().__init__()
 
-        self.field = Field2d()
+        #self.field = Field2d()
 
 
         self.backLeftRotation = rev.CANSparkMax(7, rev.CANSparkMax.MotorType.kBrushless)
@@ -129,12 +133,19 @@ class DriveTrain(commands2.Subsystem):
                 getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
                 getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
             ),
-            Pose2d(0, 0, Rotation2d(0))
+            Pose2d(0,0, Rotation2d(0))
         )
         
 
         #SmartDashboard.putData("penis", self.field)
+        inst = ntcore.NetworkTableInstance.getDefault()
+        table = inst.getTable("testTable")
+    
+        self.publisher = ntcore.NetworkTableInstance.getDefault().getStructArrayTopic("MyStates", SwerveModuleState).publish()
+
+
         
+
     def getAutonomousCommand(self):
         self.gyro.set_yaw(0)
         # Load the path you want to follow using its name in the GUI
@@ -177,7 +188,7 @@ class DriveTrain(commands2.Subsystem):
 
     def updateOdometry(self) -> None:
         
-        yaw = Rotation2d(0)#deg2Rot2d(self.gyro.get_yaw())
+        yaw = deg2Rot2d(self.gyro.get_yaw())
         # print(f"{yaw=}")
         a = self.odometry.update(
             yaw,
@@ -189,11 +200,12 @@ class DriveTrain(commands2.Subsystem):
             )
         )
 
-        self.field.setRobotPose(a)
+        #self.field.setRobotPose(a)
 
        
     def periodic(self) -> None:
         self.updateOdometry()
+        self.publisher.set(self.kinematics.toSwerveModuleStates(self.lastChassisSpeed))
         # print(f"periodic odometryu FUCK: {self.odometry.getPose()}")
 
     def testGetPose(self) -> Pose2d:
@@ -217,9 +229,12 @@ class DriveTrain(commands2.Subsystem):
         
         
         #speeds = ChassisSpeeds(speeds.vx, -speeds.vy, -speeds.omega) #-speeds.omega
-        #speeds = ChassisSpeeds(speeds.vx, -speeds.vy, 0)#-speeds.omega) #-speeds.omega
+        test = -speeds.vy
+        #speeds = ChassisSpeeds(speeds.vx, test, speeds.omega) #-speeds.omega
         self.lastChassisSpeed = speeds
         frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
+
+
 
         frontLeftOptimized = SwerveModuleState.optimize(frontLeft,
         Rotation2d(ticks2rad(self.FleftEnc.get_absolute_position()._value)))
@@ -242,9 +257,10 @@ class DriveTrain(commands2.Subsystem):
 
         
 
-        if random.random() < .3:
+        if True:
             print(self.odometry.getPose())
             print(f"{speeds}\n")
+            print(f"{test}")
 
             #print(lratio(backRightOptimized.angle.radians()))
             #print(self.BrightEnc.get_absolute_position()._value)

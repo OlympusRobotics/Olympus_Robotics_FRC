@@ -24,6 +24,7 @@ from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 import phoenix6 as ctre
 from wpilib import DriverStation
 from wpilib import SmartDashboard, Field2d
+import ntcore
 
 class MyRobot(commands2.TimedCommandRobot):
 
@@ -32,6 +33,9 @@ class MyRobot(commands2.TimedCommandRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
+
+
+
         self.drivetrain = drivetrain.DriveTrain()
         self.time = 0.0
         #self.configure_auto()
@@ -51,34 +55,16 @@ class MyRobot(commands2.TimedCommandRobot):
         )
         
         self.HoloController = controller.HolonomicDriveController(
-            controller.PIDController(1,0,0), controller.PIDController(-1,0,0),
-            controller.ProfiledPIDControllerRadians(1,0,0, trajectory.TrapezoidProfileRadians.Constraints(6.28, 3.14))
+            controller.PIDController(.1,0,0), controller.PIDController(.1,0,0),
+            controller.ProfiledPIDControllerRadians(.5,0,0, trajectory.TrapezoidProfileRadians.Constraints(6.28, 3.14))
         )
 
 
         self.myTrajectory = trajectory.TrajectoryGenerator.generateTrajectory(
             Pose2d(0,0,Rotation2d(0)),
             [],
-            Pose2d(4,0,Rotation2d(0)),
+            Pose2d(10,0,Rotation2d(0)),
             config
-        )
-        
-
-    def configure_auto(self):
-        AutoBuilder.configureHolonomic(
-            self.drivetrain.getPose, # Robot pose supplier
-            self.drivetrain.resetPose, # Method to reset odometry (will be called if your auto has a starting pose)
-            self.drivetrain.getChassisSpeed, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            self.drivetrain.driveFromChassisSpeeds, # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-            HolonomicPathFollowerConfig( # HolonomicPathFollowerConfig, this should likely live in your Constants class
-                PIDConstants(.5, 0.0, 0.0), # Translation PID constants
-                PIDConstants(0.5, 0.0, 0.0), # Rotation PID constants
-                .4, # Max module speed, in m/s
-                0.4, # Drive base radius in meters. Distance from robot center to furthest module.
-                ReplanningConfig(False) # Default path replanning config. See the API for the options here
-            ),
-            self.drivetrain.shouldFlipPath, # Supplier to control path flipping based on alliance color
-            self.drivetrain# Reference to this subsystem to set requirements
         )
 
 
@@ -104,6 +90,7 @@ class MyRobot(commands2.TimedCommandRobot):
         
         if self.myTrajectory.totalTime() >= self.time:
             goal = self.myTrajectory.sample(self.time)
+            print(goal)
             adjSpeeds = self.HoloController.calculate(
                 self.drivetrain.odometry.getPose(),
                 goal,
@@ -114,7 +101,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.updateOdometry()
         else:
             self.drivetrain.resetMotors()
-
+            
 
 
     def teleopInit(self):
