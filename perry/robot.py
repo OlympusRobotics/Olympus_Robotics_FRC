@@ -26,6 +26,7 @@ from wpilib import DriverStation
 from wpilib import SmartDashboard, Field2d
 import ntcore
 
+
 class MyRobot(commands2.TimedCommandRobot):
 
     def robotInit(self):
@@ -38,20 +39,26 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.drivetrain = drivetrain.DriveTrain()
         self.time = 0.0
-        #self.configure_auto()
+        self.configure_auto()
 
     def autonomousInit(self):
+        self.drivetrain.resetHarder()
+        
         """This function is run once each time the robot enters autonomous mode."""
-        #self.command = self.getAutoCommand()
-
-        #if self.command:
-        #    self.command.schedule()
-            # self.drivetrain.resetMotors()
         self.drivetrain.gyro.set_yaw(0)
+        self.command = self.getAutoCommand()
+
+        if self.command:
+            self.command.schedule()
+        
+        self.drivetrain.resetMotors()
+        
+
+        """
         self.time = 0.0
         config = trajectory.TrajectoryConfig(
-            10,
-            10
+            0.7,
+            1
         )
         
         self.HoloController = controller.HolonomicDriveController(
@@ -62,20 +69,20 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.myTrajectory = trajectory.TrajectoryGenerator.generateTrajectory(
             Pose2d(0,0,Rotation2d(0)),
-            [],
-            Pose2d(10,0,Rotation2d(0)),
+            [Translation2d(0,-2), Translation2d(2,0),Translation2d(0,2)],
+            Pose2d(0,0,Rotation2d(0)), 
             config
         )
-
+        """
 
     
     def getAutoCommand(self):
         # Load the path you want to follow using its name in the GUI
-        #path = PathPlannerPath.fromPathFile('test') 
+        path = PathPlannerPath.fromPathFile('test') 
 
         # Create a path following command using AutoBuilder. This will also trigger event markers.
-        #   return AutoBuilder.followPath(path)
-        pass
+        return AutoBuilder.followPath(path)
+
  
 
     def autonomousPeriodic(self):
@@ -87,22 +94,40 @@ class MyRobot(commands2.TimedCommandRobot):
         rotation_delay_distance=0.0 # Rotation delay distance in meters. This is how far the robot should travel before attempting to rotate.
         )"""
 
-        
+        """
         if self.myTrajectory.totalTime() >= self.time:
             goal = self.myTrajectory.sample(self.time)
             print(goal)
             adjSpeeds = self.HoloController.calculate(
-                self.drivetrain.odometry.getPose(),
+                self.drivetrain.getPose(),
                 goal,
                 Rotation2d.fromDegrees(0.0)
             )
             self.drivetrain.driveFromChassisSpeeds(adjSpeeds)
             self.time += 0.02
             self.drivetrain.updateOdometry()
+
         else:
             self.drivetrain.resetMotors()
-            
 
+        """
+            
+    def configure_auto(self):
+        AutoBuilder.configureHolonomic(
+            self.drivetrain.getPose,
+            self.drivetrain.resetPose,
+            self.drivetrain.getChassisSpeed,
+            self.drivetrain.driveFromChassisSpeeds,
+            HolonomicPathFollowerConfig(
+                PIDConstants(.5,0,0),
+                PIDConstants(.5,0,0),
+                .4,
+                .4,
+                ReplanningConfig(False)
+            ),
+            self.drivetrain.shouldFlipPath,
+            self.drivetrain
+        )
 
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
@@ -127,7 +152,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         xspeed = self.joystick.getX()
         yspeed = self.joystick.getY()
-        tspeed = self.joystick.getTwist()
+        tspeed = -self.joystick.getTwist()
 
         yaw = -self.drivetrain.gyro.get_yaw().value_as_double
         
@@ -160,8 +185,9 @@ class MyRobot(commands2.TimedCommandRobot):
             self.frontLeftRotation.set(0)
             self.frontRightRotation.set(0)            
         else:
-            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(xspeed, yspeed, -tspeed, Rotation2d(heading))
+            speeds = ChassisSpeeds(xspeed, yspeed, -tspeed)
             self.drivetrain.driveFromChassisSpeeds(speeds)
+
 
     # Convert to module states
             

@@ -12,6 +12,28 @@ import phoenix6 as ctre
 from wpilib import DriverStation
 from wpilib import SmartDashboard, Field2d
 import ntcore
+import wpilib
+import wpilib.drive
+import phoenix5 as ctre
+import rev
+import ntcore
+import math
+from wpimath.geometry import Translation2d
+from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.kinematics import SwerveDrive4Odometry
+from wpimath.kinematics import ChassisSpeeds
+from wpimath.kinematics import SwerveModuleState
+from wpimath.geometry import Rotation2d
+import phoenix6
+
+def setPos(motor, speed):
+    motor.set(ctre.ControlMode.Position, speed)
+
+def drive(motor, speed):
+    motor.set(speed)
+
+def driveCTRE(motor, speed):
+    motor.set(ctre.ControlMode.PercentOutput, speed)
 
 def lratio(angle):
     """converts -pi, pi to -.5,.5"""
@@ -21,10 +43,11 @@ def ticks2rad(something):
     return (something/.5)*-math.pi
 
 def FUCKticks2rad(something):
-    return something * 2* math.pi
+
+    return (something/1024) * 2* math.pi
 
 def deg2Rot2d(deg) -> Rotation2d:
-    yaw = deg.value_as_double/360
+    yaw = -deg.value_as_double/360
     return Rotation2d(yaw * math.pi * 2)
     """
     yaw = -deg.value_as_double
@@ -49,99 +72,103 @@ def deg2Rot2da(deg) -> Rotation2d:
 
     return Rotation2d(h2 * (math.pi*2))
 
-def getSwerveModPos(rotEnc : ctre.hardware.CANcoder, driveEnc: rev.SparkRelativeEncoder) -> SwerveModulePosition:
+def getSwerveModPos(rotEnc : ctre.TalonSRX, driveEnc: wpilib.Encoder) -> SwerveModulePosition:
 
     return SwerveModulePosition(
-        driveEnc.getPosition()*.3191858,
-        Rotation2d(FUCKticks2rad(rotEnc.get_position().value_as_double))
+        driveEnc.getDistance(),
+        Rotation2d(FUCKticks2rad(rotEnc.getSelectedSensorPosition()))
     )
 
 
 class DriveTrain(commands2.Subsystem):
+    def configMotorEncoder(self, motor):
+        motor.configSelectedFeedbackSensor(ctre.FeedbackDevice.Analog, 0, 1)
+        
+        motor.setInverted(False)
+        motor.setSensorPhase(True)
+
+        motor.configNominalOutputForward(0)
+        motor.configNominalOutputReverse(0)
+        motor.configPeakOutputForward(1)
+        motor.configPeakOutputReverse(-1)
+
+        motor.config_kF(0, 0.0)
+        motor.config_kP(0, 20)
+        motor.config_kI(0, 0.0)
+        motor.config_kD(0, 0)
+        # motor.SetSelectedSensorPosition(0);
+        motor.setInverted(True)
+        
+
+
     def __init__(self) -> None:
         super().__init__()
+        self.backLeftRotation = ctre.TalonSRX(3)
+        self.backRightRotation = ctre.TalonSRX(4)
+        self.frontLeftRotation = ctre.TalonSRX(1)
+        self.frontRightRotation = ctre.TalonSRX(2)
+        
+        self.FrontLeftDrive = ctre.TalonSRX(5)
+        self.FrontRightDrive = ctre.VictorSPX(6)
+        self.BackLeftDrive = ctre.VictorSPX(7)
+        self.BackRightDrive = ctre.TalonSRX(8)
 
-        #self.field = Field2d()
 
 
-        self.backLeftRotation = rev.CANSparkMax(7, rev.CANSparkMax.MotorType.kBrushless)
-        self.backRightRotation = rev.CANSparkMax(5, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontLeftRotation = rev.CANSparkMax(1, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontRightRotation = rev.CANSparkMax(3, rev.CANSparkMax.MotorType.kBrushless)
 
-        self.backLeftDrive = rev.CANSparkMax(8, rev.CANSparkMax.MotorType.kBrushless)
-        self.backRightDrive = rev.CANSparkMax(6, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontLeftDrive = rev.CANSparkMax(2, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontRightDrive = rev.CANSparkMax(4, rev.CANSparkMax.MotorType.kBrushless)
+        
+        self.frontLeftDriveEncoder = wpilib.Encoder(2,3)
+        self.frontRightDriveEncoder = wpilib.Encoder(8,9)
+        self.backLeftDriveEncoder = wpilib.Encoder(0,1)
+        self.backRightDriveEncoder = wpilib.Encoder(6,7)
+
+        dpp = ((math.pi*.09)/20.0)/6.67
+        self.frontLeftDriveEncoder.setDistancePerPulse(dpp)
+        self.frontRightDriveEncoder.setDistancePerPulse(dpp)
+        self.backLeftDriveEncoder.setDistancePerPulse(dpp)
+        self.backRightDriveEncoder.setDistancePerPulse(dpp)
+
+        
         
 
-        self.frontRightDriveEnc = self.frontRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-        self.frontLeftDriveEnc = self.frontLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-        self.backRightDriveEnc = self.backRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-        self.backLeftDriveEnc = self.backLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
+        self.obl = 125
+        self.obr = 536
+        self.ofr = 124
+        self.ofl = 346
 
+        self.configMotorEncoder(self.backLeftRotation)
+        self.configMotorEncoder(self.backRightRotation)
+        self.configMotorEncoder(self.frontLeftRotation)
+        self.configMotorEncoder(self.frontRightRotation)
 
-        self.BleftEnc = ctre.hardware.CANcoder(11)
-        self.BrightEnc = ctre.hardware.CANcoder(13)
-        self.FleftEnc = ctre.hardware.CANcoder(10)
-        self.FrightEnc = ctre.hardware.CANcoder(12)
-
-        self.lastChassisSpeed = ChassisSpeeds(0, 0, 0)
-
-        Kp = 1.5
-        self.BleftPID = controller.PIDController(Kp,0,.000)
-        self.BleftPID.enableContinuousInput(-.5,.5)
-        self.BleftPID.setSetpoint(0.0)
-        self.BrightPID = controller.PIDController(Kp,0,.000)
-        self.BrightPID.enableContinuousInput(-.5,.5)
-        self.BrightPID.setSetpoint(0.0)
-        self.FleftPID = controller.PIDController(Kp,0,.000)
-        self.FleftPID.enableContinuousInput(-.5,.5)
-        self.FleftPID.setSetpoint(0.0)
-        self.FrightPID = controller.PIDController(Kp,0,.000)
-        self.FrightPID.enableContinuousInput(-.5,.5)
-        self.FrightPID.setSetpoint(0.0)
-
-
-
-        self.gyro = ctre.hardware.Pigeon2(14)
+        self.gyro = phoenix6.hardware.Pigeon2(14)
         self.gyro.set_yaw(0)
 
-        
-        frontrightlocation = Translation2d(.381, .381) 
-        frontleftlocation = Translation2d(.381, -.381) 
-        backleftlocation = Translation2d(-.381, -.381)         
-        backrightlocation = Translation2d(-.381, .381)       
-        """  
-        frontleftlocation = Translation2d(.381, .381) 
         frontrightlocation = Translation2d(.381, -.381) 
-        backrightlocation = Translation2d(-.381, -.381)         
+        frontleftlocation = Translation2d(.381, .381) 
         backleftlocation = Translation2d(-.381, .381)         
-        """
-
+        backrightlocation = Translation2d(-.381, -.381)         
 
         self.kinematics = SwerveDrive4Kinematics(
             frontleftlocation, frontrightlocation, backleftlocation, backrightlocation
         )
 
+        
         self.odometry = SwerveDrive4Odometry(
             self.kinematics,
             deg2Rot2d(self.gyro.get_yaw()),
             (
-                getSwerveModPos(self.FleftEnc, self.frontLeftDriveEnc),
-                getSwerveModPos(self.FrightEnc, self.frontRightDriveEnc),
-                getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
-                getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
+                getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
+                getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
+                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
+                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
             ),
             Pose2d(0,0, Rotation2d(0))
         )
         
 
-        #SmartDashboard.putData("penis", self.field)
-        inst = ntcore.NetworkTableInstance.getDefault()
-        table = inst.getTable("testTable")
-    
-        self.publisher = ntcore.NetworkTableInstance.getDefault().getStructArrayTopic("MyStates", SwerveModuleState).publish()
+
+
 
 
         
@@ -159,17 +186,44 @@ class DriveTrain(commands2.Subsystem):
         self.odometry.resetPosition(
             Rotation2d(0),
             (
-                getSwerveModPos(self.FleftEnc, self.frontLeftDriveEnc),
-                getSwerveModPos(self.FrightEnc, self.frontRightDriveEnc),
-                getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
-                getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
+                getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
+                getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
+                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
+                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
             ),
             pose
         )
 
+    def resetHarder(self):
+        
+        self.odometry = SwerveDrive4Odometry(
+            self.kinematics,
+            deg2Rot2d(self.gyro.get_yaw()),
+            (
+                getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
+                getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
+                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
+                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
+            ),
+            Pose2d(0,0, Rotation2d(0))
+        )
+        
+
+    def resetMotors(self):
+        driveCTRE(self.BackLeftDrive, 0)
+        driveCTRE(self.BackRightDrive, 0)
+        driveCTRE(self.FrontLeftDrive, 0)
+        driveCTRE(self.FrontRightDrive, 0)
+        setPos(self.backLeftRotation, self.obl)
+        setPos(self.backRightRotation, self.obr)
+        setPos(self.frontLeftRotation, self.ofl)
+        setPos(self.frontRightRotation, self.ofr)
+        
+
     def getPose(self):
         print("FUCKFUCKFUCKFUCKFUCKFUCK")
-        return(self.odometry.getPose())
+        nonYPose = self.odometry.getPose()
+        return(Pose2d(-nonYPose.X(), -nonYPose.Y(), nonYPose.rotation()))
 
 
 
@@ -193,10 +247,10 @@ class DriveTrain(commands2.Subsystem):
         a = self.odometry.update(
             yaw,
             (
-                getSwerveModPos(self.FleftEnc, self.frontLeftDriveEnc),
-                getSwerveModPos(self.FrightEnc, self.frontRightDriveEnc),
-                getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
-                getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
+                getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
+                getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
+                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
+                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
             )
         )
 
@@ -205,62 +259,64 @@ class DriveTrain(commands2.Subsystem):
        
     def periodic(self) -> None:
         self.updateOdometry()
-        self.publisher.set(self.kinematics.toSwerveModuleStates(self.lastChassisSpeed))
+        #.publisher.set(self.kinematics.toSwerveModuleStates(self.lastChassisSpeed))
         # print(f"periodic odometryu FUCK: {self.odometry.getPose()}")
 
     def testGetPose(self) -> Pose2d:
         return Pose2d()
                    
-    def resetMotors(self) -> None:
- 
-        self.backLeftRotation.set(0)
-        self.frontLeftRotation.set(0)
-        self.backRightRotation.set(0)
-        self.frontRightRotation.set(0)
-
-        self.backLeftDrive.set(0)
-        self.backRightDrive.set(0)
-        self.frontLeftDrive.set(0)
-        self.frontRightDrive.set(0)
 
        
     def driveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
 
+        Vx = speeds.vy
+        Vy = speeds.vx
+        Omega = speeds.omega
+        speeds = ChassisSpeeds(Vx/1.6, Vy/1.6, Omega)
         
+        #speeds = ChassisSpeeds(speeds.vy, speeds.vx, -speeds.omega)
+
         
-        #speeds = ChassisSpeeds(speeds.vx, -speeds.vy, -speeds.omega) #-speeds.omega
-        test = -speeds.vy
-        #speeds = ChassisSpeeds(speeds.vx, test, speeds.omega) #-speeds.omega
-        self.lastChassisSpeed = speeds
         frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
 
 
-
         frontLeftOptimized = SwerveModuleState.optimize(frontLeft,
-        Rotation2d(ticks2rad(self.FleftEnc.get_absolute_position()._value)))
+        Rotation2d(FUCKticks2rad(self.frontLeftRotation.getSelectedSensorPosition()-self.ofl)))
+
         frontRightOptimized = SwerveModuleState.optimize(frontRight,
-        Rotation2d(ticks2rad(self.FrightEnc.get_absolute_position()._value)))
+        Rotation2d(FUCKticks2rad(self.frontRightRotation.getSelectedSensorPosition())))
+
         backLeftOptimized = SwerveModuleState.optimize(backLeft,
-        Rotation2d(ticks2rad(self.BleftEnc.get_absolute_position()._value)))
+        Rotation2d(FUCKticks2rad(self.backLeftRotation.getSelectedSensorPosition())))
+
         backRightOptimized = SwerveModuleState.optimize(backRight,
-        Rotation2d(ticks2rad(self.BrightEnc.get_absolute_position()._value)))
+        Rotation2d(FUCKticks2rad(self.backRightRotation.getSelectedSensorPosition()+self.obr)))
 
-        self.backLeftRotation.set(-self.BleftPID.calculate(self.BleftEnc.get_absolute_position()._value, lratio(backLeftOptimized.angle.radians())))
-        self.frontLeftRotation.set(-self.FleftPID.calculate(self.FleftEnc.get_absolute_position()._value, lratio(frontLeftOptimized.angle.radians())))
-        self.backRightRotation.set(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, lratio(backRightOptimized.angle.radians())))
-        self.frontRightRotation.set(-self.FrightPID.calculate(self.FrightEnc.get_absolute_position()._value, lratio(frontRightOptimized.angle.radians())))
+        ratio = 1024/(2*math.pi)
 
-        self.backLeftDrive.set(backLeftOptimized.speed)
-        self.backRightDrive.set(backRightOptimized.speed)
-        self.frontLeftDrive.set(frontLeftOptimized.speed)
-        self.frontRightDrive.set(-frontRightOptimized.speed)
+        #print(self.frontLeftRotation.getSelectedSensorPosition())
+        #print(backLeftOptimized.angle.radians())
+        #print(frontRightOptimized.angle.radians())
+        print(self.backRightRotation.getSelectedSensorPosition())
+        print(backRightOptimized.angle.radians())
 
-        
+        print
+
+        setPos(self.backLeftRotation, backLeftOptimized.angle.radians()*ratio+self.obl)
+        setPos(self.backRightRotation, backRightOptimized.angle.radians()*ratio+self.obr)
+        setPos(self.frontLeftRotation, frontLeftOptimized.angle.radians()*ratio+self.ofl)
+        setPos(self.frontRightRotation, frontRightOptimized.angle.radians()*ratio+self.ofr)
+
+        driveCTRE(self.BackLeftDrive, backLeftOptimized.speed)
+        driveCTRE(self.BackRightDrive, backRightOptimized.speed)
+        driveCTRE(self.FrontLeftDrive, frontLeftOptimized.speed)
+        driveCTRE(self.FrontRightDrive, frontRightOptimized.speed)
 
         if True:
-            print(self.odometry.getPose())
+            print(self.getPose())
             print(f"{speeds}\n")
-            print(f"{test}")
+            
+
 
             #print(lratio(backRightOptimized.angle.radians()))
             #print(self.BrightEnc.get_absolute_position()._value)
