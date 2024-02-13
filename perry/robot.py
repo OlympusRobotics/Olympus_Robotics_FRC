@@ -1,11 +1,32 @@
-import math
 import wpilib
 import wpilib.drive
+from wpimath import controller
+import math
+from pathplannerlib.auto import AutoBuilder, ReplanningConfig, PathPlannerPath
+from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
 from wpimath.kinematics import ChassisSpeeds
 from wpimath.geometry import Rotation2d
 import wpilib.drive
-from robotcontainer import RobotContainer
+from wpilib import DriverStation
+import drivetrain
 import commands2
+from wpimath import trajectory
+import random
+import rev
+import math
+import commands2
+from pathplannerlib.path import PathPlannerPath
+from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
+from wpimath import controller
+from wpimath.kinematics import SwerveDrive4Kinematics, SwerveModuleState, ChassisSpeeds, SwerveDrive4Odometry, SwerveModulePosition
+from wpimath.geometry import Translation2d, Rotation2d, Pose2d
+import phoenix6 as ctre
+from wpilib import DriverStation
+from wpilib import SmartDashboard, Field2d
+import ntcore
+
+
 class MyRobot(commands2.TimedCommandRobot):
 
     def robotInit(self):
@@ -13,14 +34,56 @@ class MyRobot(commands2.TimedCommandRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
-        self.robotContainer = RobotContainer()
+
+
+
+        self.drivetrain = drivetrain.DriveTrain()
+        self.time = 0.0
+        self.configure_auto()
 
     def autonomousInit(self):
+        self.drivetrain.resetHarder()
+        
         """This function is run once each time the robot enters autonomous mode."""
-        self.command = self.robotContainer.getAutoCommand()
+        self.drivetrain.gyro.set_yaw(0)
+        self.command = self.getAutoCommand()
 
         if self.command:
             self.command.schedule()
+        
+        self.drivetrain.resetMotors()
+        
+
+        """
+        self.time = 0.0
+        config = trajectory.TrajectoryConfig(
+            0.7,
+            1
+        )
+        
+        self.HoloController = controller.HolonomicDriveController(
+            controller.PIDController(.1,0,0), controller.PIDController(.1,0,0),
+            controller.ProfiledPIDControllerRadians(.5,0,0, trajectory.TrapezoidProfileRadians.Constraints(6.28, 3.14))
+        )
+
+
+        self.myTrajectory = trajectory.TrajectoryGenerator.generateTrajectory(
+            Pose2d(0,0,Rotation2d(0)),
+            [Translation2d(0,-2), Translation2d(2,0),Translation2d(0,2)],
+            Pose2d(0,0,Rotation2d(0)), 
+            config
+        )
+        """
+
+    
+    def getAutoCommand(self):
+        # Load the path you want to follow using its name in the GUI
+        path = PathPlannerPath.fromPathFile('test') 
+
+        # Create a path following command using AutoBuilder. This will also trigger event markers.
+        return AutoBuilder.followPath(path)
+
+ 
 
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
@@ -31,14 +94,46 @@ class MyRobot(commands2.TimedCommandRobot):
         rotation_delay_distance=0.0 # Rotation delay distance in meters. This is how far the robot should travel before attempting to rotate.
         )"""
 
+        """
+        if self.myTrajectory.totalTime() >= self.time:
+            goal = self.myTrajectory.sample(self.time)
+            print(goal)
+            adjSpeeds = self.HoloController.calculate(
+                self.drivetrain.getPose(),
+                goal,
+                Rotation2d.fromDegrees(0.0)
+            )
+            self.drivetrain.driveFromChassisSpeeds(adjSpeeds)
+            self.time += 0.02
+            self.drivetrain.updateOdometry()
 
+        else:
+            self.drivetrain.resetMotors()
+
+        """
+            
+    def configure_auto(self):
+        AutoBuilder.configureHolonomic(
+            self.drivetrain.getPose,
+            self.drivetrain.resetHarder,
+            self.drivetrain.getChassisSpeed,
+            self.drivetrain.driveFromChassisSpeeds,
+            HolonomicPathFollowerConfig(
+                PIDConstants(0.2,0,0),
+                PIDConstants(0.02,0,0),
+                3,
+                .2,
+                ReplanningConfig(False)
+            ),
+            self.drivetrain.shouldFlipPath,
+            self.drivetrain
+        )
 
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
 
-        
-        print("test")
-        self.robotContainer.drivetrain.gyro.set_yaw(0)        
+        self.drivetrain.resetHarder()
+        self.drivetrain.gyro.set_yaw(0)        
 
         
         """self.backLeftRotation.set(-self.BleftPID.calculate(self.BleftEnc.get_absolute_position()._value, 5.0))
@@ -51,14 +146,15 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopPeriodic(self):
         """This function is called periodically during teleoperated mode."""
+        #self.fuckyouhenry.set (1.0)
 
         self.joystick = wpilib.Joystick(0)
 
         xspeed = self.joystick.getX()
         yspeed = self.joystick.getY()
-        tspeed = self.joystick.getTwist()
+        tspeed = -self.joystick.getTwist()
 
-        yaw = -self.robotContainer.drivetrain.gyro.get_yaw().value_as_double
+        yaw = -self.drivetrain.gyro.get_yaw().value_as_double
         
 
 
@@ -89,8 +185,9 @@ class MyRobot(commands2.TimedCommandRobot):
             self.frontLeftRotation.set(0)
             self.frontRightRotation.set(0)            
         else:
-            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(xspeed, yspeed, -tspeed, Rotation2d(heading))
-            self.robotContainer.drivetrain.driveFromChassisSpeeds(speeds)
+            speeds = ChassisSpeeds(xspeed*10, yspeed*10, -tspeed*100)
+            self.drivetrain.driveFromChassisSpeeds(speeds)
+
 
     # Convert to module states
             
