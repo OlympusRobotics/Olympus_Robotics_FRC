@@ -152,7 +152,7 @@ class DriveTrain(commands2.Subsystem):
                 getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
                 getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
             ),
-            Pose2d(2,7, Rotation2d(0))
+            Pose2d(-2,-7, Rotation2d(0))
         )
         
 
@@ -196,7 +196,7 @@ class DriveTrain(commands2.Subsystem):
                 getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
                 getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
             ),
-            Pose2d(2,7, Rotation2d(0))
+            Pose2d(-2,-7, Rotation2d(0))
         )
         
 
@@ -221,8 +221,8 @@ class DriveTrain(commands2.Subsystem):
         # Boolean supplier that controls when the path will be mirrored for the red alliance
         # This will flip the path being followed to the red side of the field.
         # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        return False
+        #return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
     def getChassisSpeed(self) -> ChassisSpeeds:
         #print(f"{self.lastChassisSpeed=}")
@@ -266,7 +266,7 @@ class DriveTrain(commands2.Subsystem):
         Vy = speeds.vx
         Omega = speeds.omega
         self.lastChassisSpeed = speeds
-        speeds = ChassisSpeeds(Vx/3, Vy/3, Omega/100)#Omega/4
+        speeds = ChassisSpeeds(Vx/3, Vy/3, Omega/3)#Omega/4
         
         #speeds = ChassisSpeeds(speeds.vy, speeds.vx, -speeds.omega)
 

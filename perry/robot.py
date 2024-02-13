@@ -120,7 +120,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.driveFromChassisSpeeds,
             HolonomicPathFollowerConfig(
                 PIDConstants(0.2,0,0),
-                PIDConstants(0.02,0,0),
+                PIDConstants(0.2,0,0),
                 3,
                 .2,
                 ReplanningConfig(False)
@@ -185,7 +185,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.frontLeftRotation.set(0)
             self.frontRightRotation.set(0)            
         else:
-            speeds = ChassisSpeeds(xspeed*10, yspeed*10, -tspeed*100)
+            speeds = ChassisSpeeds(xspeed*10, yspeed*10, -tspeed*3)
             self.drivetrain.driveFromChassisSpeeds(speeds)
 
 

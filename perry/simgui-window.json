@@ -1,7 +1,7 @@
 {
   "Docking": {
     "Data": [
-      "DockNode  ID=0x00000001 Pos=320,124 Size=1146,650 Selected=0x48913727"
+      "DockNode  ID=0x00000001 Pos=262,185 Size=1146,650 Selected=0x48913727"
     ]
   },
   "MainWindow": {
@@ -28,18 +28,18 @@
     "###/SmartDashboard/penis": {
       "Collapsed": "0",
       "DockId": "0x00000001,1",
-      "Pos": "320,124",
+      "Pos": "262,185",
       "Size": "1146,650"
     },
     "###FMS": {
       "Collapsed": "0",
-      "Pos": "6,675",
-      "Size": "202,214"
+      "Pos": "25,725",
+      "Size": "46,32"
     },
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "312,581",
-      "Size": "976,82"
+      "Size": "46,32"
     },
     "###NetworkTables": {
       "Collapsed": "0",
@@ -49,7 +49,7 @@
     "###NetworkTables Info": {
       "Collapsed": "0",
       "DockId": "0x00000001,0",
-      "Pos": "320,124",
+      "Pos": "262,185",
       "Size": "1146,650"
     },
     "###Other Devices": {
@@ -60,12 +60,12 @@
     "###System Joysticks": {
       "Collapsed": "0",
       "Pos": "6,437",
-      "Size": "232,254"
+      "Size": "46,32"
     },
     "###Timing": {
       "Collapsed": "0",
       "Pos": "6,187",
-      "Size": "162,142"
+      "Size": "46,32"
     },
     "Debug##Default": {
       "Collapsed": "0",
@@ -75,7 +75,7 @@
     "Robot State": {
       "Collapsed": "0",
       "Pos": "5,20",
-      "Size": "109,134"
+      "Size": "46,32"
     }
   }
 }
