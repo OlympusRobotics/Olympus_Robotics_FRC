@@ -3,8 +3,9 @@ import rev
 import math
 import commands2
 from pathplannerlib.path import PathPlannerPath
-from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.auto import PathPlannerAuto
 from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
+from pathplannerlib.geometry_util import flipFieldPos, flipFieldRotation, flipFieldPose
 from wpimath import controller
 from wpimath.kinematics import SwerveDrive4Kinematics, SwerveModuleState, ChassisSpeeds, SwerveDrive4Odometry, SwerveModulePosition
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
@@ -25,6 +26,7 @@ from wpimath.kinematics import ChassisSpeeds
 from wpimath.kinematics import SwerveModuleState
 from wpimath.geometry import Rotation2d
 import phoenix6
+from pathplannerlib.auto import NamedCommands
 
 def setPos(motor, speed):
     motor.set(ctre.ControlMode.Position, speed)
@@ -82,9 +84,9 @@ class DriveTrain(commands2.Subsystem):
         motor.configPeakOutputReverse(-1)
 
         motor.config_kF(0, 0.0)
-        motor.config_kP(0, 20)
+        motor.config_kP(0, 10)
         motor.config_kI(0, 0.0)
-        motor.config_kD(0, 0)
+        motor.config_kD(0, 2)
         # motor.SetSelectedSensorPosition(0);
         motor.setInverted(True)
         
@@ -141,51 +143,52 @@ class DriveTrain(commands2.Subsystem):
         self.kinematics = SwerveDrive4Kinematics(
             frontleftlocation, frontrightlocation, backleftlocation, backrightlocation
         )
-
         self.lastChassisSpeed = ChassisSpeeds(0,0,0)
+
+
         self.odometry = SwerveDrive4Odometry(
             self.kinematics,
-            deg2Rot2d(self.gyro.get_yaw()),
+            Rotation2d(),
             (
                 getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
                 getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
-                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
+                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder),
                 getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
+
             ),
-            Pose2d(-2,-7, Rotation2d(0))
+            Pose2d()
+
         )
+
+
+        
         
 
 
 
 
-
+    def shootCommand(self):
+        return print("FUCKYOU")
         
 
     def getAutonomousCommand(self):
+        print("Autocommand Called")
         self.gyro.set_yaw(0)
         # Load the path you want to follow using its name in the GUI
-        path = PathPlannerPath.fromPathFile('test') 
+        self.shootNamedCommand = self.runOnce(self.shootCommand)
+        NamedCommands.registerCommand("shoot", self.shootNamedCommand)
+        auto = PathPlannerAuto("testAuto")
 
-        # Create a path following command using AutoBuilder. This will also trigger event markers.
-        return AutoBuilder.followPath(path)
-    
-    def resetPose(self, pose):
-        print("RESET POSE")
-        self.odometry.resetPosition(
-            Rotation2d(0),
-            (
-                getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
-                getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
-                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
-                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
-            ),
-            pose
-        )
+        return auto
 
-    def resetHarder(self):
+
+    def resetHarder(self, initialPose = Pose2d()):
         print("CALLED RSETHARDER")
-        self.gyro.set_yaw(0)
+                
+        """        if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
+                    initialPose = flipFieldPose(initialPose)
+        """
+        self.gyro.set_yaw(initialPose.rotation().degrees())
 
         self.odometry = SwerveDrive4Odometry(
             self.kinematics,
@@ -193,11 +196,16 @@ class DriveTrain(commands2.Subsystem):
             (
                 getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
                 getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
-                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
+                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder),
                 getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
             ),
-            Pose2d(-2,-7, Rotation2d(0))
+            Pose2d(-initialPose.X(),-initialPose.Y(), initialPose.rotation())
+
         )
+
+        print(self.getPose())
+
+
         
 
     def resetMotors(self):
@@ -221,8 +229,8 @@ class DriveTrain(commands2.Subsystem):
         # Boolean supplier that controls when the path will be mirrored for the red alliance
         # This will flip the path being followed to the red side of the field.
         # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-        return False
-        #return DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        #return False
+        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
     def getChassisSpeed(self) -> ChassisSpeeds:
         #print(f"{self.lastChassisSpeed=}")
@@ -239,7 +247,7 @@ class DriveTrain(commands2.Subsystem):
             (
                 getSwerveModPos(self.frontLeftRotation, self.frontLeftDriveEncoder),
                 getSwerveModPos(self.frontRightRotation, self.frontRightDriveEncoder),
-                getSwerveModPos(self.backLeftRotation, self.backLeftDriveEncoder),
+                getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder),
                 getSwerveModPos(self.backRightRotation, self.backRightDriveEncoder)
             )
         )
@@ -266,9 +274,57 @@ class DriveTrain(commands2.Subsystem):
         Vy = speeds.vx
         Omega = speeds.omega
         self.lastChassisSpeed = speeds
-        speeds = ChassisSpeeds(Vx/3, Vy/3, Omega/3)#Omega/4
+        speeds = ChassisSpeeds(Vx, Vy, Omega)#Omega/4
         
         #speeds = ChassisSpeeds(speeds.vy, speeds.vx, -speeds.omega)
+
+        
+        frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
+
+
+        frontLeftOptimized = SwerveModuleState.optimize(frontLeft,
+        Rotation2d(FUCKticks2rad(self.frontLeftRotation.getSelectedSensorPosition()-self.ofl)))
+
+        frontRightOptimized = SwerveModuleState.optimize(frontRight,
+        Rotation2d(FUCKticks2rad(self.frontRightRotation.getSelectedSensorPosition())))
+
+        backLeftOptimized = SwerveModuleState.optimize(backLeft,
+        Rotation2d(FUCKticks2rad(self.backLeftRotation.getSelectedSensorPosition())))
+
+        backRightOptimized = SwerveModuleState.optimize(backRight,
+        Rotation2d(FUCKticks2rad(self.backRightRotation.getSelectedSensorPosition()+self.obr)))
+
+        ratio = 1024/(2*math.pi)
+
+        #print(self.frontLeftRotation.getSelectedSensorPosition())
+        #print(backLeftOptimized.angle.radians())
+        #print(frontRightOptimized.angle.radians())
+
+    
+
+        setPos(self.backLeftRotation, backLeftOptimized.angle.radians()*ratio+self.obl)
+        setPos(self.backRightRotation, backRightOptimized.angle.radians()*ratio+self.obr)
+        setPos(self.frontLeftRotation, frontLeftOptimized.angle.radians()*ratio+self.ofl)
+        setPos(self.frontRightRotation, frontRightOptimized.angle.radians()*ratio+self.ofr)
+
+        driveCTRE(self.BackLeftDrive, backLeftOptimized.speed)
+        driveCTRE(self.BackRightDrive, backRightOptimized.speed)
+        driveCTRE(self.FrontLeftDrive, frontLeftOptimized.speed)
+        driveCTRE(self.FrontRightDrive, frontRightOptimized.speed)
+
+
+
+
+            #print(lratio(backRightOptimized.angle.radians()))
+            #print(self.BrightEnc.get_absolute_position()._value)
+
+    def manualDrive(self, speeds: ChassisSpeeds) -> None:
+        if random.random() < .2:
+            print(self.getPose())
+            print(f"{speeds}\n")
+            
+    
+        speeds = ChassisSpeeds(-speeds.vy, speeds.vx, -speeds.omega)
 
         
         frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)

@@ -42,11 +42,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.configure_auto()
 
     def autonomousInit(self):
-        self.drivetrain.resetHarder()
-        
-        """This function is run once each time the robot enters autonomous mode."""
         self.drivetrain.gyro.set_yaw(0)
-        self.command = self.getAutoCommand()
+        self.command = self.drivetrain.getAutonomousCommand()
+  
+        """This function is run once each time the robot enters autonomous mode."""
+
 
         if self.command:
             self.command.schedule()
@@ -79,6 +79,9 @@ class MyRobot(commands2.TimedCommandRobot):
     def getAutoCommand(self):
         # Load the path you want to follow using its name in the GUI
         path = PathPlannerPath.fromPathFile('test') 
+        pp = path.getStartingDifferentialPose()
+        print(pp, "dumbo")
+
 
         # Create a path following command using AutoBuilder. This will also trigger event markers.
         return AutoBuilder.followPath(path)
@@ -119,8 +122,8 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.getChassisSpeed,
             self.drivetrain.driveFromChassisSpeeds,
             HolonomicPathFollowerConfig(
-                PIDConstants(0.2,0,0),
-                PIDConstants(0.2,0,0),
+                PIDConstants(-.4,0,0),
+                PIDConstants(.4,0,0),
                 3,
                 .2,
                 ReplanningConfig(False)
@@ -159,45 +162,33 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         h = yaw % 360
-        if h < 0:
-            h += 360
+        h = h/360
 
-        h2 = h / 360
-
-        heading = h2 * (math.pi*2)
+        heading = h * (math.pi*2)
         
         if abs(xspeed) <.10:
             xspeed=0
         if abs(yspeed) <.10:
             yspeed=0
-        if abs(tspeed) <.10:
+        if abs(tspeed) <.05:
             tspeed=0
 
+        print(Rotation2d(heading))
 
-        if False:#xspeed == 0 and yspeed == 0 and tspeed == 0:
-            self.backLeftDrive.set(0)
-            self.backRightDrive.set(0)
-            self.frontLeftDrive.set(0)
-            self.frontRightDrive.set(0)
-
-            self.backLeftRotation.set(0)
-            self.backRightRotation.set(0)
-            self.frontLeftRotation.set(0)
-            self.frontRightRotation.set(0)            
-        else:
-            speeds = ChassisSpeeds(xspeed*10, yspeed*10, -tspeed*3)
-            self.drivetrain.driveFromChassisSpeeds(speeds)
+        speeds = ChassisSpeeds(xspeed, -yspeed, tspeed)
+            #speeds = ChassisSpeeds(xspeed*10, yspeed*10, -tspeed*3)
+        self.drivetrain.manualDrive(speeds)
 
 
     # Convert to module states
             
-            """print("HENRY HELP ME")
-            print(f"{backLeftOptimized.angle.radians()}, {backLeftOptimized.speed}")
-            print(f"{backRightOptimized.angle.radians()}, {backRightOptimized.speed}")
-            print(f"{frontLeftOptimized.angle.radians()}, {frontLeftOptimized.speed}")
-            print(f"{frontRightOptimized.angle.radians()}, {-frontRightOptimized.speed}")"""
+        print("HENRY HELP ME")
+        """print(f"{backLeftOptimized.angle.radians()}, {backLeftOptimized.speed}")
+        print(f"{backRightOptimized.angle.radians()}, {backRightOptimized.speed}")
+        print(f"{frontLeftOptimized.angle.radians()}, {frontLeftOptimized.speed}")
+        print(f"{frontRightOptimized.angle.radians()}, {-frontRightOptimized.speed}")"""
 
-            
+        
 
 
 if __name__ == "__main__":
