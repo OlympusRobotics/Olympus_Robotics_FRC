@@ -16,14 +16,6 @@
       "ypos": "29"
     }
   },
-  "Table": {
-    "0xE56EC1C2,4": {
-      "Column 0  Weight": "1.0000",
-      "Column 1  Weight": "1.0000",
-      "Column 2  Weight": "1.0000",
-      "Column 3  Weight": "1.0000"
-    }
-  },
   "Window": {
     "###/SmartDashboard/penis": {
       "Collapsed": "0",
@@ -54,7 +46,7 @@
     },
     "###Other Devices": {
       "Collapsed": "0",
-      "Pos": "1528,50",
+      "Pos": "1281,25",
       "Size": "312,868"
     },
     "###System Joysticks": {

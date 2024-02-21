@@ -1,31 +1,14 @@
+import math
 import wpilib
 import wpilib.drive
-from wpimath import controller
-import math
-from pathplannerlib.auto import AutoBuilder, ReplanningConfig, PathPlannerPath
-from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
 from wpimath.kinematics import ChassisSpeeds
 from wpimath.geometry import Rotation2d
 import wpilib.drive
-from wpilib import DriverStation
+import commands2
 import drivetrain
-import commands2
-from wpimath import trajectory
-import random
-import rev
-import math
-import commands2
-from pathplannerlib.path import PathPlannerPath
+import intake
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
-from wpimath import controller
-from wpimath.kinematics import SwerveDrive4Kinematics, SwerveModuleState, ChassisSpeeds, SwerveDrive4Odometry, SwerveModulePosition
-from wpimath.geometry import Translation2d, Rotation2d, Pose2d
-import phoenix6 as ctre
-from wpilib import DriverStation
-from wpilib import SmartDashboard, Field2d
-import ntcore
-
 
 class MyRobot(commands2.TimedCommandRobot):
 
@@ -34,129 +17,56 @@ class MyRobot(commands2.TimedCommandRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
-
-
-
         self.drivetrain = drivetrain.DriveTrain()
-        self.time = 0.0
+        self.intake = intake.Intake()
         self.configure_auto()
-
-    def autonomousInit(self):
-        self.drivetrain.resetHarder()
-        
-        """This function is run once each time the robot enters autonomous mode."""
-        self.drivetrain.gyro.set_yaw(0)
-        self.command = self.getAutoCommand()
-
-        if self.command:
-            self.command.schedule()
-        
-        self.drivetrain.resetMotors()
-        
-
-        """
-        self.time = 0.0
-        config = trajectory.TrajectoryConfig(
-            0.7,
-            1
-        )
-        
-        self.HoloController = controller.HolonomicDriveController(
-            controller.PIDController(.1,0,0), controller.PIDController(.1,0,0),
-            controller.ProfiledPIDControllerRadians(.5,0,0, trajectory.TrapezoidProfileRadians.Constraints(6.28, 3.14))
-        )
-
-
-        self.myTrajectory = trajectory.TrajectoryGenerator.generateTrajectory(
-            Pose2d(0,0,Rotation2d(0)),
-            [Translation2d(0,-2), Translation2d(2,0),Translation2d(0,2)],
-            Pose2d(0,0,Rotation2d(0)), 
-            config
-        )
-        """
-
-    
-    def getAutoCommand(self):
-        # Load the path you want to follow using its name in the GUI
-        path = PathPlannerPath.fromPathFile('test') 
-
-        # Create a path following command using AutoBuilder. This will also trigger event markers.
-        return AutoBuilder.followPath(path)
-
- 
-
-    def autonomousPeriodic(self):
-        """This function is called periodically during autonomous."""
-        """pathfindingCommand = AutoBuilder.pathfindToPose(
-        targetPose,
-        constraints,
-        goal_end_vel=0.0, # Goal end velocity in meters/sec
-        rotation_delay_distance=0.0 # Rotation delay distance in meters. This is how far the robot should travel before attempting to rotate.
-        )"""
-
-        """
-        if self.myTrajectory.totalTime() >= self.time:
-            goal = self.myTrajectory.sample(self.time)
-            print(goal)
-            adjSpeeds = self.HoloController.calculate(
-                self.drivetrain.getPose(),
-                goal,
-                Rotation2d.fromDegrees(0.0)
-            )
-            self.drivetrain.driveFromChassisSpeeds(adjSpeeds)
-            self.time += 0.02
-            self.drivetrain.updateOdometry()
-
-        else:
-            self.drivetrain.resetMotors()
-
-        """
-            
+      
     def configure_auto(self):
         AutoBuilder.configureHolonomic(
             self.drivetrain.getPose,
-            self.drivetrain.resetPose,
+            self.drivetrain.resetHarder,
             self.drivetrain.getChassisSpeed,
             self.drivetrain.driveFromChassisSpeeds,
             HolonomicPathFollowerConfig(
-                PIDConstants(.5,0,0),
-                PIDConstants(.5,0,0),
-                .4,
-                .4,
+                PIDConstants(-.4,0,0),
+                PIDConstants(.4,0,0),
+                3,
+                .2,
                 ReplanningConfig(False)
             ),
             self.drivetrain.shouldFlipPath,
             self.drivetrain
         )
 
+    def autonomousInit(self):
+        """This function is run once each time the robot enters autonomous mode."""
+        self.command = self.drivetrain.getAutonomousCommand()
+        if self.command:
+            self.command.schedule()
+        
+
+    def autonomousPeriodic(self):
+        """This function is called periodically during autonomous."""
+        pass
+
+
+
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
-
-        
-        self.drivetrain.gyro.set_yaw(0)        
-
-        
-        """self.backLeftRotation.set(-self.BleftPID.calculate(self.BleftEnc.get_absolute_position()._value, 5.0))
-        self.frontLeftRotation.set(-self.FleftPID.calculate(self.FleftEnc.get_absolute_position()._value, 5.0))
-        self.backRightRotation.set(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, 5.0))
-        self.frontRightRotation.set(-self.FrightPID.calculate(self.FrightEnc.get_absolute_position()._value, 5.0))"""
-    
-        
+        self.drivetrain.resetHarder()   
  
 
     def teleopPeriodic(self):
         """This function is called periodically during teleoperated mode."""
-        #self.fuckyouhenry.set (1.0)
 
+        # ----------------------- DRIVETRAIN CODE -----------------------
         self.joystick = wpilib.Joystick(0)
 
         xspeed = self.joystick.getX()
         yspeed = self.joystick.getY()
-        tspeed = -self.joystick.getTwist()
+        tspeed = self.joystick.getTwist()
 
         yaw = -self.drivetrain.gyro.get_yaw().value_as_double
-        
-
 
         h = yaw % 360
         if h < 0:
@@ -185,20 +95,84 @@ class MyRobot(commands2.TimedCommandRobot):
             self.frontLeftRotation.set(0)
             self.frontRightRotation.set(0)            
         else:
-            speeds = ChassisSpeeds(xspeed, yspeed, -tspeed)
+            speeds = ChassisSpeeds.fromFieldRelativeSpeeds(xspeed, yspeed, -tspeed, Rotation2d(heading))
             self.drivetrain.driveFromChassisSpeeds(speeds)
 
 
-    # Convert to module states
-            
-            """print("HENRY HELP ME")
-            print(f"{backLeftOptimized.angle.radians()}, {backLeftOptimized.speed}")
-            print(f"{backRightOptimized.angle.radians()}, {backRightOptimized.speed}")
-            print(f"{frontLeftOptimized.angle.radians()}, {frontLeftOptimized.speed}")
-            print(f"{frontRightOptimized.angle.radians()}, {-frontRightOptimized.speed}")"""
+        # ----------------------- INTAKE CODE -----------------------
+        xboxController = wpilib.XboxController(1)
+        intakeButton = xboxController.getXButton()
+        if intakeButton: # if it is currently held
+            self.intake.rotateDown()
 
-            
+        else:
+            self.intake.rotateHome()
 
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)
+
+
+
+"""
+
+
+        self.backLeftRotation = rev.CANSparkMax(7, rev.CANSparkMax.MotorType.kBrushless)
+        self.backRightRotation = rev.CANSparkMax(5, rev.CANSparkMax.MotorType.kBrushless)
+        self.frontLeftRotation = rev.CANSparkMax(1, rev.CANSparkMax.MotorType.kBrushless)
+        self.frontRightRotation = rev.CANSparkMax(3, rev.CANSparkMax.MotorType.kBrushless)
+
+        self.backLeftDrive = rev.CANSparkMax(8, rev.CANSparkMax.MotorType.kBrushless)
+        self.backRightDrive = rev.CANSparkMax(6, rev.CANSparkMax.MotorType.kBrushless)
+        self.frontLeftDrive = rev.CANSparkMax(2, rev.CANSparkMax.MotorType.kBrushless)
+        self.frontRightDrive = rev.CANSparkMax(4, rev.CANSparkMax.MotorType.kBrushless)
+        
+
+        self.frontRightDriveEnc = self.frontRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
+        self.frontLeftDriveEnc = self.frontLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
+        self.backRightDriveEnc = self.backRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
+        self.backLeftDriveEnc = self.backLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
+
+
+        self.BleftEnc = ctre.hardware.CANcoder(11)
+        self.BrightEnc = ctre.hardware.CANcoder(13)
+        self.FleftEnc = ctre.hardware.CANcoder(10)
+        self.FrightEnc = ctre.hardware.CANcoder(12)
+
+        self.lastChassisSpeed = ChassisSpeeds(0, 0, 0)
+
+        Kp = 1.5
+        self.BleftPID = controller.PIDController(Kp,0,.000)
+        self.BleftPID.enableContinuousInput(-.5,.5)
+        self.BleftPID.setSetpoint(0.0)
+        self.BrightPID = controller.PIDController(3.5,0,.000)
+        self.BrightPID.enableContinuousInput(-.5,.5)
+        self.BrightPID.setSetpoint(0.0)
+        self.FleftPID = controller.PIDController(Kp,0,.000)
+        self.FleftPID.enableContinuousInput(-.5,.5)
+        self.FleftPID.setSetpoint(0.0)
+        self.FrightPID = controller.PIDController(Kp,0,.000)
+        self.FrightPID.enableContinuousInput(-.5,.5)
+        self.FrightPID.setSetpoint(0.0)
+
+
+
+        self.gyro = ctre.hardware.Pigeon2(14)
+
+        
+        frontrightlocation = Translation2d(.381, .381) 
+        frontleftlocation = Translation2d(.381, -.381) 
+        backleftlocation = Translation2d(-.381, -.381)         
+        backrightlocation = Translation2d(-.381, .381)       
+
+
+        self.kinematics = SwerveDrive4Kinematics(
+            frontleftlocation, frontrightlocation, backleftlocation, backrightlocation
+        )
+
+
+
+       
+
+       
+"""
