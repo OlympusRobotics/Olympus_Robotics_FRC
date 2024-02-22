@@ -11,16 +11,16 @@ robotpy_version = "2024.2.1.1"
 # Which extra RobotPy components should be installed
 # -> equivalent to `pip install robotpy[extra1, ...]
 robotpy_extras = [
-    "all",
+    #"all",
     # "apriltag",
-    # "commands2",
+     "commands2",
     # "cscore",
     # "navx",
-    "pathplannerlib",
-    # "phoenix5",
-    # "phoenix6",
+    #"pathplannerlib",
+     "phoenix5",
+     "phoenix6",
     # "playingwithfusion",
-    # "rev",
+    "rev",
     # "romi",
     # "sim",
     # "xrp",
@@ -29,4 +29,7 @@ robotpy_extras = [
 
 # Other pip packages to install
 
-requires = []
+requires = [
+    #"robotpy-ctre==2024.1.1",
+    "robotpy-pathplannerlib>=2024.1.4",
+] 

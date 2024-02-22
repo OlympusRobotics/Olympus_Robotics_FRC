@@ -102,7 +102,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         # ----------------------- INTAKE CODE -----------------------
-        # possibly check current draw to detect if note is in intake
         xboxController = wpilib.XboxController(1)
         intakeButton = xboxController.getXButton()
         if intakeButton: # if it is currently held
@@ -114,14 +113,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # ----------------------- SHOOTER CODE -----------------------
         shooterButton = xboxController.getRightTriggerAxis()
-        if shooterButton > 0: # if trigger pressed
-            if self.shooter.spinFlywheels():
-                self.shooter.feedNote()
-
-        else:
-            # stop motors
-            self.shooter.stopFeed()
-            self.shooter.stopFlywheels()
+        if shooterButton: # if trigger pressed
+            self.shooter.spinFlywheels()
+            self.shooter.feedNote()
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)

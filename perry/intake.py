@@ -45,4 +45,7 @@ class Intake(commands2.Subsystem):
     def rotateDown(self):
         self.intakeController.setReference(self.intakeDownSetpoint, rev.CANSparkMax.ControlType.kPosition)
         self.intakeDrive.set(.2)
+        
     
+    def expel(self):
+        self.intakeDrive.set(-.2)
