@@ -49,3 +49,6 @@ class Intake(commands2.Subsystem):
     
     def expel(self):
         self.intakeDrive.set(-.2)
+
+    def stopIntake(self):
+        self.intakeDrive.set(0)
