@@ -3,14 +3,30 @@ import rev
 import math
 import commands2
 from pathplannerlib.path import PathPlannerPath
-from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.auto import PathPlannerAuto
 from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
+from pathplannerlib.geometry_util import flipFieldPos, flipFieldRotation, flipFieldPose
 from wpimath import controller
 from wpimath.kinematics import SwerveDrive4Kinematics, SwerveModuleState, ChassisSpeeds, SwerveDrive4Odometry, SwerveModulePosition
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
-import phoenix6 as ctre
+
 from wpilib import DriverStation
 from wpilib import SmartDashboard, Field2d
+import ntcore
+import wpilib
+import wpilib.drive
+import rev
+import ntcore
+import math
+from wpimath.geometry import Translation2d
+from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.kinematics import SwerveDrive4Odometry
+from wpimath.kinematics import ChassisSpeeds
+from wpimath.kinematics import SwerveModuleState
+from wpimath.geometry import Rotation2d
+import phoenix6
+from pathplannerlib.auto import NamedCommands
+
 
 def lratio(angle):
     """converts -pi, pi to -.5,.5"""
@@ -19,36 +35,20 @@ def lratio(angle):
 def ticks2rad(something):
     return (something/.5)*-math.pi
 
-def FUCKticks2rad(something):
+
+def ticks2radODOMETRY(something):
+    # units are in rotations
     return something * 2* math.pi
 
 def deg2Rot2d(deg) -> Rotation2d:
-    yaw = -deg.value_as_double
-
-    if yaw < 0:
-        yaw += 360
-
-    yaw = yaw/360
+    yaw = deg.value_as_double/360
+    return Rotation2d(yaw * math.pi * 2)
 
 
-    return Rotation2d(yaw * (math.pi*2))
-
-def deg2Rot2da(deg) -> Rotation2d:
-    yaw = -deg.value_as_double
-    
-    if yaw < 0:
-        h = 360-(yaw % 360)
-    else:
-        h = yaw % 360
-
-    h2 = h / 360
-
-    return Rotation2d(h2 * (math.pi*2))
-
-def getSwerveModPos(rotEnc : ctre.hardware.CANcoder, driveEnc: rev.SparkRelativeEncoder) -> SwerveModulePosition:
+def getSwerveModPos(rotEnc : phoenix6.hardware.CANcoder, driveEnc: rev.SparkRelativeEncoder) -> SwerveModulePosition:
     return SwerveModulePosition(
-        driveEnc.getPosition()*.3191858,
-        Rotation2d(FUCKticks2rad(rotEnc.get_position().value_as_double))
+        (driveEnc.getPosition()/6.75)*math.pi*.1016,
+        Rotation2d(ticks2radODOMETRY(rotEnc.get_position().value_as_double))
     )
 
 
@@ -56,8 +56,8 @@ class DriveTrain(commands2.Subsystem):
     def __init__(self) -> None:
         super().__init__()
 
-        self.field = Field2d()
 
+        # DRIVETRAIN INIT
 
         self.backLeftRotation = rev.CANSparkMax(7, rev.CANSparkMax.MotorType.kBrushless)
         self.backRightRotation = rev.CANSparkMax(5, rev.CANSparkMax.MotorType.kBrushless)
@@ -75,15 +75,18 @@ class DriveTrain(commands2.Subsystem):
         self.backRightDriveEnc = self.backRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
         self.backLeftDriveEnc = self.backLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
 
-
-        self.BleftEnc = ctre.hardware.CANcoder(11)
-        self.BrightEnc = ctre.hardware.CANcoder(13)
-        self.FleftEnc = ctre.hardware.CANcoder(10)
-        self.FrightEnc = ctre.hardware.CANcoder(12)
-
-        self.lastChassisSpeed = ChassisSpeeds(0, 0, 0)
-
-        Kp = 1.5
+        self.FrightEnc = phoenix6.hardware.CANcoder(11) 
+        self.FleftEnc = phoenix6.hardware.CANcoder(13)
+        self.BrightEnc = phoenix6.hardware.CANcoder(10)
+        self.BleftEnc = phoenix6.hardware.CANcoder(12)
+        """
+                self.FleftEnc = phoenix6.hardware.CANcoder(11) 
+                self.BleftEnc = phoenix6.hardware.CANcoder(13)
+                self.FrightEnc = phoenix6.hardware.CANcoder(10)
+                self.BrightEnc = phoenix6.hardware.CANcoder(12)
+        """
+        # PID SETUP
+        Kp = 4
         self.BleftPID = controller.PIDController(Kp,0,.000)
         self.BleftPID.enableContinuousInput(-.5,.5)
         self.BleftPID.setSetpoint(0.0)
@@ -99,24 +102,68 @@ class DriveTrain(commands2.Subsystem):
 
 
 
-        self.gyro = ctre.hardware.Pigeon2(14)
 
-        
+        # GYRO INIT
+        self.gyro = phoenix6.hardware.Pigeon2(14)
+        self.gyro.set_yaw(0)
+
+        # KINEMATICS
         frontrightlocation = Translation2d(.381, .381) 
         frontleftlocation = Translation2d(.381, -.381) 
         backleftlocation = Translation2d(-.381, -.381)         
-        backrightlocation = Translation2d(-.381, .381)       
-        """  
-        frontleftlocation = Translation2d(.381, .381) 
-        frontrightlocation = Translation2d(.381, -.381) 
-        backrightlocation = Translation2d(-.381, -.381)         
-        backleftlocation = Translation2d(-.381, .381)         
-        """
+        backrightlocation = Translation2d(-.381, .381)    
 
+
+
+        self.lastChassisSpeed = ChassisSpeeds(0,0,0)
 
         self.kinematics = SwerveDrive4Kinematics(
             frontleftlocation, frontrightlocation, backleftlocation, backrightlocation
         )
+
+        self.odometry = SwerveDrive4Odometry(
+            self.kinematics,
+            Rotation2d(),
+            (
+                getSwerveModPos(self.FleftEnc, self.frontLeftDriveEnc),
+                getSwerveModPos(self.FrightEnc, self.frontRightDriveEnc),
+                getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
+                getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
+
+            ),
+            Pose2d()
+
+        )
+
+
+        
+        
+
+
+
+
+    def shootCommand(self):
+        return print("FUCKYOU")
+        
+
+    def getAutonomousCommand(self):
+        print("Autocommand Called")
+        self.gyro.set_yaw(0)
+        # Load the path you want to follow using its name in the GUI
+        self.shootNamedCommand = self.runOnce(self.shootCommand)
+        NamedCommands.registerCommand("shoot", self.shootNamedCommand)
+        auto = PathPlannerAuto("testAuto")
+
+        return auto
+
+
+    def resetHarder(self, initialPose = Pose2d()):
+        print("CALLED RSETHARDER")
+                
+        """        if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
+                    initialPose = flipFieldPose(initialPose)
+        """
+        self.gyro.set_yaw(initialPose.rotation().degrees())
 
         self.odometry = SwerveDrive4Odometry(
             self.kinematics,
@@ -127,47 +174,26 @@ class DriveTrain(commands2.Subsystem):
                 getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
                 getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
             ),
-            Pose2d(0, 0, Rotation2d(0))
-        )
-        
+            Pose2d(-initialPose.X(),-initialPose.Y(), initialPose.rotation())
 
-        
-        # Configure the AutoBuilder last
-        AutoBuilder.configureHolonomic(
-            self.getPose, # Robot pose supplier
-            self.odometry.resetPosition, # Method to reset odometry (will be called if your auto has a starting pose)
-            self.getChassisSpeed, # ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            self.driveFromChassisSpeeds, # Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-            HolonomicPathFollowerConfig( # HolonomicPathFollowerConfig, this should likely live in your Constants class
-                PIDConstants(.5, 0.0, 0.0), # Translation PID constants
-                PIDConstants(-0.5, 0.0, 0.0), # Rotation PID constants
-                1, # Max module speed, in m/s
-                0.4, # Drive base radius in meters. Distance from robot center to furthest module.
-                ReplanningConfig() # Default path replanning config. See the API for the options here
-            ),
-            self.shouldFlipPath, # Supplier to control path flipping based on alliance color
-            self# Reference to this subsystem to set requirements
         )
 
-        SmartDashboard.putData("penis", self.field)
-        
-    def getAutonomousCommand(self):
-        self.gyro.set_yaw(0)
-        # Load the path you want to follow using its name in the GUI
-        path = PathPlannerPath.fromPathFile('test') 
+        print(self.getPose())
 
-        # Create a path following command using AutoBuilder. This will also trigger event markers.
-        return AutoBuilder.followPath(path)
+
+        
 
     def getPose(self):
-        return(self.odometry.getPose())
+        nonYPose = self.odometry.getPose()
+        return(Pose2d(nonYPose.Y(), -nonYPose.X(), nonYPose.rotation()))
+
 
 
     def shouldFlipPath(self):
         # Boolean supplier that controls when the path will be mirrored for the red alliance
         # This will flip the path being followed to the red side of the field.
         # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
+        #return False
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
     def getChassisSpeed(self) -> ChassisSpeeds:
@@ -190,17 +216,23 @@ class DriveTrain(commands2.Subsystem):
             )
         )
 
-        self.field.setRobotPose(a)
+        #self.field.setRobotPose(a)
 
        
     def periodic(self) -> None:
         self.updateOdometry()
+        #.publisher.set(self.kinematics.toSwerveModuleStates(self.lastChassisSpeed))
         # print(f"periodic odometryu FUCK: {self.odometry.getPose()}")
 
-    def testGetPose(self) -> Pose2d:
-        return Pose2d()
+    def resetMotors(self) -> None:
+        pass
                    
-    def driveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
+
+     
+    def manualDriveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
+        if random.random() < .1:
+            print(self.getPose())
+            print(speeds)
 
         self.lastChassisSpeed = speeds
         
@@ -221,16 +253,40 @@ class DriveTrain(commands2.Subsystem):
         self.backRightRotation.set(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, lratio(backRightOptimized.angle.radians())))
         self.frontRightRotation.set(-self.FrightPID.calculate(self.FrightEnc.get_absolute_position()._value, lratio(frontRightOptimized.angle.radians())))
 
-        self.backLeftDrive.set(backLeftOptimized.speed)
+        self.backLeftDrive.set(-backLeftOptimized.speed)
         self.backRightDrive.set(backRightOptimized.speed)
         self.frontLeftDrive.set(frontLeftOptimized.speed)
-        self.frontRightDrive.set(-frontRightOptimized.speed)
+        self.frontRightDrive.set(frontRightOptimized.speed)
 
-        
 
+    def driveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
         if random.random() < .1:
-            #print(self.odometry.getPose())
-            #print(f"{speeds}\n")
-            #print(lratio(backRightOptimized.angle.radians()))
-            #print(self.BrightEnc.get_absolute_position()._value)
-            print(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, lratio(backRightOptimized.angle.radians())))
+            print(self.getPose())
+            print(speeds)
+
+        self.lastChassisSpeed = speeds
+
+        Vx = speeds.vy
+        Vy = speeds.vx
+        
+        speeds = ChassisSpeeds(-Vx, -Vy, -speeds.omega)
+        frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
+
+        frontLeftOptimized = SwerveModuleState.optimize(frontLeft,
+        Rotation2d(ticks2rad(self.FleftEnc.get_absolute_position()._value)))
+        frontRightOptimized = SwerveModuleState.optimize(frontRight,
+        Rotation2d(ticks2rad(self.FrightEnc.get_absolute_position()._value)))
+        backLeftOptimized = SwerveModuleState.optimize(backLeft,
+        Rotation2d(ticks2rad(self.BleftEnc.get_absolute_position()._value)))
+        backRightOptimized = SwerveModuleState.optimize(backRight,
+        Rotation2d(ticks2rad(self.BrightEnc.get_absolute_position()._value)))
+
+        self.backLeftRotation.set(-self.BleftPID.calculate(self.BleftEnc.get_absolute_position()._value, lratio(backLeftOptimized.angle.radians())))
+        self.frontLeftRotation.set(-self.FleftPID.calculate(self.FleftEnc.get_absolute_position()._value, lratio(frontLeftOptimized.angle.radians())))
+        self.backRightRotation.set(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, lratio(backRightOptimized.angle.radians())))
+        self.frontRightRotation.set(-self.FrightPID.calculate(self.FrightEnc.get_absolute_position()._value, lratio(frontRightOptimized.angle.radians())))
+
+        self.backLeftDrive.set(-backLeftOptimized.speed)
+        self.backRightDrive.set(backRightOptimized.speed)
+        self.frontLeftDrive.set(frontLeftOptimized.speed)
+        self.frontRightDrive.set(frontRightOptimized.speed)
