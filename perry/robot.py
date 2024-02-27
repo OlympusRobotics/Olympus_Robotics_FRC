@@ -1,9 +1,7 @@
 import math
 import wpilib
-import wpilib.drive
 from wpimath.kinematics import ChassisSpeeds
 from wpimath.geometry import Rotation2d
-import wpilib.drive
 import commands2
 import drivetrain
 import intake
@@ -21,8 +19,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain = drivetrain.DriveTrain()
         self.intake = intake.Intake()
         self.shooter = shooter.Shooter()
-        self.configure_auto()
 
+        self.configure_auto()
+    
     def configure_auto(self):
         AutoBuilder.configureHolonomic(
             self.drivetrain.getPose,
@@ -30,10 +29,10 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.getChassisSpeed,
             self.drivetrain.driveFromChassisSpeeds,
             HolonomicPathFollowerConfig(
-                PIDConstants(-.4,0,0),
-                PIDConstants(.4,0,0),
-                3,
-                .2,
+                PIDConstants(0,0,0),
+                PIDConstants(3,0,0),
+                4.602,
+                .36,
                 ReplanningConfig(False)
             ),
             self.drivetrain.shouldFlipPath,
@@ -42,9 +41,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
-        #self.command = self.drivetrain.getAutonomousCommand()
-        #if self.command:
-        #    self.command.schedule()
+        self.command = self.drivetrain.getAutonomousCommand()
+        if self.command:
+            self.command.schedule()
         
 
     def autonomousPeriodic(self):
@@ -56,19 +55,30 @@ class MyRobot(commands2.TimedCommandRobot):
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
         self.drivetrain.resetHarder()   
+        self.drivetrain.gyro.set_yaw(0)
  
 
     def teleopPeriodic(self):
         """This function is called periodically during teleoperated mode."""
-
+        
         # ----------------------- DRIVETRAIN CODE -----------------------
-        self.joystick = wpilib.Joystick(0)
-
+        #if not wpilib.DriverStation.getJoystickIsXbox(0):
+        self.joystick = wpilib.Joystick(2)
         xspeed = self.joystick.getX()
-        yspeed = self.joystick.getY()
+        yspeed = -self.joystick.getY()
         tspeed = self.joystick.getTwist()
+            
+        #else:
+        #    self.joystick = wpilib.XboxController(0)
+        #    xspeed = self.joystick.getLeftX()
+        #    yspeed = self.joystick.getLeftY()
+        #    tspeed = self.joystick.getRightX()
 
-        yaw = -self.drivetrain.gyro.get_yaw().value_as_double
+        #self.joystick = wpilib.XboxController(1)
+        #xspeed = self.joystick.getLeftX()/2
+        #yspeed = -self.joystick.getLeftY()/2
+        #tspeed = self.joystick.getRightX()/2
+        yaw = self.drivetrain.gyro.get_yaw().value_as_double
 
         h = yaw % 360
         if h < 0:
@@ -98,11 +108,11 @@ class MyRobot(commands2.TimedCommandRobot):
             self.frontRightRotation.set(0)            
         else:
             speeds = ChassisSpeeds.fromFieldRelativeSpeeds(xspeed, yspeed, -tspeed, Rotation2d(heading))
-            self.drivetrain.driveFromChassisSpeeds(speeds)
+            self.drivetrain.manualDriveFromChassisSpeeds(speeds)
 
 
         # ----------------------- INTAKE CODE -----------------------
-        # possibly check current draw to detect if note is in intake
+        #self.intake.rotateDown()
         xboxController = wpilib.XboxController(1)
         intakeButton = xboxController.getXButton()
         if intakeButton: # if it is currently held
@@ -110,6 +120,13 @@ class MyRobot(commands2.TimedCommandRobot):
 
         else:
             self.intake.rotateHome()
+
+        self.intake.stopMotors()
+        if xboxController.getAButton():
+            self.intake.moveUp()
+        if xboxController.getBButton():
+            self.intake.moveDown()
+
 
 
         # ----------------------- PASS NOTE FROM INTAKE TO SHOOTER -----------------------
@@ -132,6 +149,9 @@ class MyRobot(commands2.TimedCommandRobot):
             # stop motors
             self.shooter.resetFeed()
             self.shooter.stopFlywheels()
+        
+        #self.drivetrain
+
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)

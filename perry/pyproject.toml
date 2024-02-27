@@ -30,6 +30,6 @@ robotpy_extras = [
 # Other pip packages to install
 
 requires = [
-    #"robotpy-ctre==2024.1.1",
-    "robotpy-pathplannerlib>=2024.1.4",
+    "robotpy-ctre==2024.1.1",
+    "robotpy-pathplannerlib>=2024.1.6",
 ] 

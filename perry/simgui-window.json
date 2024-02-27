@@ -1,53 +1,62 @@
 {
   "Docking": {
-    "Data": []
+    "Data": [
+      "DockNode  ID=0x00000001 Pos=320,124 Size=1146,650 Selected=0x48913727"
+    ]
   },
   "MainWindow": {
     "GLOBAL": {
       "fps": "120",
-      "height": "1050",
+      "height": "986",
       "maximized": "1",
       "style": "0",
       "userScale": "2",
       "width": "1920",
       "xpos": "0",
-      "ypos": "34"
+      "ypos": "29"
     }
   },
   "Window": {
+    "###/SmartDashboard/penis": {
+      "Collapsed": "0",
+      "DockId": "0x00000001,1",
+      "Pos": "320,124",
+      "Size": "1146,650"
+    },
     "###FMS": {
       "Collapsed": "0",
-      "Pos": "7,810",
+      "Pos": "6,675",
       "Size": "235,244"
     },
     "###Joysticks": {
       "Collapsed": "0",
-      "Pos": "375,697",
+      "Pos": "312,581",
       "Size": "1156,91"
     },
     "###NetworkTables": {
       "Collapsed": "0",
-      "Pos": "375,415",
-      "Size": "1125,277"
+      "Pos": "312,346",
+      "Size": "937,231"
     },
     "###NetworkTables Info": {
       "Collapsed": "0",
-      "Pos": "375,195",
-      "Size": "1125,217"
+      "DockId": "0x00000001,0",
+      "Pos": "320,124",
+      "Size": "1146,650"
     },
     "###Other Devices": {
       "Collapsed": "0",
-      "Pos": "1537,30",
-      "Size": "375,1042"
+      "Pos": "1281,25",
+      "Size": "312,868"
     },
     "###System Joysticks": {
       "Collapsed": "0",
-      "Pos": "7,525",
+      "Pos": "6,437",
       "Size": "273,290"
     },
     "###Timing": {
       "Collapsed": "0",
-      "Pos": "7,225",
+      "Pos": "6,187",
       "Size": "188,186"
     },
     "Debug##Default": {
