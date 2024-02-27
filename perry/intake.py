@@ -1,5 +1,6 @@
 import commands2
 import rev
+import math
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -33,6 +34,17 @@ class Intake(commands2.Subsystem):
         # intake global variables
         self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
         self.intakeDownSetpoint = -90 # rotations for the bottom position of the intake
+        self.Kg = 12 # feedforward constants
+
+        # feedforward constants
+        # theta above x axis of cg of intake in home pos = 0.360450679927 rads
+        # theta above x axis of cg of intake in down pos = 3.70321275685 rads
+    
+    def calcFeedForward(self):
+        currentPos = self.intakeRotEnc.getPosition() # from 0 to intakeDownSetpoint
+        currentPosRadians = currentPos*0.371418008547+0.360450679927 # scales current pos to radians from hex shaft to cg of intake
+        
+        return math.cos(currentPosRadians)*self.Kg
 
         
 
@@ -54,3 +66,9 @@ class Intake(commands2.Subsystem):
 
     def stopMotors(self):
         self.intakeRotation.set(0)
+
+    def expel(self):
+        self.intakeDrive.set(-.2)
+
+    def stopIntake(self):
+        self.intakeDrive.set(0)

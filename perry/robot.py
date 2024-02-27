@@ -7,6 +7,7 @@ import drivetrain
 import intake
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
+import shooter
 
 class MyRobot(commands2.TimedCommandRobot):
 
@@ -17,7 +18,8 @@ class MyRobot(commands2.TimedCommandRobot):
         """
         self.drivetrain = drivetrain.DriveTrain()
         self.intake = intake.Intake()
-        
+        self.shooter = shooter.Shooter()
+
         self.configure_auto()
     
     def configure_auto(self):
@@ -127,6 +129,26 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
 
+        # ----------------------- PASS NOTE FROM INTAKE TO SHOOTER -----------------------
+        passButton = xboxController.getAButton()
+        if passButton:
+            self.intake.expel() # slowly roll then note into the shooter, hopefully the shooter will have enough grip to stall the motor
+            if self.shooter.grabNote(): # get note into ready position with encoders
+                self.intake.stopIntake() # stop intake motor
+        else:
+            self.shooter.resetFeed() # reset enc pos
+        
+
+        # ----------------------- SHOOTER CODE -----------------------
+        shooterButton = xboxController.getRightTriggerAxis()
+        if shooterButton > 0: # if trigger pressed, spin wheels and when max vel reached, feed note
+            if self.shooter.spinFlywheels():
+                self.shooter.feedNote()
+
+        else:
+            # stop motors
+            self.shooter.resetFeed()
+            self.shooter.stopFlywheels()
         
         #self.drivetrain
 
