@@ -69,15 +69,6 @@ class DriveTrain(commands2.Subsystem):
         self.frontLeftDrive = rev.CANSparkMax(2, rev.CANSparkMax.MotorType.kBrushless)
         self.frontRightDrive = rev.CANSparkMax(4, rev.CANSparkMax.MotorType.kBrushless)
         
-        self.backLeftDriveController = self.backLeftDrive.getPIDController()
-        self.backRightDriveController = self.backRightDrive.getPIDController()
-        self.frontLeftDriveController = self.frontLeftDrive.getPIDController()
-        self.frontRightDriveController = self.frontRightDrive.getPIDController()
-
-        self.configDriveController(self.backLeftDriveController)
-        self.configDriveController(self.backRightDriveController)
-        self.configDriveController(self.frontLeftDriveController)
-        self.configDriveController(self.frontRightDriveController)
 
         self.frontRightDriveEnc = self.frontRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
         self.frontLeftDriveEnc = self.frontLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
@@ -99,7 +90,7 @@ class DriveTrain(commands2.Subsystem):
         self.BleftPID = controller.PIDController(Kp,0,.000)
         self.BleftPID.enableContinuousInput(-.5,.5)
         self.BleftPID.setSetpoint(0.0)
-        self.BrightPID = controller.PIDController(3.5,0,.000)
+        self.BrightPID = controller.PIDController(Kp,0,.000)
         self.BrightPID.enableContinuousInput(-.5,.5)
         self.BrightPID.setSetpoint(0.0)
         self.FleftPID = controller.PIDController(Kp,0,.000)
@@ -145,23 +136,9 @@ class DriveTrain(commands2.Subsystem):
         )
 
 
+        
+        
 
-    def configDriveController(self, motor: rev.SparkPIDController):
-        kP = 1
-        kI = 0
-        kD = 0
-        kIz = 0 
-        kFF = 0 
-        kMaxOutput = 1 
-        kMinOutput = -1
-
-        # set PID constants
-        motor.setP(kP)
-        motor.setI(kI)
-        motor.setD(kD)
-        motor.setIZone(kIz)
-        motor.setFF(kFF)
-        motor.setOutputRange(kMinOutput, kMaxOutput)
 
 
 
@@ -253,7 +230,6 @@ class DriveTrain(commands2.Subsystem):
 
      
     def manualDriveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
-        """USER CONTROLS PERCENT OUTPUT"""
         if random.random() < .1:
             print(self.getPose())
             print(speeds)
@@ -283,14 +259,10 @@ class DriveTrain(commands2.Subsystem):
         self.frontRightDrive.set(frontRightOptimized.speed)
 
 
-
-
-    def speed2RPM(self, wheelSpeed: float) -> float:
-        """Converts wheel speed to RPM of drive motor encoder"""
-        return (wheelSpeed / (math.pi*.1016)) * 6.75
-
     def driveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
-        """USER CONTROLS CHASSIS VELOCITY"""
+        if random.random() < .1:
+            print(self.getPose())
+            print(speeds)
 
         self.lastChassisSpeed = speeds
 
@@ -298,7 +270,6 @@ class DriveTrain(commands2.Subsystem):
         Vy = speeds.vx
         
         speeds = ChassisSpeeds(-Vx, -Vy, -speeds.omega)
-
         frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
 
         frontLeftOptimized = SwerveModuleState.optimize(frontLeft,
@@ -315,20 +286,7 @@ class DriveTrain(commands2.Subsystem):
         self.backRightRotation.set(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, lratio(backRightOptimized.angle.radians())))
         self.frontRightRotation.set(-self.FrightPID.calculate(self.FrightEnc.get_absolute_position()._value, lratio(frontRightOptimized.angle.radians())))
 
-        
-        #self.backLeftDrive.set(-backLeftOptimized.speed)
-        #self.backRightDrive.set(backRightOptimized.speed)
-        #self.frontLeftDrive.set(frontLeftOptimized.speed)
-        #self.frontRightDrive.set(frontRightOptimized.speed)
-
-        # Drive motor velocity control
-        self.backLeftDriveController.setReference(-self.speed2RPM(backLeftOptimized.speed), rev.CANSparkMax.ControlType.kVelocity)
-        self.backRightDriveController.setReference(self.speed2RPM(backRightOptimized.speed), rev.CANSparkMax.ControlType.kVelocity)
-        self.frontLeftDriveController.setReference(self.speed2RPM(frontLeftOptimized.speed), rev.CANSparkMax.ControlType.kVelocity)
-        self.frontRightDriveController.setReference(self.speed2RPM(frontRightOptimized.speed), rev.CANSparkMax.ControlType.kVelocity)
-
-
-        if random.random() < .1:
-            print(self.getPose())
-            print(speeds)
-            print(self.speed2RPM(frontRightOptimized.speed))
+        self.backLeftDrive.set(-backLeftOptimized.speed)
+        self.backRightDrive.set(backRightOptimized.speed)
+        self.frontLeftDrive.set(frontLeftOptimized.speed)
+        self.frontRightDrive.set(frontRightOptimized.speed)

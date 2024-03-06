@@ -5,6 +5,7 @@ from wpimath.geometry import Rotation2d
 import commands2
 import drivetrain
 import intake
+import climber
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
 import shooter
@@ -18,8 +19,9 @@ class MyRobot(commands2.TimedCommandRobot):
         """
         self.drivetrain = drivetrain.DriveTrain()
         self.intake = intake.Intake()
+        self.climber = climber.Climber()
         self.shooter = shooter.Shooter()
-
+        
         self.configure_auto()
     
     def configure_auto(self):
@@ -113,43 +115,71 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # ----------------------- INTAKE CODE -----------------------
         #self.intake.rotateDown()
-        xboxController = wpilib.XboxController(1)
+        xboxController = wpilib.XboxController(0)
         intakeButton = xboxController.getXButton()
+        
         if intakeButton: # if it is currently held
             self.intake.rotateDown()
 
         else:
             self.intake.rotateHome()
 
-        self.intake.stopMotors()
-        if xboxController.getAButton():
-            self.intake.moveUp()
-        if xboxController.getBButton():
-            self.intake.moveDown()
+        #self.intake.stopMotors()
+        #if xboxController.getAButton():
+        #    self.intake.moveUp()
+        #if xboxController.getBButton():
+        #    self.intake.moveDown()
+        self.intake.intakeDrive.set(0)
+        self.shooter.stopFlywheels()
 
+        if xboxController.getLeftStickButtonPressed():
+            self.climber.rest()
+            #self.climber.stopMotors()
 
-
-        # ----------------------- PASS NOTE FROM INTAKE TO SHOOTER -----------------------
-        passButton = xboxController.getAButton()
-        if passButton:
-            self.intake.expel() # slowly roll then note into the shooter, hopefully the shooter will have enough grip to stall the motor
-            if self.shooter.grabNote(): # get note into ready position with encoders
-                self.intake.stopIntake() # stop intake motor
-        else:
-            self.shooter.resetFeed() # reset enc pos
+        if xboxController.getRightStickButtonPressed():
+            self.climber.setUp()
+            #self.climber.stopMotors()
         
+        if xboxController.getLeftTriggerAxis() > .5:
+            self.shooter.targetSpeaker()
+            self.shooter.spinFlywheels()
+
+
+        if xboxController.getRightTriggerAxis() > .5:
+            self.shooter.feedNote()
+        else:
+            self.shooter.resetFeed()
+
+        if xboxController.getLeftBumper():
+            self.shooter.targetAmp()
+            self.shooter.spinFlywheels()
+
+        if not xboxController.getLeftBumper() and (xboxController.getLeftTriggerAxis() < .5):
+            self.shooter.goHome()
+
+        if xboxController.getYButton():
+            self.shooter.pushBack()
+        
+
+        
+        
+        if xboxController.getBButton():
+            self.intake.intakeDrive.set(-0.8)
+
+        if xboxController.getAButton():
+            self.intake.intakeDrive.set(1)
+
+            
+
 
         # ----------------------- SHOOTER CODE -----------------------
-        shooterButton = xboxController.getRightTriggerAxis()
-        if shooterButton > 0: # if trigger pressed, spin wheels and when max vel reached, feed note
-            if self.shooter.spinFlywheels():
-                self.shooter.feedNote()
+"""        revbutton = xboxController.getLeftTriggerAxis()
 
-        else:
-            # stop motors
-            self.shooter.resetFeed()
-            self.shooter.stopFlywheels()
-        
+
+        if revbutton:
+            self.
+
+        """
         #self.drivetrain
 
 
