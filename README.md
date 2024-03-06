@@ -8,7 +8,5 @@ Github repo for code and documentation for FRC team 4982.
  
  Kinkmaster69 - oldest  
  Marvin - 2022 season
- 
  Bob - 2023 season
- 
  Perry - 2024 season
