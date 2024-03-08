@@ -23,6 +23,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.shooter = shooter.Shooter()
         
         self.configure_auto()
+        #self.globalTimer = time.time()
     
     def configure_auto(self):
         AutoBuilder.configureHolonomic(
@@ -52,20 +53,50 @@ class MyRobot(commands2.TimedCommandRobot):
         """This function is called periodically during autonomous."""
         pass
 
+    
+    def stage1(self):
+        self.intake.intakeDrive.set(1)
+        self.shooter.feedNote()
 
+    def stage2(self):
+        self.intake.intakeDrive.set(-1)
+        self.shooter.feedNote()
+
+    def stage3(self):
+        self.intake.intakeDrive.set(0)
+        self.shooter.feedMotor.set(0)
+        self.shooter.pushBack()
+
+    def end(self):
+        self.shooter.stopFlywheels()
 
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
         self.drivetrain.resetHarder()   
         self.drivetrain.gyro.set_yaw(0)
- 
+        self.transferStartTime = 0
 
+        self.transferCommand = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.stage1, self),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(self.stage2, self),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(self.stage3, self),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(self.end, self),
+        )
+
+        self.xboxController = wpilib.XboxController(0)
+        self.joystick = wpilib.Joystick(2)
+
+        
     def teleopPeriodic(self):
+        print("TEST")
         """This function is called periodically during teleoperated mode."""
         
         # ----------------------- DRIVETRAIN CODE -----------------------
         #if not wpilib.DriverStation.getJoystickIsXbox(0):
-        self.joystick = wpilib.Joystick(2)
+        
         xspeed = self.joystick.getX()
         yspeed = -self.joystick.getY()
         tspeed = self.joystick.getTwist()
@@ -115,20 +146,27 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # ----------------------- INTAKE CODE -----------------------
         #self.intake.rotateDown()
-        xboxController = wpilib.XboxController(0)
-        intakeButton = xboxController.getXButton()
-        
-        if intakeButton: # if it is currently held
-            self.intake.rotateDown()
+            
+        if self.xboxController.getRightBumperPressed():
+            self.transferCommand.schedule()
 
-        else:
-            self.intake.rotateHome()
+
+        # VERY SMART FIX
+        if not self.transferCommand.isScheduled():
+            intakeButton = self.xboxController.getXButton()            
+            if intakeButton: # if it is currently held
+                self.intake.rotateDown()
+
+            else:
+                self.intake.rotateHome()
 
         #self.intake.stopMotors()
         #if xboxController.getAButton():
         #    self.intake.moveUp()
         #if xboxController.getBButton():
         #    self.intake.moveDown()
+            
+        """
         self.intake.intakeDrive.set(0)
         self.shooter.stopFlywheels()
 
@@ -159,6 +197,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         if xboxController.getYButton():
             self.shooter.pushBack()
+   
         
 
         
@@ -169,7 +208,20 @@ class MyRobot(commands2.TimedCommandRobot):
         if xboxController.getAButton():
             self.intake.intakeDrive.set(1)
 
-            
+        """
+
+
+
+
+        
+        # auto transfer
+        """
+          - stage1 - drive intake motor inwards while feed motor intakes
+          - stage 2 -eject intake and feed motor
+          - 3- spin flywheels backwards
+        """
+
+
 
 
         # ----------------------- SHOOTER CODE -----------------------
@@ -186,67 +238,3 @@ class MyRobot(commands2.TimedCommandRobot):
 if __name__ == "__main__":
     wpilib.run(MyRobot)
 
-
-
-"""
-
-
-        self.backLeftRotation = rev.CANSparkMax(7, rev.CANSparkMax.MotorType.kBrushless)
-        self.backRightRotation = rev.CANSparkMax(5, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontLeftRotation = rev.CANSparkMax(1, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontRightRotation = rev.CANSparkMax(3, rev.CANSparkMax.MotorType.kBrushless)
-
-        self.backLeftDrive = rev.CANSparkMax(8, rev.CANSparkMax.MotorType.kBrushless)
-        self.backRightDrive = rev.CANSparkMax(6, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontLeftDrive = rev.CANSparkMax(2, rev.CANSparkMax.MotorType.kBrushless)
-        self.frontRightDrive = rev.CANSparkMax(4, rev.CANSparkMax.MotorType.kBrushless)
-        
-
-        self.frontRightDriveEnc = self.frontRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-        self.frontLeftDriveEnc = self.frontLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-        self.backRightDriveEnc = self.backRightDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-        self.backLeftDriveEnc = self.backLeftDrive.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-
-
-        self.BleftEnc = ctre.hardware.CANcoder(11)
-        self.BrightEnc = ctre.hardware.CANcoder(13)
-        self.FleftEnc = ctre.hardware.CANcoder(10)
-        self.FrightEnc = ctre.hardware.CANcoder(12)
-
-        self.lastChassisSpeed = ChassisSpeeds(0, 0, 0)
-
-        Kp = 1.5
-        self.BleftPID = controller.PIDController(Kp,0,.000)
-        self.BleftPID.enableContinuousInput(-.5,.5)
-        self.BleftPID.setSetpoint(0.0)
-        self.BrightPID = controller.PIDController(3.5,0,.000)
-        self.BrightPID.enableContinuousInput(-.5,.5)
-        self.BrightPID.setSetpoint(0.0)
-        self.FleftPID = controller.PIDController(Kp,0,.000)
-        self.FleftPID.enableContinuousInput(-.5,.5)
-        self.FleftPID.setSetpoint(0.0)
-        self.FrightPID = controller.PIDController(Kp,0,.000)
-        self.FrightPID.enableContinuousInput(-.5,.5)
-        self.FrightPID.setSetpoint(0.0)
-
-
-
-        self.gyro = ctre.hardware.Pigeon2(14)
-
-        
-        frontrightlocation = Translation2d(.381, .381) 
-        frontleftlocation = Translation2d(.381, -.381) 
-        backleftlocation = Translation2d(-.381, -.381)         
-        backrightlocation = Translation2d(-.381, .381)       
-
-
-        self.kinematics = SwerveDrive4Kinematics(
-            frontleftlocation, frontrightlocation, backleftlocation, backrightlocation
-        )
-
-
-
-       
-
-       
-"""

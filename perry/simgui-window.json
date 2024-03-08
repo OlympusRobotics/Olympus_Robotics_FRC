@@ -7,11 +7,11 @@
   "MainWindow": {
     "GLOBAL": {
       "fps": "120",
-      "height": "986",
+      "height": "1494",
       "maximized": "1",
       "style": "0",
       "userScale": "2",
-      "width": "1920",
+      "width": "2560",
       "xpos": "0",
       "ypos": "29"
     }
@@ -26,7 +26,7 @@
     "###FMS": {
       "Collapsed": "0",
       "Pos": "6,675",
-      "Size": "235,244"
+      "Size": "388,176"
     },
     "###Joysticks": {
       "Collapsed": "0",

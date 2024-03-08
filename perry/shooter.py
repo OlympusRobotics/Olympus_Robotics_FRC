@@ -31,9 +31,10 @@ class Shooter(commands2.Subsystem):
 
         # shooter global variables
         self.shooterMaxVelocity = 1000
-        self.homeSetpoint = .5 # home position in rotations
-        self.shootSetpoint = .5 # shoot position in rotations
+        self.homeSetpoint = 1 # home position in rotations
+        self.shootSetpoint = 1 # shoot position in rotations
         self.ampSetpoint = 20 # amp position in rotations
+
 
     def configFeedMotor(self, motor: rev.SparkPIDController):
         kP = 0.5
@@ -55,7 +56,7 @@ class Shooter(commands2.Subsystem):
     def configMotor(self, motor: rev.SparkPIDController):
         kP = 0.5
         kI = 0
-        kD = 0
+        kD = 1
         kIz = 0 
         kFF = 0 
         kMaxOutput = 1 
@@ -96,6 +97,10 @@ class Shooter(commands2.Subsystem):
     def goHome(self):
         self.rotationMotorContoroller.setReference(self.homeSetpoint, rev.CANSparkMax.ControlType.kPosition)
 
+    def setAngle(self):
+        self.rotationMotorContoroller.setReference(8, rev.CANSparkMax.ControlType.kPosition)
+
+
     def spinFlywheels(self) -> bool:
         #self.shooterController1.setReference(-self.shooterMaxVelocity, rev.CANSparkMax.ControlType.kVelocity)
         #self.shooterController2.setReference(self.shooterMaxVelocity, rev.CANSparkMax.ControlType.kVelocity)
@@ -109,11 +114,7 @@ class Shooter(commands2.Subsystem):
         
         #return True
     
-    def grabNote(self):
-        self.shooterController2.setReference(self.grabSetpoint, rev.CANSparkMax.ControlType.kPosition)
-        if abs(self.shooterDriveEnc2.getPosition() - self.grabSetpoint) < .1: # if in position
-            return True
-        return False
+
 
     def resetFeed(self):
         self.feedMotor.set(0)

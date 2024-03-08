@@ -230,10 +230,6 @@ class DriveTrain(commands2.Subsystem):
 
      
     def manualDriveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
-        if random.random() < .1:
-            print(self.getPose())
-            print(speeds)
-
         self.lastChassisSpeed = speeds
         
         speeds = ChassisSpeeds(speeds.vx, -speeds.vy, -speeds.omega)

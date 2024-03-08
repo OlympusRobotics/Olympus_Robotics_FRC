@@ -32,7 +32,7 @@ class Intake(commands2.Subsystem):
 
         # intake global variables
         self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
-        self.intakeDownSetpoint = -9 # rotations for the bottom position of the intake
+        self.intakeDownSetpoint = -8.5 # rotations for the bottom position of the intake
 
         
 
@@ -40,12 +40,11 @@ class Intake(commands2.Subsystem):
         # set refernce changes the setpoint - rotations
         # SET MAX CURRENT LIMIT IN FIRMWARE
         self.intakeController.setReference(self.intakeHomeSetpoint, rev.CANSparkMax.ControlType.kPosition)
-        #self.intakeDrive.set(0)
-      
+        self.intakeDrive.set(0)
 
     def rotateDown(self):
         self.intakeController.setReference(self.intakeDownSetpoint, rev.CANSparkMax.ControlType.kPosition)
-        #self.intakeDrive.set(1)
+        self.intakeDrive.set(1)
 
     def moveUp(self):
         self.intakeRotation.set(.3)
