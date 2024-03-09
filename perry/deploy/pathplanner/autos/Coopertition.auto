@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.08,
-      "y": 6.73
+      "x": 1.3,
+      "y": 7.21
     },
-    "rotation": 62.33670485355601
+    "rotation": -89.91288690242307
   },
   "command": {
     "type": "sequential",
@@ -14,13 +14,13 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": null
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Weird1"
+            "pathName": "Coopertition1"
           }
         },
         {
@@ -32,19 +32,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Weird2"
+            "pathName": "Coopertition2"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Weird3"
+            "name": null
           }
         }
       ]
