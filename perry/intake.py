@@ -31,7 +31,7 @@ class Intake(commands2.Subsystem):
 
         # intake global variables
         self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
-        self.intakeDownSetpoint = -8.5 # rotations for the bottom position of the intake
+        self.intakeDownSetpoint = -8 # rotations for the bottom position of the intake
 
         
 

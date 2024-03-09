@@ -28,14 +28,19 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.transferCommand = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.stage1, self),
-            commands2.WaitCommand(.7),
+            commands2.WaitCommand(.65),
             commands2.InstantCommand(self.stage2, self),
-            commands2.WaitCommand(1),
+            commands2.WaitCommand(.5),
             commands2.InstantCommand(self.stage3, self),
-            commands2.WaitCommand(1),
+            commands2.WaitCommand(.2),
             commands2.InstantCommand(self.stage4, self),
-            commands2.WaitCommand(1),
+            commands2.WaitCommand(.1),
             commands2.InstantCommand(self.end, self),
+        )
+
+        self.userTrans = commands2.SequentialCommandGroup(
+            commands2.WaitCommand(0.7),
+            self.transferCommand,
         )
     
     def configure_auto(self):
@@ -136,7 +141,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def stage3(self):
         self.intake.intakeDrive.set(0)
-        self.shooter.feedMotor.set(-1)
+        self.shooter.feedMotor.set(1)
         self.shooter.pushBack()
 
     def stage4(self):
@@ -146,6 +151,11 @@ class MyRobot(commands2.TimedCommandRobot):
     def end(self):
         self.shooter.stopFlywheels()
 
+    def autoAim(self) -> float:
+        """returns omega value to aim towards"""
+        kP = .1
+        tx = 0
+        return kP * (-tx )
 
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
@@ -153,8 +163,8 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain.gyro.set_yaw(0)
         self.transferStartTime = 0
 
-        self.xboxController = wpilib.XboxController(0)
-        self.joystick = wpilib.Joystick(2)
+        self.xboxController = wpilib.XboxController(1)
+        self.joystick = wpilib.Joystick(0)
 
         
     def teleopPeriodic(self):
@@ -227,11 +237,15 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
             if intakeButton: # if it is currently held
+                self.userTrans.cancel()
                 self.intake.rotateDown()
 
             else:
                 self.intake.rotateHome()
 
+            if self.xboxController.getXButtonReleased():
+                self.userTrans.schedule()
+                
             if self.xboxController.getLeftStickButtonPressed():
                 self.climber.rest()
                 #self.climber.stopMotors()
@@ -259,6 +273,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
             if self.xboxController.getYButton():
                 self.shooter.pushBack()
+                self.shooter.feedMotor.set(1)
    
         #self.intake.stopMotors()
         #if xboxController.getAButton():
