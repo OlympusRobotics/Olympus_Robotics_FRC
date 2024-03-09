@@ -31,8 +31,8 @@ class Shooter(commands2.Subsystem):
 
         # shooter global variables
         self.shooterMaxVelocity = 1000
-        self.homeSetpoint = 1 # home position in rotations
-        self.shootSetpoint = 1 # shoot position in rotations
+        self.homeSetpoint = 0 # home position in rotations
+        self.shootSetpoint = 0 # shoot position in rotations
         self.ampSetpoint = 20 # amp position in rotations
 
 
@@ -123,8 +123,8 @@ class Shooter(commands2.Subsystem):
 
 
     def pushBack(self):
-        self.shooterDrive1.set(.5)
-        self.shooterDrive2.set(-.5)
+        self.shooterDrive1.set(.9)
+        self.shooterDrive2.set(-.9)
         
 
     def stopFlywheels(self):

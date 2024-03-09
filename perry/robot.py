@@ -9,6 +9,7 @@ import climber
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
 import shooter
+from pathplannerlib.auto import NamedCommands, PathPlannerAuto
 
 class MyRobot(commands2.TimedCommandRobot):
 
@@ -24,6 +25,18 @@ class MyRobot(commands2.TimedCommandRobot):
         
         self.configure_auto()
         #self.globalTimer = time.time()
+
+        self.transferCommand = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.stage1, self),
+            commands2.WaitCommand(.7),
+            commands2.InstantCommand(self.stage2, self),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(self.stage3, self),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(self.stage4, self),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(self.end, self),
+        )
     
     def configure_auto(self):
         AutoBuilder.configureHolonomic(
@@ -42,9 +55,65 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain
         )
 
+
+    def getAutonomousCommand(self):
+        print("Autocommand Called")
+        #self.gyro.set_yaw(0)
+        # Load the path you want to follow using its name in the GUI
+        #self.shootNamedCommand = self.runOnce(self.shootCommand)
+        self.shootCommand = commands2.SequentialCommandGroup(
+            commands2.cmd.runOnce(self.shooter.spinFlywheels),
+            commands2.cmd.runOnce(self.shooter.goHome),
+            commands2.PrintCommand("SHOOTER RAN"),
+            commands2.WaitCommand(2),
+            commands2.PrintCommand("FEED NOTE"),
+            commands2.cmd.runOnce( self.shooter.feedNote),
+            commands2.WaitCommand(2),
+            commands2.PrintCommand("FLYWHEEL COMMAND"),
+            commands2.cmd.runOnce(self.shooter.stopFlywheels),
+            commands2.cmd.runOnce(lambda: self.shooter.feedMotor.set(0)),
+            commands2.PrintCommand("                            SHOOT COMMAND RAN"),
+            commands2.cmd.runOnce(lambda: self.intake.intakeDrive.set(1)),
+            commands2.WaitCommand(1),
+            commands2.cmd.runOnce(self.intake.rotateDown),
+        )
+        """
+        
+                commands2.cmd.runOnce(self.shooter.stopFlywheels()),
+                commands2.cmd.runOnce(self.shooter.feedMotor.set(0)),
+        """
+
+        self.intakeCommand = commands2.SequentialCommandGroup(
+            commands2.cmd.runOnce(self.shooter.goHome),
+            commands2.WaitCommand(3),
+            commands2.cmd.runOnce(self.intake.rotateHome),
+            commands2.WaitCommand(2),
+            commands2.PrintCommand("                          INTAKE COMMAND RAN"),
+            commands2.cmd.runOnce(self.stage1, self),
+            commands2.WaitCommand(.7),
+            commands2.cmd.runOnce(self.stage2, self),
+            commands2.WaitCommand(1),
+            commands2.cmd.runOnce(self.stage3, self),
+            commands2.WaitCommand(1),
+            commands2.cmd.runOnce(self.stage4, self),
+            commands2.WaitCommand(1),
+            commands2.cmd.runOnce(self.end, self),
+            commands2.PrintCommand("                              TRANS")
+            
+        )
+
+        #NamedCommands.registerCommand("shoot", commands2.InstantCommand(lambda: self.shootCommand.schedule(), self))
+        #NamedCommands.registerCommand("intakeTrans", commands2.InstantCommand(lambda: self.intakeCommand.schedule(), self))
+        
+        NamedCommands.registerCommand("shoot", self.shootCommand)
+        NamedCommands.registerCommand("intakeTrans", self.intakeCommand)
+        auto = PathPlannerAuto("testAuto")
+
+        return auto
+
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
-        self.command = self.drivetrain.getAutonomousCommand()
+        self.command = self.getAutonomousCommand()
         if self.command:
             self.command.schedule()
         
@@ -59,16 +128,24 @@ class MyRobot(commands2.TimedCommandRobot):
         self.shooter.feedNote()
 
     def stage2(self):
-        self.intake.intakeDrive.set(-1)
+        self.intake.intakeDrive.set(-.7)
+        print(self.intake.intakeDrive.getOutputCurrent())
         self.shooter.feedNote()
+        self.shooter.pushBack()
+
 
     def stage3(self):
         self.intake.intakeDrive.set(0)
+        self.shooter.feedMotor.set(-1)
+        self.shooter.pushBack()
+
+    def stage4(self):
         self.shooter.feedMotor.set(0)
         self.shooter.pushBack()
 
     def end(self):
         self.shooter.stopFlywheels()
+
 
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
@@ -76,22 +153,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain.gyro.set_yaw(0)
         self.transferStartTime = 0
 
-        self.transferCommand = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.stage1, self),
-            commands2.WaitCommand(1),
-            commands2.InstantCommand(self.stage2, self),
-            commands2.WaitCommand(1),
-            commands2.InstantCommand(self.stage3, self),
-            commands2.WaitCommand(1),
-            commands2.InstantCommand(self.end, self),
-        )
-
         self.xboxController = wpilib.XboxController(0)
         self.joystick = wpilib.Joystick(2)
 
         
     def teleopPeriodic(self):
-        print("TEST")
         """This function is called periodically during teleoperated mode."""
         
         # ----------------------- DRIVETRAIN CODE -----------------------
@@ -153,13 +219,47 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # VERY SMART FIX
         if not self.transferCommand.isScheduled():
-            intakeButton = self.xboxController.getXButton()            
+            intakeButton = self.xboxController.getXButton()     
+
+
+            self.intake.intakeDrive.set(0)
+            self.shooter.stopFlywheels()
+
+
             if intakeButton: # if it is currently held
                 self.intake.rotateDown()
 
             else:
                 self.intake.rotateHome()
 
+            if self.xboxController.getLeftStickButtonPressed():
+                self.climber.rest()
+                #self.climber.stopMotors()
+
+            if self.xboxController.getRightStickButtonPressed():
+                self.climber.setUp()
+                #self.climber.stopMotors()
+            
+            if self.xboxController.getLeftTriggerAxis() > .5:
+                self.shooter.targetSpeaker()
+                self.shooter.spinFlywheels()
+
+
+            if self.xboxController.getRightTriggerAxis() > .5:
+                self.shooter.feedNote()
+            else:
+                self.shooter.resetFeed()
+
+            if self.xboxController.getLeftBumper():
+                self.shooter.targetAmp()
+                self.shooter.spinFlywheels()
+
+            if not self.xboxController.getLeftBumper() and (self.xboxController.getLeftTriggerAxis() < .5):
+                self.shooter.goHome()
+
+            if self.xboxController.getYButton():
+                self.shooter.pushBack()
+   
         #self.intake.stopMotors()
         #if xboxController.getAButton():
         #    self.intake.moveUp()
@@ -167,37 +267,8 @@ class MyRobot(commands2.TimedCommandRobot):
         #    self.intake.moveDown()
             
         """
-        self.intake.intakeDrive.set(0)
-        self.shooter.stopFlywheels()
-
-        if xboxController.getLeftStickButtonPressed():
-            self.climber.rest()
-            #self.climber.stopMotors()
-
-        if xboxController.getRightStickButtonPressed():
-            self.climber.setUp()
-            #self.climber.stopMotors()
-        
-        if xboxController.getLeftTriggerAxis() > .5:
-            self.shooter.targetSpeaker()
-            self.shooter.spinFlywheels()
 
 
-        if xboxController.getRightTriggerAxis() > .5:
-            self.shooter.feedNote()
-        else:
-            self.shooter.resetFeed()
-
-        if xboxController.getLeftBumper():
-            self.shooter.targetAmp()
-            self.shooter.spinFlywheels()
-
-        if not xboxController.getLeftBumper() and (xboxController.getLeftTriggerAxis() < .5):
-            self.shooter.goHome()
-
-        if xboxController.getYButton():
-            self.shooter.pushBack()
-   
         
 
         

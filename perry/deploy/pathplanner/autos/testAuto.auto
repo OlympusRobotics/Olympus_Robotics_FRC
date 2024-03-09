@@ -2,15 +2,21 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.5645260933888481,
-      "y": 2.17821559751536
+      "x": 1.41,
+      "y": 5.55
     },
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "command": {
     "type": "sequential",
     "data": {
       "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
         {
           "type": "path",
           "data": {
@@ -18,9 +24,51 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "pickup3rd"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "shoot3rd"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "tonote"
           }
         }
       ]

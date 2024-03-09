@@ -41,7 +41,7 @@ def ticks2radODOMETRY(something):
     return something * 2* math.pi
 
 def deg2Rot2d(deg) -> Rotation2d:
-    yaw = deg.value_as_double/360
+    yaw = deg/360
     return Rotation2d(yaw * math.pi * 2)
 
 
@@ -142,40 +142,29 @@ class DriveTrain(commands2.Subsystem):
 
 
 
-    def shootCommand(self):
-        return print("FUCKYOU")
-        
 
-    def getAutonomousCommand(self):
-        print("Autocommand Called")
-        self.gyro.set_yaw(0)
-        # Load the path you want to follow using its name in the GUI
-        self.shootNamedCommand = self.runOnce(self.shootCommand)
-        NamedCommands.registerCommand("shoot", self.shootNamedCommand)
-        auto = PathPlannerAuto("testAuto")
 
-        return auto
 
 
     def resetHarder(self, initialPose = Pose2d()):
+
         print("CALLED RSETHARDER")
                 
         """        if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
                     initialPose = flipFieldPose(initialPose)
         """
-        self.gyro.set_yaw(initialPose.rotation().degrees())
+        self.gyro.set_yaw(0)#initialPose.rotation().degrees()
 
         self.odometry = SwerveDrive4Odometry(
             self.kinematics,
-            deg2Rot2d(self.gyro.get_yaw()),
+            deg2Rot2d(self.gyro.get_yaw().value_as_double),
             (
                 getSwerveModPos(self.FleftEnc, self.frontLeftDriveEnc),
                 getSwerveModPos(self.FrightEnc, self.frontRightDriveEnc),
                 getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
                 getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
             ),
-            Pose2d(-initialPose.X(),-initialPose.Y(), initialPose.rotation())
-
+            initialPose
         )
 
         print(self.getPose())
@@ -185,8 +174,7 @@ class DriveTrain(commands2.Subsystem):
 
     def getPose(self):
         nonYPose = self.odometry.getPose()
-        return(Pose2d(nonYPose.Y(), -nonYPose.X(), nonYPose.rotation()))
-
+        return nonYPose
 
 
     def shouldFlipPath(self):
@@ -204,7 +192,18 @@ class DriveTrain(commands2.Subsystem):
 
     def updateOdometry(self) -> None:
         
-        yaw = deg2Rot2d(self.gyro.get_yaw())
+        yaw = deg2Rot2d(self.gyro.get_yaw().value_as_double-90)
+        # print(f"{yaw=}")
+        a = self.odometry.update(
+            yaw,
+            (
+                getSwerveModPos(self.FleftEnc, self.frontLeftDriveEnc),
+                getSwerveModPos(self.FrightEnc, self.frontRightDriveEnc),
+                getSwerveModPos(self.BleftEnc, self.backLeftDriveEnc),
+                getSwerveModPos(self.BrightEnc, self.backRightDriveEnc)
+            )
+        )
+        yaw = deg2Rot2d(self.gyro.get_yaw().value_as_double)
         # print(f"{yaw=}")
         a = self.odometry.update(
             yaw,
@@ -266,7 +265,11 @@ class DriveTrain(commands2.Subsystem):
         Vy = speeds.vx
         
         speeds = ChassisSpeeds(-Vx, -Vy, -speeds.omega)
-        frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
+        moduleStates = self.kinematics.toSwerveModuleStates(speeds)
+        
+        maxModSpeed = 4.1
+        frontLeft, frontRight, backLeft, backRight = SwerveDrive4Kinematics.desaturateWheelSpeeds(moduleStates, maxModSpeed)
+
 
         frontLeftOptimized = SwerveModuleState.optimize(frontLeft,
         Rotation2d(ticks2rad(self.FleftEnc.get_absolute_position()._value)))
@@ -282,7 +285,15 @@ class DriveTrain(commands2.Subsystem):
         self.backRightRotation.set(-self.BrightPID.calculate(self.BrightEnc.get_absolute_position()._value, lratio(backRightOptimized.angle.radians())))
         self.frontRightRotation.set(-self.FrightPID.calculate(self.FrightEnc.get_absolute_position()._value, lratio(frontRightOptimized.angle.radians())))
 
-        self.backLeftDrive.set(-backLeftOptimized.speed)
-        self.backRightDrive.set(backRightOptimized.speed)
-        self.frontLeftDrive.set(frontLeftOptimized.speed)
-        self.frontRightDrive.set(frontRightOptimized.speed)
+        #self.backLeftDrive.set(-backLeftOptimized.speed/scale)
+        #self.backRightDrive.set(backRightOptimized.speed/scale)
+        #self.frontLeftDrive.set(frontLeftOptimized.speed/scale)
+        #self.frontRightDrive.set(frontRightOptimized.speed/scale)
+
+
+        maxVoltage = 13
+        self.backLeftDrive.setVoltage(-(backLeftOptimized.speed/maxModSpeed)*maxVoltage)
+        self.backRightDrive.setVoltage((backRightOptimized.speed/maxModSpeed)*maxVoltage)
+        self.frontLeftDrive.setVoltage((frontLeftOptimized.speed/maxModSpeed)*maxVoltage)
+        self.frontRightDrive.setVoltage((frontRightOptimized.speed/maxModSpeed)*maxVoltage)
+        print((backLeftOptimized.speed/maxModSpeed)*maxVoltage)
