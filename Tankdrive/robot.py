@@ -30,7 +30,7 @@ class MyRobot(wpilib.TimedRobot):
         #self.drive2 = wpilib.drive.DifferentialDrive(self.backLeftDrive, self.backLeftDrive)
 
         #self.joystick = wpilib.Joystick(0)
-        self.controller = wpilib.XboxController(1)
+        self.controller = wpilib.XboxController(0)
         
         
     #Tank drive movement commands (Wpilib differential drive does not work with TalonSRX)
@@ -63,8 +63,8 @@ class MyRobot(wpilib.TimedRobot):
 
         
 
-        print(f"left vel: {leftVelocity}")
-        print(f"right vel: {rightVelocity}")
+        #print(f"left vel: {leftVelocity}")
+        #print(f"right vel: {rightVelocity}")
         
         
             
