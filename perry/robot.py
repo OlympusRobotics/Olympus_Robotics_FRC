@@ -10,6 +10,7 @@ from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig, PIDConstants
 import shooter
 from pathplannerlib.auto import NamedCommands, PathPlannerAuto
+import Limey
 
 class MyRobot(commands2.TimedCommandRobot):
 
@@ -22,6 +23,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.intake = intake.Intake()
         self.climber = climber.Climber()
         self.shooter = shooter.Shooter()
+        self.limey = Limey.Limey()
         
         self.configure_auto()
         #self.globalTimer = time.time()
@@ -36,11 +38,6 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.stage4, self),
             commands2.WaitCommand(.1),
             commands2.InstantCommand(self.end, self),
-        )
-
-        self.userTrans = commands2.SequentialCommandGroup(
-            commands2.WaitCommand(0.7),
-            self.transferCommand,
         )
     
     def configure_auto(self):
@@ -150,12 +147,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def end(self):
         self.shooter.stopFlywheels()
+        self.shooter.feedMotor.set(0)
 
-    def autoAim(self) -> float:
-        """returns omega value to aim towards"""
-        kP = .1
-        tx = 0
-        return kP * (-tx )
 
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
@@ -163,10 +156,28 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain.gyro.set_yaw(0)
         self.transferStartTime = 0
 
-        self.xboxController = wpilib.XboxController(1)
-        self.joystick = wpilib.Joystick(0)
+        self.xboxController = wpilib.XboxController(0)
+        self.joystick = wpilib.Joystick(2)
 
+    def autoAim(self):
+        kP = .03
+        tx = self.limey.getLimey()["tx"]
+        if tx == 0:
+            return -1
         
+        arbFF = .04
+
+        return kP * (tx) + arbFF * (tx/abs(tx))
+
+    def shooterAim(self):
+        distance = self.limey.getTarget()["distance"]
+        angle = self.limey.getTarget()["angle"]
+        angle = 90 - angle
+        angle -= distance
+        rot = 0.210843373494 * angle - 6.45180722892
+        self.shooter.setRot(round(rot-1, 1))
+        print(rot)
+
     def teleopPeriodic(self):
         """This function is called periodically during teleoperated mode."""
         
@@ -175,7 +186,15 @@ class MyRobot(commands2.TimedCommandRobot):
         
         xspeed = self.joystick.getX()
         yspeed = -self.joystick.getY()
-        tspeed = self.joystick.getTwist()
+
+        if not self.joystick.getTrigger():
+            tspeed = self.joystick.getTwist()
+        else:
+            tspeed = self.autoAim()
+            if tspeed == -1:
+                tspeed = self.joystick.getTwist()
+            
+            self.shooterAim()
             
         #else:
         #    self.joystick = wpilib.XboxController(0)
@@ -237,15 +256,11 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
             if intakeButton: # if it is currently held
-                self.userTrans.cancel()
                 self.intake.rotateDown()
 
             else:
                 self.intake.rotateHome()
 
-            if self.xboxController.getXButtonReleased():
-                self.userTrans.schedule()
-                
             if self.xboxController.getLeftStickButtonPressed():
                 self.climber.rest()
                 #self.climber.stopMotors()
@@ -255,7 +270,7 @@ class MyRobot(commands2.TimedCommandRobot):
                 #self.climber.stopMotors()
             
             if self.xboxController.getLeftTriggerAxis() > .5:
-                self.shooter.targetSpeaker()
+                #self.shooter.targetSpeaker()
                 self.shooter.spinFlywheels()
 
 
@@ -268,16 +283,16 @@ class MyRobot(commands2.TimedCommandRobot):
                 self.shooter.targetAmp()
                 self.shooter.spinFlywheels()
 
-            if not self.xboxController.getLeftBumper() and (self.xboxController.getLeftTriggerAxis() < .5):
+            if not self.xboxController.getLeftBumper() and (self.xboxController.getLeftTriggerAxis() < .5) and not self.joystick.getTrigger():
                 self.shooter.goHome()
 
             if self.xboxController.getYButton():
                 self.shooter.pushBack()
-                self.shooter.feedMotor.set(1)
    
+
         #self.intake.stopMotors()
-        #if xboxController.getAButton():
-        #    self.intake.moveUp()
+        if self.xboxController.getAButton():
+            self.intake.intakeDrive.set(1)
         #if xboxController.getBButton():
         #    self.intake.moveDown()
             

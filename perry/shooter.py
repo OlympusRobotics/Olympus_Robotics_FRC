@@ -36,6 +36,9 @@ class Shooter(commands2.Subsystem):
         self.ampSetpoint = 20 # amp position in rotations
 
 
+        # 0 rot = 30.6 deg, 14 = 97
+
+        
     def configFeedMotor(self, motor: rev.SparkPIDController):
         kP = 0.5
         kI = 1e-4
@@ -54,9 +57,9 @@ class Shooter(commands2.Subsystem):
         motor.setOutputRange(kMinOutput, kMaxOutput)
 
     def configMotor(self, motor: rev.SparkPIDController):
-        kP = 0.5
+        kP = 0.2
         kI = 0
-        kD = 1
+        kD = 0
         kIz = 0 
         kFF = 0 
         kMaxOutput = 1 
@@ -133,3 +136,12 @@ class Shooter(commands2.Subsystem):
         
     def feedNote(self):
         self.feedMotor.set(-1)
+
+
+    def setRot(self, rot):
+        if rot < 0:
+            rot = 0
+        elif rot > self.ampSetpoint:
+            rot = self.ampSetpoint
+
+        self.rotationMotorContoroller.setReference(rot, rev.CANSparkMax.ControlType.kPosition)
