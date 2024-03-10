@@ -11,6 +11,7 @@ from pathplannerlib.config import HolonomicPathFollowerConfig, ReplanningConfig,
 import shooter
 from pathplannerlib.auto import NamedCommands, PathPlannerAuto
 import Limey
+from helper import getInterpAng
 
 class MyRobot(commands2.TimedCommandRobot):
 
@@ -169,13 +170,27 @@ class MyRobot(commands2.TimedCommandRobot):
 
         return kP * (tx) + arbFF * (tx/abs(tx))
 
+
     def shooterAim(self):
         distance = self.limey.getTarget()["distance"]
         angle = self.limey.getTarget()["angle"]
+
+        # if lost tracking, dont change shooter position for smoother operation
+        if distance == 0:
+            return 0
+
+        # --- if long range ---
+        if distance > 2:
+            angle = getInterpAng(distance)
+
+        # --- if close range ---
+        # limelight angle is above the horizontal
         angle = 90 - angle
-        angle -= distance
+
+        # angle measured from the top of the shooter to vertical, 0 degrees is up, 90 is horizontal
+        # angle to rotations of motor
         rot = 0.210843373494 * angle - 6.45180722892
-        self.shooter.setRot(round(rot-1, 1))
+        self.shooter.setRot(rot-1) #round(rot-1, 1)
         print(rot)
 
     def teleopPeriodic(self):
