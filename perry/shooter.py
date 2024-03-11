@@ -100,9 +100,6 @@ class Shooter(commands2.Subsystem):
     def goHome(self):
         self.rotationMotorContoroller.setReference(self.homeSetpoint, rev.CANSparkMax.ControlType.kPosition)
 
-    def setAngle(self):
-        self.rotationMotorContoroller.setReference(8, rev.CANSparkMax.ControlType.kPosition)
-
 
     def spinFlywheels(self) -> bool:
         #self.shooterController1.setReference(-self.shooterMaxVelocity, rev.CANSparkMax.ControlType.kVelocity)

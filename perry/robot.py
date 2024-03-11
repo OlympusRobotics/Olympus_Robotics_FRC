@@ -30,9 +30,11 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.globalTimer = time.time()
 
         self.transferCommand = commands2.SequentialCommandGroup(
-            commands2.WaitCommand(.7),
+            commands2.InstantCommand(self.intake.rotateHome, self),
+            commands2.InstantCommand(self.shooter.goHome, self),
+            commands2.WaitCommand(.85),
             commands2.InstantCommand(self.stage1, self),
-            commands2.WaitCommand(.65),
+            commands2.WaitCommand(.75),
             commands2.InstantCommand(self.stage2, self),
             commands2.WaitCommand(.5),
             commands2.InstantCommand(self.stage3, self),
@@ -41,7 +43,8 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.WaitCommand(.1),
             commands2.InstantCommand(self.end, self),
         )
-    
+        self.shooterot = 0
+
     def configure_auto(self):
         AutoBuilder.configureHolonomic(
             self.drivetrain.getPose,
@@ -89,7 +92,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.intakeCommand = commands2.SequentialCommandGroup(
             commands2.cmd.runOnce(self.shooter.goHome),
-            commands2.WaitCommand(3),
+            commands2.WaitCommand(1.5),
             commands2.cmd.runOnce(self.intake.rotateHome),
             commands2.WaitCommand(2),
             commands2.PrintCommand("                          INTAKE COMMAND RAN"),
@@ -158,16 +161,16 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain.gyro.set_yaw(0)
         self.transferStartTime = 0
 
-        self.xboxController = wpilib.XboxController(0)
-        self.joystick = wpilib.Joystick(2)
+        self.xboxController = wpilib.XboxController(1)
+        self.joystick = wpilib.Joystick(0)
 
     def autoAim(self):
-        kP = .03
+        kP = .012
         tx = self.limey.getLimey()["tx"]
         if tx == 0:
             return -1
         
-        arbFF = .04
+        arbFF = .024
 
         return kP * (tx) + arbFF * (tx/abs(tx))
 
@@ -181,18 +184,19 @@ class MyRobot(commands2.TimedCommandRobot):
             return 0
 
         # --- if long range ---
-        if distance > 2:
-            self.shooter.setRot(getInterpAng(distance))
+        #if distance > 2:
+        #    self.shooter.setRot(getInterpAng(distance))
 
         # --- if close range ---
         # limelight angle is above the horizontal
+        angle += 5
         angle = 90 - angle
 
         # angle measured from the top of the shooter to vertical, 0 degrees is up, 90 is horizontal
         # angle to rotations of motor
         rot = 0.210843373494 * angle - 6.45180722892
         self.shooter.setRot(rot-1) #round(rot-1, 1)
-        print(rot)
+        print(distance)
 
     def teleopPeriodic(self):
         """This function is called periodically during teleoperated mode."""
@@ -315,10 +319,16 @@ class MyRobot(commands2.TimedCommandRobot):
             self.intake.intakeDrive.set(1)
         #if xboxController.getBButton():
         #    self.intake.moveDown()
-            
         """
+        
+        if self.xboxController.getRightY() > .1:
+            self.shooterot += 0.002
+        if self.xboxController.getRightY() > -.1:
+            self.shooterot -= 0.002
 
-
+        self.shooter.setRot(self.shooterot)
+        """
+        """
         
 
         
