@@ -30,6 +30,7 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.globalTimer = time.time()
 
         self.transferCommand = commands2.SequentialCommandGroup(
+            commands2.WaitCommand(.7),
             commands2.InstantCommand(self.stage1, self),
             commands2.WaitCommand(.65),
             commands2.InstantCommand(self.stage2, self),
@@ -209,7 +210,7 @@ class MyRobot(commands2.TimedCommandRobot):
             if tspeed == -1:
                 tspeed = self.joystick.getTwist()
             
-            self.shooterAim()
+            
             
         #else:
         #    self.joystick = wpilib.XboxController(0)
@@ -290,6 +291,7 @@ class MyRobot(commands2.TimedCommandRobot):
             if self.xboxController.getLeftTriggerAxis() > .5:
                 #self.shooter.targetSpeaker()
                 self.shooter.spinFlywheels()
+                self.shooterAim()
 
 
             if self.xboxController.getRightTriggerAxis() > .5:
