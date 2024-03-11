@@ -181,7 +181,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # --- if long range ---
         if distance > 2:
-            angle = getInterpAng(distance)
+            self.shooter.setRot(getInterpAng(distance))
 
         # --- if close range ---
         # limelight angle is above the horizontal
@@ -257,8 +257,11 @@ class MyRobot(commands2.TimedCommandRobot):
         # ----------------------- INTAKE CODE -----------------------
         #self.intake.rotateDown()
             
-        if self.xboxController.getRightBumperPressed():
+        if self.xboxController.getXButtonReleased():
             self.transferCommand.schedule()
+
+        if self.xboxController.getXButtonPressed() and self.transferCommand.isScheduled():
+            self.transferCommand.cancel()
 
 
         # VERY SMART FIX
