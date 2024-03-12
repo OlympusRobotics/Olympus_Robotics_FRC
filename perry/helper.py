@@ -41,3 +41,14 @@ def getInterpAng(distance):
         return dydx * (distance - prev_key) + distMap[prev_key]
 
 
+import rev
+
+def tempProt(motorController: rev.CANSparkMax):
+    """Check if motor temp is too high before doing stuff, nonzero eror code means motor too hot"""
+    temp = motorController.getMotorTemperature()
+    if temp > 100:
+        motorController.set(0)
+        print(f"Motor {motorController.getDeviceId()}, {temp}C")
+        return 1
+    
+    return 0

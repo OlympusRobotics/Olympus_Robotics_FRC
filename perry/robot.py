@@ -27,7 +27,8 @@ class MyRobot(commands2.TimedCommandRobot):
         self.limey = Limey.Limey()
         
         self.configure_auto()
-        #self.globalTimer = time.time()
+        self.globalTimer = wpilib.Timer()
+        self.globalTimer.start()
 
         self.transferCommand = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.intake.rotateHome, self),
@@ -284,13 +285,12 @@ class MyRobot(commands2.TimedCommandRobot):
             else:
                 self.intake.rotateHome()
 
-            if self.xboxController.getLeftStickButtonPressed():
-                self.climber.rest()
-                #self.climber.stopMotors()
+            if self.globalTimer.getMatchTime() > 20:
+                if self.xboxController.getLeftStickButtonPressed():
+                    self.climber.rest()
 
-            if self.xboxController.getRightStickButtonPressed():
-                self.climber.setUp()
-                #self.climber.stopMotors()
+                if self.xboxController.getRightStickButtonPressed():
+                    self.climber.setUp()
             
             if self.xboxController.getLeftTriggerAxis() > .5:
                 #self.shooter.targetSpeaker()
@@ -300,6 +300,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
             if self.xboxController.getRightTriggerAxis() > .5:
                 self.shooter.feedNote()
+                self.intake.intakeDrive.set(-1)
             else:
                 self.shooter.resetFeed()
 
@@ -307,7 +308,10 @@ class MyRobot(commands2.TimedCommandRobot):
                 self.shooter.targetAmp()
                 self.shooter.spinFlywheels()
 
-            if not self.xboxController.getLeftBumper() and (self.xboxController.getLeftTriggerAxis() < .5) and not self.joystick.getTrigger():
+            if self.xboxController.getRightBumper():
+                self.shooter.setRot(14)
+
+            if not self.xboxController.getRightBumper() and not self.xboxController.getLeftBumper() and (self.xboxController.getLeftTriggerAxis() < .5) and not self.joystick.getTrigger():
                 self.shooter.goHome()
 
             if self.xboxController.getYButton():
@@ -317,6 +321,7 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.intake.stopMotors()
         if self.xboxController.getAButton():
             self.intake.intakeDrive.set(1)
+
         #if xboxController.getBButton():
         #    self.intake.moveDown()
         """

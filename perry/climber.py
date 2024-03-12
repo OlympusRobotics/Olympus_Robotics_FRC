@@ -1,5 +1,6 @@
 import commands2
 import rev
+from helper import tempProt
 
 class Climber(commands2.Subsystem):
     def __init__(self):
@@ -43,13 +44,28 @@ class Climber(commands2.Subsystem):
         self.restingPoint = -67
         self.fullyExtended = 0
 
+
+
+
+    def climberTempProt(self):
+        return tempProt(self.leftClimber) + tempProt(self.rightClimber)
+        
+
     def setUp(self):
+        # check if motors are too hot
+        if self.climberTempProt() > 0:
+            return 1
+        
         self.lClimberController.setReference(self.fullyExtended, rev.CANSparkMax.ControlType.kPosition)
         self.rClimberController.setReference(self.fullyExtended, rev.CANSparkMax.ControlType.kPosition)
         #self.leftClimber.set(.1)
         #self.rightClimber.set(.1)
 
     def rest(self):
+        # check if motors are too hot
+        if self.climberTempProt() > 0:
+            return 1
+        
         self.lClimberController.setReference(self.restingPoint, rev.CANSparkMax.ControlType.kPosition)
         self.rClimberController.setReference(self.restingPoint, rev.CANSparkMax.ControlType.kPosition)
         #self.leftClimber.set(-.1)

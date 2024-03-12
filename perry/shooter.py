@@ -1,6 +1,6 @@
 import commands2
 import rev
-
+from helper import tempProt
 
 class Shooter(commands2.Subsystem):
     def __init__(self):
@@ -101,11 +101,19 @@ class Shooter(commands2.Subsystem):
         self.rotationMotorContoroller.setReference(self.homeSetpoint, rev.CANSparkMax.ControlType.kPosition)
 
 
+    def shooterTempProt(self):
+        return tempProt(self.shooterDrive1) + tempProt(self.shooterDrive2)
+
     def spinFlywheels(self) -> bool:
-        #self.shooterController1.setReference(-self.shooterMaxVelocity, rev.CANSparkMax.ControlType.kVelocity)
-        #self.shooterController2.setReference(self.shooterMaxVelocity, rev.CANSparkMax.ControlType.kVelocity)
-        self.shooterDrive1.set(-1)
-        self.shooterDrive2.set(1)
+        if self.shooterTempProt() > 0:
+            return 1
+        
+        self.shooterDrive1.setVoltage(-11)
+        self.shooterDrive2.setVoltage(11)
+
+        print(self.shooterDriveEnc1.getVelocity())
+        print(self.shooterDriveEnc2.getVelocity())
+        
         #error1 = abs(abs(self.shooterDriveEnc1.getVelocity())-abs(self.shooterMaxVelocity))
         #error2 = abs(abs(self.shooterDriveEnc2.getVelocity())-abs(self.shooterMaxVelocity))
     

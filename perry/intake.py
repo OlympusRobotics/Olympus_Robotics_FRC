@@ -1,5 +1,6 @@
 import commands2
 import rev
+from helper import tempProt
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -33,22 +34,25 @@ class Intake(commands2.Subsystem):
         self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
         self.intakeDownSetpoint = -8.5 # rotations for the bottom position of the intake
 
-        
+
+    def intakeTempProt(self):
+        return tempProt(self.intakeRotation)
 
     def rotateHome(self):
+        if self.intakeTempProt() > 0:
+            return 1
+
         # set refernce changes the setpoint - rotations
-        # SET MAX CURRENT LIMIT IN FIRMWARE
         self.intakeController.setReference(self.intakeHomeSetpoint, rev.CANSparkMax.ControlType.kPosition)
         self.intakeDrive.set(0)
 
     def rotateDown(self):
+        if self.intakeTempProt() > 0:
+            return 1
+        
         self.intakeController.setReference(self.intakeDownSetpoint, rev.CANSparkMax.ControlType.kPosition)
         self.intakeDrive.set(1)
 
-    def moveUp(self):
-        self.intakeRotation.set(.3)
-    def moveDown(self):
-        self.intakeRotation.set(-.3)
 
     def stopMotors(self):
         self.intakeRotation.set(0)
