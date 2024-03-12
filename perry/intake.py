@@ -14,13 +14,13 @@ class Intake(commands2.Subsystem):
         self.intakeRotEnc = self.intakeRotation.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
 
         # Neo PID constants
-        kP = 0.1
+        kP = 0.022
         kI = 0
         kD = 0
         kIz = 0 
         kFF = 0 
-        kMaxOutput = 1 
-        kMinOutput = -1
+        kMaxOutput = .4
+        kMinOutput = -.4
 
         # set PID constants
         self.intakeController.setP(kP)
@@ -32,7 +32,7 @@ class Intake(commands2.Subsystem):
 
         # intake global variables
         self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
-        self.intakeDownSetpoint = -8.5 # rotations for the bottom position of the intake
+        self.intakeDownSetpoint = -28 # rotations for the bottom position of the intake
 
 
     def intakeTempProt(self):
@@ -56,3 +56,7 @@ class Intake(commands2.Subsystem):
 
     def stopMotors(self):
         self.intakeRotation.set(0)
+
+
+    def moveUp(self):
+        self.intakeRotation.set(.4)

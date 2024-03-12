@@ -108,11 +108,19 @@ class Shooter(commands2.Subsystem):
         if self.shooterTempProt() > 0:
             return 1
         
-        self.shooterDrive1.setVoltage(-11)
-        self.shooterDrive2.setVoltage(11)
+        self.shooterDrive1.setVoltage(-12)
+        self.shooterDrive2.setVoltage(12)
 
         print(self.shooterDriveEnc1.getVelocity())
-        print(self.shooterDriveEnc2.getVelocity())
+#        print(self.shooterDriveEnc2.getVelocity())
+        return 0
+
+
+    def getSpeed(self):
+        if (abs(self.shooterDriveEnc1.getVelocity()) + abs(self.shooterDriveEnc2.getVelocity()))/2 > 5300:
+            return 1
+        
+        return 0
         
         #error1 = abs(abs(self.shooterDriveEnc1.getVelocity())-abs(self.shooterMaxVelocity))
         #error2 = abs(abs(self.shooterDriveEnc2.getVelocity())-abs(self.shooterMaxVelocity))

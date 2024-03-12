@@ -162,11 +162,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain.gyro.set_yaw(0)
         self.transferStartTime = 0
 
-        self.xboxController = wpilib.XboxController(1)
-        self.joystick = wpilib.Joystick(0)
+        self.xboxController = wpilib.XboxController(0)
+        self.joystick = wpilib.Joystick(1)
 
     def autoAim(self):
-        kP = .012
+        kP = .013
         tx = self.limey.getLimey()["tx"]
         if tx == 0:
             return -1
@@ -190,7 +190,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # --- if close range ---
         # limelight angle is above the horizontal
-        angle += 5
+        angle += 3.6
         angle = 90 - angle
 
         # angle measured from the top of the shooter to vertical, 0 degrees is up, 90 is horizontal
@@ -208,6 +208,8 @@ class MyRobot(commands2.TimedCommandRobot):
         xspeed = self.joystick.getX()
         yspeed = -self.joystick.getY()
 
+        print(self.shooter.shooterDrive1.getMotorTemperature())
+
         if not self.joystick.getTrigger():
             tspeed = self.joystick.getTwist()
         else:
@@ -222,7 +224,7 @@ class MyRobot(commands2.TimedCommandRobot):
         #    xspeed = self.joystick.getLeftX()
         #    yspeed = self.joystick.getLeftY()
         #    tspeed = self.joystick.getRightX()
-
+        #smd
         #self.joystick = wpilib.XboxController(1)
         #xspeed = self.joystick.getLeftX()/2
         #yspeed = -self.joystick.getLeftY()/2
@@ -285,13 +287,15 @@ class MyRobot(commands2.TimedCommandRobot):
             else:
                 self.intake.rotateHome()
 
-            if self.globalTimer.getMatchTime() > 20:
+            if self.globalTimer.getMatchTime():
                 if self.xboxController.getLeftStickButtonPressed():
                     self.climber.rest()
 
                 if self.xboxController.getRightStickButtonPressed():
                     self.climber.setUp()
+
             
+
             if self.xboxController.getLeftTriggerAxis() > .5:
                 #self.shooter.targetSpeaker()
                 self.shooter.spinFlywheels()
@@ -299,8 +303,10 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
             if self.xboxController.getRightTriggerAxis() > .5:
-                self.shooter.feedNote()
-                self.intake.intakeDrive.set(-1)
+                if self.shooter.getSpeed():
+
+                    self.shooter.feedNote()
+                    self.intake.intakeDrive.set(-1)
             else:
                 self.shooter.resetFeed()
 
@@ -315,7 +321,11 @@ class MyRobot(commands2.TimedCommandRobot):
                 self.shooter.goHome()
 
             if self.xboxController.getYButton():
-                self.shooter.pushBack()
+                self.intake.moveUp()
+            if self.xboxController.getYButtonReleased():
+                self.intake.intakeRotation.set(0)
+                self.intake.intakeHomeSetpoint = self.intake.intakeRotEnc.getPosition()
+                self.intake.intakeDownSetpoint += self.intake.intakeRotEnc.getPosition()
    
 
         #self.intake.stopMotors()

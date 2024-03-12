@@ -17,7 +17,7 @@ class Climber(commands2.Subsystem):
         self.rClimberRotEnc = self.rightClimber.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
 
         # Neo PID constants
-        kP = 0.5
+        kP = 0.7
         kI = 0
         kD = 0
         kIz = 0 
@@ -41,10 +41,9 @@ class Climber(commands2.Subsystem):
         self.rClimberController.setOutputRange(kMinOutput, kMaxOutput)
 
         #ClimberSetpoint
-        self.restingPoint = -67
-        self.fullyExtended = 0
-
-
+        self.restingPoint = 0
+        self.LeftfullyExtended = 64
+        self.RightfullyExtended = 57
 
 
     def climberTempProt(self):
@@ -56,8 +55,8 @@ class Climber(commands2.Subsystem):
         if self.climberTempProt() > 0:
             return 1
         
-        self.lClimberController.setReference(self.fullyExtended, rev.CANSparkMax.ControlType.kPosition)
-        self.rClimberController.setReference(self.fullyExtended, rev.CANSparkMax.ControlType.kPosition)
+        self.lClimberController.setReference(self.LeftfullyExtended, rev.CANSparkMax.ControlType.kPosition)
+        self.rClimberController.setReference(self.RightfullyExtended, rev.CANSparkMax.ControlType.kPosition)
         #self.leftClimber.set(.1)
         #self.rightClimber.set(.1)
 
