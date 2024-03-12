@@ -139,17 +139,15 @@ class MyRobot(commands2.TimedCommandRobot):
         self.intake.intakeDrive.set(-.7)
         print(self.intake.intakeDrive.getOutputCurrent())
         self.shooter.feedNote()
-        self.shooter.pushBack()
-
+       
 
     def stage3(self):
         self.intake.intakeDrive.set(0)
         self.shooter.feedMotor.set(1)
-        self.shooter.pushBack()
-
+  
     def stage4(self):
         self.shooter.feedMotor.set(0)
-        self.shooter.pushBack()
+
 
     def end(self):
         self.shooter.stopFlywheels()
@@ -159,14 +157,14 @@ class MyRobot(commands2.TimedCommandRobot):
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
         self.drivetrain.resetHarder()   
-        self.drivetrain.gyro.set_yaw(0)
+        #self.drivetrain.gyro.set_yaw(0)
         self.transferStartTime = 0
 
         self.xboxController = wpilib.XboxController(0)
         self.joystick = wpilib.Joystick(1)
 
     def autoAim(self):
-        kP = .013
+        kP = .019 #.013
         tx = self.limey.getLimey()["tx"]
         if tx == 0:
             return -1
@@ -325,7 +323,7 @@ class MyRobot(commands2.TimedCommandRobot):
             if self.xboxController.getYButtonReleased():
                 self.intake.intakeRotation.set(0)
                 self.intake.intakeHomeSetpoint = self.intake.intakeRotEnc.getPosition()
-                self.intake.intakeDownSetpoint += self.intake.intakeRotEnc.getPosition()
+                self.intake.intakeDownSetpoint = self.intake.intakeRotEnc.getPosition() - 28
    
 
         #self.intake.stopMotors()
