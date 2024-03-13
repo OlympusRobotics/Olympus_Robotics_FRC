@@ -34,7 +34,7 @@ class Intake(commands2.Subsystem):
         self.intakeController.setOutputRange(kMinOutput, kMaxOutput)
 
         # intake global variables
-        self.intakeHomeSetpoint = 20 # top position in rotations (not enc values) for the top position of the intake
+        self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
         self.intakeDownSetpoint = -28 # rotations for the bottom position of the intake
 
         # intake motion profiling
