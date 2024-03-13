@@ -13,6 +13,7 @@ from pathplannerlib.auto import NamedCommands, PathPlannerAuto
 import Limey
 from helper import getInterpAng
 
+
 class MyRobot(commands2.TimedCommandRobot):
 
     def robotInit(self):
@@ -45,6 +46,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.end, self),
         )
         self.shooterot = 0
+
 
     def configure_auto(self):
         AutoBuilder.configureHolonomic(
@@ -137,7 +139,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def stage2(self):
         self.intake.intakeDrive.set(-.7)
-        print(self.intake.intakeDrive.getOutputCurrent())
         self.shooter.feedNote()
        
 
@@ -195,7 +196,6 @@ class MyRobot(commands2.TimedCommandRobot):
         # angle to rotations of motor
         rot = 0.210843373494 * angle - 6.45180722892
         self.shooter.setRot(rot-1) #round(rot-1, 1)
-        print(distance)
 
     def teleopPeriodic(self):
         """This function is called periodically during teleoperated mode."""
@@ -205,8 +205,6 @@ class MyRobot(commands2.TimedCommandRobot):
         
         xspeed = self.joystick.getX()
         yspeed = -self.joystick.getY()
-
-        print(self.shooter.shooterDrive1.getMotorTemperature())
 
         if not self.joystick.getTrigger():
             tspeed = self.joystick.getTwist()
@@ -236,7 +234,15 @@ class MyRobot(commands2.TimedCommandRobot):
         h2 = h / 360
 
         heading = h2 * (math.pi*2)
-        
+
+
+        heading = self.drivetrain.getPose().rotation()
+        if self.drivetrain.shouldFlipPath():
+            # flip towards driver pespective if on red side
+            heading = heading.rotateBy(Rotation2d(math.pi))
+
+        heading = heading.radians()
+
         if abs(xspeed) <.10:
             xspeed=0
         if abs(yspeed) <.10:
@@ -330,53 +336,10 @@ class MyRobot(commands2.TimedCommandRobot):
         if self.xboxController.getAButton():
             self.intake.intakeDrive.set(1)
 
-        #if xboxController.getBButton():
-        #    self.intake.moveDown()
-        """
-        
-        if self.xboxController.getRightY() > .1:
-            self.shooterot += 0.002
-        if self.xboxController.getRightY() > -.1:
-            self.shooterot -= 0.002
-
-        self.shooter.setRot(self.shooterot)
-        """
-        """
-        
-
-        
-        
-        if xboxController.getBButton():
-            self.intake.intakeDrive.set(-0.8)
-
-        if xboxController.getAButton():
-            self.intake.intakeDrive.set(1)
-
-        """
 
 
+        self.intake.intakeControllerUpdate()
 
-
-        
-        # auto transfer
-        """
-          - stage1 - drive intake motor inwards while feed motor intakes
-          - stage 2 -eject intake and feed motor
-          - 3- spin flywheels backwards
-        """
-
-
-
-
-        # ----------------------- SHOOTER CODE -----------------------
-"""        revbutton = xboxController.getLeftTriggerAxis()
-
-
-        if revbutton:
-            self.
-
-        """
-        #self.drivetrain
 
 
 if __name__ == "__main__":

@@ -255,9 +255,7 @@ class DriveTrain(commands2.Subsystem):
 
 
     def driveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
-        if random.random() < .1:
-            print(self.getPose())
-            print(speeds)
+        print(self.getPose())
 
         self.lastChassisSpeed = speeds
 
@@ -296,4 +294,4 @@ class DriveTrain(commands2.Subsystem):
         self.backRightDrive.setVoltage((backRightOptimized.speed/maxModSpeed)*maxVoltage)
         self.frontLeftDrive.setVoltage((frontLeftOptimized.speed/maxModSpeed)*maxVoltage)
         self.frontRightDrive.setVoltage((frontRightOptimized.speed/maxModSpeed)*maxVoltage)
-        print((backLeftOptimized.speed/maxModSpeed)*maxVoltage)
+        
