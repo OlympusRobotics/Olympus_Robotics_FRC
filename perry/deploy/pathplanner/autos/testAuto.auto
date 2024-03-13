@@ -24,15 +24,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "intakeTrans"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "shoot"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "shoot"
+                }
+              }
+            ]
           }
         },
         {
@@ -48,15 +55,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "intakeTrans"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "shoot3rd"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "shoot3rd"
+                }
+              }
+            ]
           }
         },
         {

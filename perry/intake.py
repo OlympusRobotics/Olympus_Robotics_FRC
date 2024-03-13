@@ -39,7 +39,7 @@ class Intake(commands2.Subsystem):
 
         # intake motion profiling
         self.kDt = .02
-        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(1.75, 0.75)
+        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(1500, 200)
         self.controller = wpimath.controller.ProfiledPIDController(
             .022, 0, 0.00, self.constraints, self.kDt
         ) #.022
@@ -47,7 +47,6 @@ class Intake(commands2.Subsystem):
     def intakeControllerUpdate(self):
         rotPower = self.controller.calculate(self.intakeRotEnc.getPosition())
         self.intakeRotation.set(rotPower)
-        print(f"rot power : {rotPower}")
 
 
     def intakeTempProt(self):

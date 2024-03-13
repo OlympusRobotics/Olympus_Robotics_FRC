@@ -26,7 +26,7 @@ from wpimath.kinematics import SwerveModuleState
 from wpimath.geometry import Rotation2d
 import phoenix6
 from pathplannerlib.auto import NamedCommands
-
+import intake
 
 def lratio(angle):
     """converts -pi, pi to -.5,.5"""
@@ -55,6 +55,7 @@ def getSwerveModPos(rotEnc : phoenix6.hardware.CANcoder, driveEnc: rev.SparkRela
 class DriveTrain(commands2.Subsystem):
     def __init__(self) -> None:
         super().__init__()
+        self.intake = intake.Intake()
 
 
         # DRIVETRAIN INIT
@@ -145,7 +146,6 @@ class DriveTrain(commands2.Subsystem):
 
 
 
-
     def resetHarder(self, initialPose = Pose2d()):
 
         print("CALLED RSETHARDER")
@@ -220,6 +220,7 @@ class DriveTrain(commands2.Subsystem):
        
     def periodic(self) -> None:
         self.updateOdometry()
+        self.intake.intakeControllerUpdate()
         #.publisher.set(self.kinematics.toSwerveModuleStates(self.lastChassisSpeed))
         # print(f"periodic odometryu FUCK: {self.odometry.getPose()}")
 
