@@ -149,6 +149,41 @@ class MyRobot(commands2.TimedCommandRobot):
         self.shooter.stopFlywheels()
         self.shooter.feedMotor.set(0)
 
+    def systemTempCheck(self):
+        motorControllers = [
+            self.drivetrain.frontLeftDrive,
+            self.drivetrain.frontRightDrive,
+            self.drivetrain.backLeftDrive,
+            self.drivetrain.backRightDrive,
+            self.drivetrain.backLeftRotation,
+            self.drivetrain.backRightRotation,
+            self.drivetrain.frontLeftRotation,
+            self.drivetrain.frontRightRotation,
+            self.drivetrain.intake.intakeRotation,
+            self.drivetrain.intake.intakeDrive,
+            self.shooter.shooterDrive1,
+            self.shooter.shooterDrive2,
+            self.shooter.feedMotor,
+            self.shooter.rotationMotor,
+            self.climber.leftClimber,
+            self.climber.rightClimber
+        ]
+
+        burntFlag = False
+        for motorController in motorControllers:
+            temp = motorController.getMotorTemperature()
+            if temp > 90:
+                print(f"[x] Motor {motorController.getDeviceId()}, {temp}C")
+                burntFlag = True
+            else:
+                print(f"[-] Motor {motorController.getDeviceId()}, {temp}C")
+        
+
+        if burntFlag:
+            for i in range(100):
+                print("!!! ---------------- MOTORS TOO HOT ------------------- !!!")
+
+        #print(f"Motor {motorController.getDeviceId()}, {temp}C")
 
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
@@ -158,6 +193,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.xboxController = wpilib.XboxController(0)
         self.joystick = wpilib.Joystick(1)
+
+        self.systemTempCheck()
 
     def autoAim(self):
         kP = .02 #.013
@@ -240,7 +277,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         heading = heading.radians()
 
-        print(heading)
 
         if abs(xspeed) <.10:
             xspeed=0

@@ -108,8 +108,11 @@ class Shooter(commands2.Subsystem):
         if self.shooterTempProt() > 0:
             return 1
         
-        self.shooterDrive1.setVoltage(-12)
-        self.shooterDrive2.setVoltage(12)
+        #self.shooterDrive1.setVoltage(-12)
+        #self.shooterDrive2.setVoltage(12)
+
+        self.shooterDrive1.set(-1)
+        self.shooterDrive2.set(1)
 
         print(self.shooterDriveEnc1.getVelocity())
 #        print(self.shooterDriveEnc2.getVelocity())

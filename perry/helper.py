@@ -48,7 +48,6 @@ def tempProt(motorController: rev.CANSparkMax):
     temp = motorController.getMotorTemperature()
     if temp > 100:
         motorController.set(0)
-        #print(f"Motor {motorController.getDeviceId()}, {temp}C")
         return 1
     
     return 0
