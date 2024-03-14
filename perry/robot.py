@@ -314,10 +314,10 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
             if self.xboxController.getRightTriggerAxis() > .5:
-                if self.shooter.getSpeed():
-
+                if self.shooter.getSpeed() or self.xboxController.getLeftBumper():
                     self.shooter.feedNote()
                     self.drivetrain.intake.intakeDrive.set(-1)
+                
             else:
                 self.shooter.resetFeed()
 
