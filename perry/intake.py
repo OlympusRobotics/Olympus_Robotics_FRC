@@ -35,11 +35,11 @@ class Intake(commands2.Subsystem):
 
         # intake global variables
         self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
-        self.intakeDownSetpoint = -28 # rotations for the bottom position of the intake
+        self.intakeDownSetpoint = -35 # rotations for the bottom position of the intake
 
         # intake motion profiling
         self.kDt = .02
-        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(1500, 200)
+        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(1500, 160)
         self.controller = wpimath.controller.ProfiledPIDController(
             .022, 0, 0.00, self.constraints, self.kDt
         ) #.022
@@ -70,9 +70,6 @@ class Intake(commands2.Subsystem):
         self.intakeDrive.set(1)
 
 
-    def stopMotors(self):
-        self.intakeRotation.set(0)
-
 
     def moveUp(self):
-        self.intakeRotation.set(.4)
+        self.intakeRotation.set(1)

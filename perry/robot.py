@@ -33,9 +33,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.transferCommand = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
             commands2.InstantCommand(self.shooter.goHome, self),
+            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.8), self),
             commands2.WaitCommand(1.3),
             commands2.InstantCommand(self.stage1, self),
-            commands2.WaitCommand(.75),
+            #commands2.WaitCommand(.75),
+            commands2.WaitCommand(1.25),
             commands2.InstantCommand(self.stage2, self),
             commands2.WaitCommand(.5),
             commands2.InstantCommand(self.stage3, self),
@@ -143,6 +145,7 @@ class MyRobot(commands2.TimedCommandRobot):
   
     def stage4(self):
         self.shooter.feedMotor.set(0)
+        self.drivetrain.intake.intakeDrive.set(0)
 
 
     def end(self):
@@ -191,14 +194,14 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.drivetrain.gyro.set_yaw(0)
         self.transferStartTime = 0
 
-        self.xboxController = wpilib.XboxController(0)
-        self.joystick = wpilib.Joystick(1)
+        self.xboxController = wpilib.XboxController(1)
+        self.joystick = wpilib.Joystick(0)
 
         self.systemTempCheck()
 
     def autoAim(self):
         kP = .02 #.013
-        kI = .008
+        kI = .006
         tx = self.limey.getLimey()["tx"]
         if tx == 0:
             return -1
@@ -307,12 +310,28 @@ class MyRobot(commands2.TimedCommandRobot):
         if self.xboxController.getXButtonReleased():
             self.transferCommand.schedule()
 
+        #if self.drivetrain.intake.intakeDrive.getOutputCurrent() > 50:
+        #    self.transferCommand.schedule()
+
         if self.xboxController.getXButtonPressed() and self.transferCommand.isScheduled():
             self.transferCommand.cancel()
 
+        self.drivetrain.intake.intakeControllerUpdate()
+
+
+        if self.xboxController.getYButton():
+            self.drivetrain.intake.intakeRotation.set(1)
+            return 1
+        
+        if self.xboxController.getYButtonReleased():
+            self.drivetrain.intake.intakeRotation.set(0)
+            self.drivetrain.intake.intakeHomeSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition()
+            self.drivetrain.intake.intakeDownSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition() - 28
+
+
 
         # VERY SMART FIX
-        if not self.transferCommand.isScheduled():
+        if not self.transferCommand.isScheduled() :
             # climber stuff
             if self.xboxController.getLeftStickButton():
                 self.shooter.targetAmp()
@@ -328,7 +347,7 @@ class MyRobot(commands2.TimedCommandRobot):
             if intakeButton: # if it is currently held
                 self.drivetrain.intake.rotateDown()
 
-            else:
+            elif not intakeButton:
                 self.drivetrain.intake.rotateHome()
 
 
@@ -350,7 +369,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
             if self.xboxController.getRightTriggerAxis() > .5:
-                if self.shooter.getSpeed() or self.xboxController.getLeftBumper():
+                if self.shooter.getSpeed() or self.xboxController.getLeftBumper() or self.xboxController.getRightBumper():
                     self.shooter.feedNote()
                     self.drivetrain.intake.intakeDrive.set(-1)
                 
@@ -367,14 +386,10 @@ class MyRobot(commands2.TimedCommandRobot):
             if not self.xboxController.getLeftStickButton() and not self.xboxController.getRightStickButton() and not self.xboxController.getRightBumper() and not self.xboxController.getLeftBumper() and (self.xboxController.getLeftTriggerAxis() < .5) and not self.joystick.getTrigger():
                 self.shooter.goHome()
 
-            if self.xboxController.getYButton():
-                self.drivetrain.intake.moveUp()
 
-            if self.xboxController.getYButtonReleased():
-                self.drivetrain.intake.intakeRotation.set(0)
-                self.drivetrain.intake.intakeHomeSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition()
-                self.drivetrain.intake.intakeDownSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition() - 28
-   
+
+
+
 
         #self.drivetrain.intake.stopMotors()
         if self.xboxController.getAButton():
@@ -388,7 +403,10 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
 
-        self.drivetrain.intake.intakeControllerUpdate()
+
+
+
+        
 
 
 

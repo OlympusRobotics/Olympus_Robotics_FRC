@@ -114,7 +114,6 @@ class Shooter(commands2.Subsystem):
         self.shooterDrive1.set(-1)
         self.shooterDrive2.set(1)
 
-        print(self.shooterDriveEnc1.getVelocity())
 #        print(self.shooterDriveEnc2.getVelocity())
         return 0
 
