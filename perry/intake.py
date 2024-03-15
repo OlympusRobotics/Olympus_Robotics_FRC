@@ -4,6 +4,7 @@ from helper import tempProt
 import wpimath
 import wpimath.controller
 import wpimath.trajectory
+import time
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -73,3 +74,17 @@ class Intake(commands2.Subsystem):
 
     def moveUp(self):
         self.intakeRotation.set(1)
+
+
+    def transferHome(self):
+        self.rotateHome()
+        startTime = time.time()
+        print("Intake starts")
+
+        while abs(self.intakeRotEnc.getPosition() - self.intakeHomeSetpoint) < 1:
+            if time.time() - startTime > 5:
+                print("Intake timeout")
+                break
+        print("Intake finish")
+
+        return 0

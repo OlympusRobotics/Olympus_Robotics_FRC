@@ -30,9 +30,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.globalTimer = wpilib.Timer()
         self.globalTimer.start()
 
+        import time
         self.transferCommand = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
-            commands2.InstantCommand(self.shooter.goHome, self),
+            #commands2.InstantCommand(self.shooter.goHome, self),
+            commands2.InstantCommand(self.drivetrain.intake.transferHome, self),
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.8), self),
             commands2.WaitCommand(1.3),
             commands2.InstantCommand(self.stage1, self),
@@ -46,6 +48,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.WaitCommand(.1),
             commands2.InstantCommand(self.end, self),
         )
+
         self.shooterot = 0
         self.shooterInte = 0
 
@@ -198,6 +201,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.joystick = wpilib.Joystick(0)
 
         self.systemTempCheck()
+        self.transferCommand.schedule()
 
     def autoAim(self):
         kP = .02 #.013
