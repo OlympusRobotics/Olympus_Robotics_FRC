@@ -116,6 +116,10 @@ class Shooter(commands2.Subsystem):
 
 #        print(self.shooterDriveEnc2.getVelocity())
         return 0
+    
+    def spinFlyAnal(self, power):
+        self.shooterDrive1.set(-power)
+        self.shooterDrive2.set(power)
 
     def ampSpinFlywheels(self) -> bool:
 

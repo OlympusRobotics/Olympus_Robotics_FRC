@@ -306,6 +306,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.shooter.setRot(rot-1) #round(rot-1, 1)
 
     def teleopPeriodic(self):
+        self.drivetrain.shouldUpdateIntakeController = False
         """This function is called periodically during teleoperated mode."""
         
         # ----------------------- DRIVETRAIN CODE -----------------------
@@ -383,6 +384,7 @@ class MyRobot(commands2.TimedCommandRobot):
         
         if self.xboxController.getXButton():
             self.drivetrain.intake.intakeRotation.set(-.4)
+            self.intakeDrive.set(1)
             return 0
         
         if self.xboxController.getYButtonReleased():
@@ -394,6 +396,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         self.drivetrain.intake.intakeRotation.set(0)
+        print(self.drivetrain.shouldUpdateIntakeController)
             
         #self.drivetrain.intake.rotateDown()
 
@@ -442,19 +445,23 @@ class MyRobot(commands2.TimedCommandRobot):
                 else:
                     self.climber.rest()
             
+            
 
-            if self.xboxController.getLeftTriggerAxis() > .5:
+            if self.xboxController.getLeftTriggerAxis() > .1:
                 #self.shooter.targetSpeaker()
                 #self.shooter.spinFlywheels()
 
-                self.shooter.spinFlywheels()
+                #self.shooter.spinFlywheels()
+                
                     #print("SPINNING")
+                self.shooter.spinFlyAnal(self.xboxController.getLeftTriggerAxis()**2)
                 self.shooterAim()
 
-            if self.xboxController.getLeftTriggerAxis() < .4:
+            if self.xboxController.getLeftTriggerAxis() < .1:
                 self.shooterInte = 0
+                self.shooter.spinFlyAnal(0)
                 
-                self.shooter.stopFlywheels()
+                #self.shooter.stopFlywheels()
                     #print("STOPPING")
 
 
@@ -468,7 +475,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
             if self.xboxController.getLeftBumper():
                 self.shooter.targetAmp()
-                self.shooter.spinFlywheels()
 
             if self.xboxController.getRightBumper():
                 self.shooter.setRot(14)
