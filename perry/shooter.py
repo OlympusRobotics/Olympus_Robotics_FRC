@@ -117,6 +117,11 @@ class Shooter(commands2.Subsystem):
 #        print(self.shooterDriveEnc2.getVelocity())
         return 0
 
+    def ampSpinFlywheels(self) -> bool:
+
+        self.shooterDrive1.set(-.5)
+        self.shooterDrive2.set(.5)
+
 
     def getSpeed(self):
         #if (abs(self.shooterDriveEnc1.getVelocity()) + abs(self.shooterDriveEnc2.getVelocity()))/2 > 4000: #5200

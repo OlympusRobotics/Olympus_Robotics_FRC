@@ -47,7 +47,7 @@ class Intake(commands2.Subsystem):
 
     def intakeControllerUpdate(self):
         rotPower = self.controller.calculate(self.intakeRotEnc.getPosition())
-        self.intakeRotation.set(rotPower)
+        #self.intakeRotation.set(rotPower)
 
 
     def intakeTempProt(self):

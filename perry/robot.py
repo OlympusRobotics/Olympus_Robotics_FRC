@@ -15,10 +15,28 @@ from helper import getInterpAng
 from wpilib import DriverStation
 #from wpilib.cameraserver import CameraServer
 from cscore import CameraServer
+from wpilib import SmartDashboard
+
+
 
 class MyRobot(commands2.TimedCommandRobot):
-
     def robotInit(self):
+        """"""
+        self.threeNote = "testAuto"
+        self.center2Auto = "center2Auto"
+        self.centerRun = "centerAuto"
+        self.twoNote = "twoNote"
+        self.preload = "preload"
+        self.chooser = wpilib.SendableChooser()
+
+        self.chooser.setDefaultOption("Three Note", self.threeNote)
+        self.chooser.addOption("Two note, amp side", self.center2Auto)
+        self.chooser.addOption("Shoot and run source side", self.centerRun)
+        self.chooser.addOption("Two note, in front of speaker", self.twoNote)
+        self.chooser.addOption("Shoot preload", self.preload)
+        SmartDashboard.putData("Auto choices", self.chooser)
+
+
         """
         This function is called upon program startup and
         should be used for any initialization code.
@@ -34,7 +52,6 @@ class MyRobot(commands2.TimedCommandRobot):
         self.globalTimer = wpilib.Timer()
         self.globalTimer.start()
 
-        import time
         self.transferCommand = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
             #commands2.InstantCommand(self.shooter.goHome, self),
@@ -55,6 +72,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.shooterot = 0
         self.shooterInte = 0
+
+        self.shooterPackets = 0
 
 
 
@@ -141,13 +160,14 @@ class MyRobot(commands2.TimedCommandRobot):
         #autos = ["Dispense", "testAuto", "Dispense2"]
         #auto = PathPlannerAuto(autos[DriverStation.getLocation()-1])
         #auto = PathPlannerAuto("centerAuto")
-        auto = PathPlannerAuto("testAuto")
+        self.autoSelected = self.chooser.getSelected()
+        auto = PathPlannerAuto(self.autoSelected)
 
         return auto
 
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
-        
+
         three = True
 
         if three:
@@ -357,25 +377,31 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # ----------------------- INTAKE CODE -----------------------
         if self.xboxController.getYButton():
-            print("Y BUTTON")
-            self.drivetrain.intake.intakeRotation.set(1)
+            self.drivetrain.intake.intakeRotation.set(.4)
             self.drivetrain.shouldUpdateIntakeController = False
+            return 0
+        
+        if self.xboxController.getXButton():
+            self.drivetrain.intake.intakeRotation.set(-.4)
             return 0
         
         if self.xboxController.getYButtonReleased():
             print("RELEASED Y")
-            self.drivetrain.intake.intakeRotation.set(0)
             self.drivetrain.intake.intakeHomeSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition()
             self.drivetrain.intake.intakeDownSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition() - 28
 
             self.drivetrain.shouldUpdateIntakeController = True 
 
-        print("REST OF T")
+
+        self.drivetrain.intake.intakeRotation.set(0)
             
         #self.drivetrain.intake.rotateDown()
-            
-        if self.xboxController.getXButtonReleased():
+
+        if self.xboxController.getAButtonPressed():
             self.transferCommand.schedule()
+
+        #if self.xboxController.getXButtonReleased():
+        #    self.transferCommand.schedule()
 
         #if self.drivetrain.intake.intakeDrive.getOutputCurrent() > 50:
         #    self.transferCommand.schedule()
@@ -399,7 +425,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
             self.drivetrain.intake.intakeDrive.set(0)
-            self.shooter.stopFlywheels()
+            
 
 
             if intakeButton: # if it is currently held
@@ -419,11 +445,17 @@ class MyRobot(commands2.TimedCommandRobot):
 
             if self.xboxController.getLeftTriggerAxis() > .5:
                 #self.shooter.targetSpeaker()
+                #self.shooter.spinFlywheels()
+
                 self.shooter.spinFlywheels()
+                    #print("SPINNING")
                 self.shooterAim()
 
             if self.xboxController.getLeftTriggerAxis() < .4:
                 self.shooterInte = 0
+                
+                self.shooter.stopFlywheels()
+                    #print("STOPPING")
 
 
             if self.xboxController.getRightTriggerAxis() > .5:
@@ -450,8 +482,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         #self.drivetrain.intake.stopMotors()
-        if self.xboxController.getAButton():
-            self.drivetrain.intake.intakeDrive.set(1)
+        #if self.xboxController.getAButton():
+        #    self.drivetrain.intake.intakeDrive.set(1)
 
         if self.joystick.getRawButtonPressed(3):
             if self.drivetrain.shouldFlipPath():
@@ -463,7 +495,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
 
-
+        
         
 
 

@@ -222,13 +222,12 @@ class DriveTrain(commands2.Subsystem):
 
        
     def periodic(self) -> None:
+        
         self.updateOdometry()
 
         if self.shouldUpdateIntakeController:
 
             self.intake.intakeControllerUpdate()
-        #.publisher.set(self.kinematics.toSwerveModuleStates(self.lastChassisSpeed))
-        # print(f"periodic odometryu FUCK: {self.odometry.getPose()}")
 
     def resetMotors(self) -> None:
         pass

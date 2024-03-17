@@ -1,17 +1,17 @@
 {
   "Docking": {
     "Data": [
-      "DockNode  ID=0x00000001 Pos=283,708 Size=1146,253 Selected=0x48913727"
+      "DockNode  ID=0x00000001 Pos=527,746 Size=1146,253 Selected=0x48913727"
     ]
   },
   "MainWindow": {
     "GLOBAL": {
       "fps": "120",
-      "height": "986",
+      "height": "1494",
       "maximized": "1",
       "style": "0",
       "userScale": "2",
-      "width": "1920",
+      "width": "2560",
       "xpos": "0",
       "ypos": "29"
     }
@@ -20,17 +20,17 @@
     "###/SmartDashboard/penis": {
       "Collapsed": "0",
       "DockId": "0x00000001,1",
-      "Pos": "283,708",
+      "Pos": "527,746",
       "Size": "1146,253"
     },
     "###FMS": {
       "Collapsed": "0",
-      "Pos": "8,723",
+      "Pos": "71,752",
       "Size": "235,244"
     },
     "###Joysticks": {
       "Collapsed": "0",
-      "Pos": "312,581",
+      "Pos": "299,626",
       "Size": "1156,91"
     },
     "###NetworkTables": {
@@ -41,7 +41,7 @@
     "###NetworkTables Info": {
       "Collapsed": "0",
       "DockId": "0x00000001,0",
-      "Pos": "283,708",
+      "Pos": "527,746",
       "Size": "1146,253"
     },
     "###Other Devices": {
