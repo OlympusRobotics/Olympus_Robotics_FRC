@@ -119,10 +119,10 @@ class Shooter(commands2.Subsystem):
 
 
     def getSpeed(self):
-        if (abs(self.shooterDriveEnc1.getVelocity()) + abs(self.shooterDriveEnc2.getVelocity()))/2 > 5200:
-            return 1
+        #if (abs(self.shooterDriveEnc1.getVelocity()) + abs(self.shooterDriveEnc2.getVelocity()))/2 > 4000: #5200
+        #    return 1
         
-        return 0
+        return 1
         
         #error1 = abs(abs(self.shooterDriveEnc1.getVelocity())-abs(self.shooterMaxVelocity))
         #error2 = abs(abs(self.shooterDriveEnc2.getVelocity())-abs(self.shooterMaxVelocity))

@@ -13,6 +13,8 @@ from pathplannerlib.auto import NamedCommands, PathPlannerAuto
 import Limey
 from helper import getInterpAng
 from wpilib import DriverStation
+#from wpilib.cameraserver import CameraServer
+from cscore import CameraServer
 
 class MyRobot(commands2.TimedCommandRobot):
 
@@ -21,6 +23,8 @@ class MyRobot(commands2.TimedCommandRobot):
         This function is called upon program startup and
         should be used for any initialization code.
         """
+        CameraServer.startAutomaticCapture()
+
         self.drivetrain = drivetrain.DriveTrain()
         self.climber = climber.Climber()
         self.shooter = shooter.Shooter()
@@ -34,9 +38,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.transferCommand = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
             #commands2.InstantCommand(self.shooter.goHome, self),
-            commands2.InstantCommand(self.drivetrain.intake.transferHome, self),
-            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.8), self),
-            commands2.WaitCommand(1.3),
+            #commands2.InstantCommand(self.drivetrain.intake.transferHome, self),
+            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.4), self),
+            commands2.WaitCommand(1.8),
             commands2.InstantCommand(self.stage1, self),
             #commands2.WaitCommand(.75),
             commands2.WaitCommand(1.25),
@@ -51,6 +55,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.shooterot = 0
         self.shooterInte = 0
+
+
 
 
     def configure_auto(self):
@@ -77,7 +83,7 @@ class MyRobot(commands2.TimedCommandRobot):
         # Load the path you want to follow using its name in the GUI
         #self.shootNamedCommand = self.runOnce(self.shootCommand)
         self.shootCommand = commands2.SequentialCommandGroup(
-            commands2.cmd.runOnce(lambda: self.drivetrain.driveFromChassisSpeeds(ChassisSpeeds(0,0,0))),
+            commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()),
             commands2.cmd.runOnce(self.shooter.spinFlywheels),
             commands2.cmd.runOnce(self.shooter.goHome),
             commands2.PrintCommand("SHOOTER RAN"),
@@ -94,6 +100,22 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.cmd.runOnce(self.drivetrain.intake.rotateDown),
             commands2.WaitCommand(.5)
         )
+
+        self.justShootCommand = commands2.SequentialCommandGroup(
+            commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()),
+            commands2.cmd.runOnce(self.shooter.spinFlywheels),
+            commands2.cmd.runOnce(self.shooter.goHome),
+            commands2.PrintCommand("SHOOTER RAN"),
+            commands2.WaitCommand(1),
+            commands2.PrintCommand("FEED NOTE"),
+            commands2.cmd.runOnce( self.shooter.feedNote),
+            commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(-1)),
+            commands2.WaitCommand(1),
+            commands2.PrintCommand("FLYWHEEL COMMAND"),
+            commands2.cmd.runOnce(self.shooter.stopFlywheels),
+            commands2.cmd.runOnce(lambda: self.shooter.feedMotor.set(0)),
+            commands2.PrintCommand("                            SHOOT COMMAND RAN"),
+        )
         """
         
                 commands2.cmd.runOnce(self.shooter.stopFlywheels()),
@@ -101,6 +123,7 @@ class MyRobot(commands2.TimedCommandRobot):
         """
 
         self.drivetrain.intakeCommand = commands2.SequentialCommandGroup(
+            commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()),
             commands2.cmd.runOnce(self.drivetrain.intake.rotateHome),
             commands2.cmd.runOnce(self.shooter.goHome),
             commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(1)),
@@ -112,20 +135,45 @@ class MyRobot(commands2.TimedCommandRobot):
         
         NamedCommands.registerCommand("shoot", self.shootCommand)
         NamedCommands.registerCommand("intakeTrans", self.drivetrain.intakeCommand)
+        NamedCommands.registerCommand("justShoot", self.justShootCommand)
         
 
-        autos = ["Dispense", "testAuto", "Dispense2"]
-        auto = PathPlannerAuto(autos[DriverStation.getLocation()-1])
-        
-        #auto = PathPlannerAuto("testAuto")
+        #autos = ["Dispense", "testAuto", "Dispense2"]
+        #auto = PathPlannerAuto(autos[DriverStation.getLocation()-1])
+        #auto = PathPlannerAuto("centerAuto")
+        auto = PathPlannerAuto("testAuto")
 
         return auto
 
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
-        self.command = self.getAutonomousCommand()
-        if self.command:
-            self.command.schedule()
+        
+        three = True
+
+        if three:
+            self.command = self.getAutonomousCommand()
+            if self.command:
+                self.command.schedule()
+
+        else:
+            self.shootCommand = commands2.SequentialCommandGroup(
+                commands2.cmd.runOnce(self.shooter.spinFlywheels),
+                commands2.cmd.runOnce(self.shooter.goHome),
+                commands2.PrintCommand("SHOOTER RAN"),
+                commands2.WaitCommand(1),
+                commands2.PrintCommand("FEED NOTE"),
+                commands2.cmd.runOnce( self.shooter.feedNote),
+                commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(-1)),
+                commands2.WaitCommand(1),
+                commands2.PrintCommand("FLYWHEEL COMMAND"),
+                commands2.cmd.runOnce(self.shooter.stopFlywheels),
+                commands2.cmd.runOnce(lambda: self.shooter.feedMotor.set(0)),
+                commands2.PrintCommand("                            SHOOT COMMAND RAN"),
+                commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(0)),
+            )
+
+            self.shootCommand.schedule()
+        
         
 
     def autonomousPeriodic(self):
@@ -201,7 +249,6 @@ class MyRobot(commands2.TimedCommandRobot):
         self.joystick = wpilib.Joystick(0)
 
         self.systemTempCheck()
-        self.transferCommand.schedule()
 
     def autoAim(self):
         kP = .02 #.013
@@ -309,6 +356,22 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         # ----------------------- INTAKE CODE -----------------------
+        if self.xboxController.getYButton():
+            print("Y BUTTON")
+            self.drivetrain.intake.intakeRotation.set(1)
+            self.drivetrain.shouldUpdateIntakeController = False
+            return 0
+        
+        if self.xboxController.getYButtonReleased():
+            print("RELEASED Y")
+            self.drivetrain.intake.intakeRotation.set(0)
+            self.drivetrain.intake.intakeHomeSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition()
+            self.drivetrain.intake.intakeDownSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition() - 28
+
+            self.drivetrain.shouldUpdateIntakeController = True 
+
+        print("REST OF T")
+            
         #self.drivetrain.intake.rotateDown()
             
         if self.xboxController.getXButtonReleased():
@@ -323,19 +386,10 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain.intake.intakeControllerUpdate()
 
 
-        if self.xboxController.getYButton():
-            self.drivetrain.intake.intakeRotation.set(1)
-            return 1
-        
-        if self.xboxController.getYButtonReleased():
-            self.drivetrain.intake.intakeRotation.set(0)
-            self.drivetrain.intake.intakeHomeSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition()
-            self.drivetrain.intake.intakeDownSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition() - 28
-
 
 
         # VERY SMART FIX
-        if not self.transferCommand.isScheduled() :
+        if not self.transferCommand.isScheduled():
             # climber stuff
             if self.xboxController.getLeftStickButton():
                 self.shooter.targetAmp()

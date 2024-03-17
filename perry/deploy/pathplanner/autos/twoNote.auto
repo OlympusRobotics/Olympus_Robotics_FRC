@@ -45,37 +45,6 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "pickup3rd"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "intakeTrans"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "shoot3rd"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
             "name": "justShoot"
           }
         }

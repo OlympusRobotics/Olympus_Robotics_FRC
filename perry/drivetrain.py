@@ -137,6 +137,9 @@ class DriveTrain(commands2.Subsystem):
         )
 
 
+        self.shouldUpdateIntakeController = True
+
+
         
         
 
@@ -220,7 +223,10 @@ class DriveTrain(commands2.Subsystem):
        
     def periodic(self) -> None:
         self.updateOdometry()
-        self.intake.intakeControllerUpdate()
+
+        if self.shouldUpdateIntakeController:
+
+            self.intake.intakeControllerUpdate()
         #.publisher.set(self.kinematics.toSwerveModuleStates(self.lastChassisSpeed))
         # print(f"periodic odometryu FUCK: {self.odometry.getPose()}")
 
@@ -296,3 +302,14 @@ class DriveTrain(commands2.Subsystem):
         self.frontLeftDrive.setVoltage((frontLeftOptimized.speed/maxModSpeed)*maxVoltage)
         self.frontRightDrive.setVoltage((frontRightOptimized.speed/maxModSpeed)*maxVoltage)
         
+
+    def stopMotors(self):
+        self.frontLeftDrive.set(0)
+        self.frontRightDrive.set(0)
+        self.backLeftDrive.set(0)
+        self.backRightDrive.set(0)
+
+        self.frontLeftRotation.set(0)
+        self.frontRightRotation.set(0)
+        self.backLeftRotation.set(0)
+        self.backRightRotation.set(0)

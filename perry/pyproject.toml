@@ -13,8 +13,7 @@ robotpy_version = "2024.2.1.1"
 robotpy_extras = [
     #"all",
     # "apriltag",
-     "commands2",
-    # "cscore",
+    "commands2",
     # "navx",
     #"pathplannerlib",
      "phoenix5",
@@ -31,5 +30,5 @@ robotpy_extras = [
 
 requires = [
     "robotpy-ctre==2024.1.1",
-    "robotpy-pathplannerlib>=2024.1.6",
+    "robotpy-pathplannerlib>=2024.1.6"
 ] 

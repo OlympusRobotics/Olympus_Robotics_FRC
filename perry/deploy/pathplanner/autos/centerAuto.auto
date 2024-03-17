@@ -14,19 +14,13 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "justShoot"
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "runToCenter"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakeTrans"
           }
         }
       ]

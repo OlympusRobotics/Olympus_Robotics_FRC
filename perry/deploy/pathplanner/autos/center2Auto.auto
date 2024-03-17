@@ -1,0 +1,49 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 0.7913245719729881,
+      "y": 6.74856751848735
+    },
+    "rotation": 58.29857033049428
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "runToTopNote"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "runToCenterBack"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "justShoot"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}
