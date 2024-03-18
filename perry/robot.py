@@ -306,7 +306,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.shooter.setRot(rot-1) #round(rot-1, 1)
 
     def teleopPeriodic(self):
-        self.drivetrain.shouldUpdateIntakeController = False
+        #self.drivetrain.shouldUpdateIntakeController = False
         """This function is called periodically during teleoperated mode."""
         
         # ----------------------- DRIVETRAIN CODE -----------------------
@@ -383,8 +383,11 @@ class MyRobot(commands2.TimedCommandRobot):
             return 0
         
         if self.xboxController.getXButton():
-            self.drivetrain.intake.intakeRotation.set(-.4)
-            self.drivetrain.intake.intakeDrive.set(1)
+            #self.drivetrain.intake.intakeRotation.set(-.4)
+            #self.drivetrain.intake.intakeDrive.set(1)
+            self.drivetrain.intake.rotateDown()
+            self.drivetrain.shouldUpdateIntakeController = True 
+
             return 0
         
         if self.xboxController.getYButtonReleased():
