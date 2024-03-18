@@ -57,7 +57,7 @@ class MyRobot(commands2.TimedCommandRobot):
             #commands2.InstantCommand(self.shooter.goHome, self),
             #commands2.InstantCommand(self.drivetrain.intake.transferHome, self),
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.4), self),
-            commands2.WaitCommand(1.8),
+            commands2.WaitCommand(.2),
             commands2.InstantCommand(self.stage1, self),
             #commands2.WaitCommand(.75),
             commands2.WaitCommand(1.25),
@@ -384,7 +384,7 @@ class MyRobot(commands2.TimedCommandRobot):
         
         if self.xboxController.getXButton():
             self.drivetrain.intake.intakeRotation.set(-.4)
-            self.intakeDrive.set(1)
+            self.drivetrain.intake.intakeDrive.set(1)
             return 0
         
         if self.xboxController.getYButtonReleased():
