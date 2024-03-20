@@ -86,7 +86,7 @@ class Intake(commands2.Subsystem):
 
     
     def isHomePos(self):
-        if abs(self.intakeRotEnc.getPosition() - self.intakeHomeSetpoint) < 10:
+        if abs(self.intakeRotEnc.getPosition() - self.intakeHomeSetpoint) < 3:
             return True
 
        

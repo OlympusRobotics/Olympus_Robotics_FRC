@@ -162,14 +162,14 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.WaitUntilCommand(self.drivetrain.intake.isHomePos),
             #commands2.WaitCommand(.2),
             commands2.InstantCommand(self.stage1, self),
-            #commands2.WaitCommand(.75),
-            commands2.WaitCommand(1.25),
+            commands2.WaitCommand(.5),
+            #commands2.WaitCommand(1.25),
             commands2.InstantCommand(self.stage2, self),
             commands2.WaitCommand(.5),
             commands2.InstantCommand(self.stage3, self),
             commands2.WaitCommand(.2),
             commands2.InstantCommand(self.stage4, self),
-            commands2.WaitCommand(.1),
+            commands2.WaitCommand(.2),
             commands2.InstantCommand(self.end, self),
             commands2.cmd.runOnce(self.shooter.spinFlywheels),
             commands2.cmd.WaitCommand(1),
@@ -257,6 +257,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
     def end(self):
+        self.drivetrain.intake.intakeDrive.set(0)
         self.shooter.feedMotor.set(0)
 
     def systemTempCheck(self):
