@@ -5,6 +5,9 @@ import wpimath
 import wpimath.controller
 import wpimath.trajectory
 import time
+import logging
+import wpilib
+import random
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -16,7 +19,8 @@ class Intake(commands2.Subsystem):
 
         self.intakeController = self.intakeRotation.getPIDController()
         self.intakeRotEnc = self.intakeRotation.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-
+        self.shaftEnc = wpilib.DutyCycleEncoder(0)
+        
         # Neo PID constants
         kP = 0.022
         kI = 0
@@ -44,6 +48,11 @@ class Intake(commands2.Subsystem):
         self.controller = wpimath.controller.ProfiledPIDController(
             .022, 0, 0.00, self.constraints, self.kDt
         ) #.022
+
+    def periodic(self) -> None:
+        if random.random() > 0.5:
+            logging.debug(f"shaft enc value - {self.shaftEnc.getAbsolutePosition()}")
+
 
     def intakeControllerUpdate(self):
         rotPower = self.controller.calculate(self.intakeRotEnc.getPosition())
@@ -75,16 +84,10 @@ class Intake(commands2.Subsystem):
     def moveUp(self):
         self.intakeRotation.set(1)
 
+    
+    def isHomePos(self):
+        if abs(self.intakeRotEnc.getPosition() - self.intakeHomeSetpoint) < 10:
+            return True
 
-    def transferHome(self):
-        self.rotateHome()
-        startTime = time.time()
-        print("Intake starts")
-
-        while abs(self.intakeRotEnc.getPosition() - self.intakeHomeSetpoint) < 1:
-            if time.time() - startTime > 5:
-                print("Intake timeout")
-                break
-        print("Intake finish")
-
-        return 0
+       
+        return False

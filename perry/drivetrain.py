@@ -47,7 +47,8 @@ def deg2Rot2d(deg) -> Rotation2d:
 
 def getSwerveModPos(rotEnc : phoenix6.hardware.CANcoder, driveEnc: rev.SparkRelativeEncoder) -> SwerveModulePosition:
     return SwerveModulePosition(
-        (driveEnc.getPosition()/6.75)*math.pi*.1016,
+                                        # 2pi*r
+        (driveEnc.getPosition()/6.75)*0.31918580816,
         Rotation2d(ticks2radODOMETRY(rotEnc.get_position().value_as_double))
     )
 
@@ -151,8 +152,6 @@ class DriveTrain(commands2.Subsystem):
 
     def resetHarder(self, initialPose = Pose2d()):
 
-        print("CALLED RSETHARDER")
-                
         """        if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
                     initialPose = flipFieldPose(initialPose)
         """
@@ -169,11 +168,6 @@ class DriveTrain(commands2.Subsystem):
             ),
             initialPose
         )
-
-        print(self.getPose())
-
-
-        
 
     def getPose(self):
         nonYPose = self.odometry.getPose()
@@ -222,12 +216,10 @@ class DriveTrain(commands2.Subsystem):
 
        
     def periodic(self) -> None:
-        
-        self.updateOdometry()
-
+        self.updateOdometry() # you need it 
         if self.shouldUpdateIntakeController:
-
             self.intake.intakeControllerUpdate()
+
 
     def resetMotors(self) -> None:
         pass
@@ -261,7 +253,6 @@ class DriveTrain(commands2.Subsystem):
 
 
     def driveFromChassisSpeeds(self, speeds: ChassisSpeeds) -> None:
-        print(self.getPose())
 
         self.lastChassisSpeed = speeds
 

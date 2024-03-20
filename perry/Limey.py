@@ -44,7 +44,6 @@ class Limey(commands2.Subsystem):
 
     def getPose(self):
         poes = self.table.getEntry("BotPoseBlue").getDoubleArray([])
-        print(poes) 
         if len(poes) == 0:
             return Pose2d()
         return Pose2d(Translation2d(poes[0], poes[1]), Rotation2d(poes[-1]))

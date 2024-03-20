@@ -14,8 +14,8 @@ class Shooter(commands2.Subsystem):
         self.rotationMotor = rev.CANSparkMax(22, rev.CANSparkMax.MotorType.kBrushless)
         self.rotationMotorContoroller = self.rotationMotor.getPIDController()
 
-        self.shooterController1 = self.shooterDrive1.getPIDController()
-        self.shooterController2 = self.shooterDrive2.getPIDController()
+        #self.shooterController1 = self.shooterDrive1.getPIDController()
+        #self.shooterController2 = self.shooterDrive2.getPIDController()
         self.feedController = self.feedMotor.getPIDController()
 
         self.shooterDriveEnc1 = self.shooterDrive1.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
@@ -23,8 +23,8 @@ class Shooter(commands2.Subsystem):
         self.feedMotorEnc = self.feedMotor.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
 
 
-        self.configShooterMotor(self.shooterController1)
-        self.configShooterMotor(self.shooterController2)
+        #self.configShooterMotor(self.shooterController1)
+        #self.configShooterMotor(self.shooterController2)
         self.configFeedMotor(self.feedController)
         self.configMotor(self.rotationMotorContoroller)
         
