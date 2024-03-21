@@ -54,6 +54,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.globalTimer.start()
 
         self.transferCommand = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.shooter.feedNote, self),
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
             #commands2.InstantCommand(self.shooter.goHome, self),
             #commands2.InstantCommand(self.drivetrain.intake.transferHome, self),
@@ -62,7 +63,7 @@ class MyRobot(commands2.TimedCommandRobot):
             #commands2.WaitCommand(.2),
             commands2.InstantCommand(self.stage1, self),
             #commands2.WaitCommand(.75),
-            commands2.WaitCommand(1.25),
+            commands2.WaitCommand(.5),
             commands2.InstantCommand(self.stage2, self),
             commands2.WaitCommand(.5),
             commands2.InstantCommand(self.stage3, self),
@@ -71,6 +72,24 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.WaitCommand(.1),
             commands2.InstantCommand(self.end, self),
         )
+
+        self.intakeHomeCommand = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.shooter.feedNote, self),
+            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.4), self),
+            commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
+            commands2.WaitUntilCommand(self.drivetrain.intake.isHomePos),
+            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(0), self),
+        )
+
+        self.intakeEject = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.drivetrain.intake.rotateEject, self),
+            commands2.WaitUntilCommand(self.drivetrain.intake.isEjectPos),
+            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(1), self),
+            commands2.WaitCommand(.5),
+            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(0), self),
+        )
+
+        
 
         self.shooterot = 0
         self.shooterInte = 0
@@ -405,6 +424,18 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         # ----------------------- INTAKE CODE -----------------------
+        if self.xboxController.getBButton():
+            self.drivetrain.intake.rotateDown()
+            self.drivetrain.shouldUpdateIntakeController = True
+            return 0
+
+        if self.xboxController.getBButtonReleased():
+            self.intakeHomeCommand.schedule()
+            #elf.drivetrain.intake.intakeDrive.set(-1) 
+
+        #if self.intakeHomeCommand.isScheduled():
+        #    return 0  
+        
         if self.xboxController.getYButton():
             self.drivetrain.intake.intakeRotation.set(.4)
             self.drivetrain.shouldUpdateIntakeController = False
@@ -436,7 +467,10 @@ class MyRobot(commands2.TimedCommandRobot):
             #print("CANCELELIGN") # TODO REMOVE THIS SHIT
 
         if self.xboxController.getAButtonPressed():
-            self.transferCommand.schedule()
+            self.drivetrain.intake.rotateDown()
+            self.drivetrain.intake.intakeDrive.set(-1)
+            #self.intakeHomeCommand.schedule()
+            #self.transferCommand.cancel()
 
         if self.xboxController.getXButtonReleased():
             self.transferCommand.schedule()
@@ -450,7 +484,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         
         # VERY SMART FIX
-        if not self.transferCommand.isScheduled():
+        if not self.transferCommand.isScheduled() and not self.intakeHomeCommand.isScheduled():
             # climber stuff, need to put shooter in up pos for climbing
             if self.xboxController.getLeftStickButton():
                 self.shooter.targetAmp()
@@ -465,9 +499,12 @@ class MyRobot(commands2.TimedCommandRobot):
 
             if intakeButton: # if it is currently held
                 self.drivetrain.intake.rotateDown()
+                self.xboxController.setRumble(self.xboxController.RumbleType.kBothRumble,1)
+                
 
-            elif not intakeButton:
+            elif not intakeButton and not self.xboxController.getAButton():
                 self.drivetrain.intake.rotateHome()
+                self.xboxController.setRumble(self.xboxController.RumbleType.kBothRumble,0)
 
 
             if self.xboxController.getRightStickButton():

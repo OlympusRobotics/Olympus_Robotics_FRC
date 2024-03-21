@@ -19,7 +19,7 @@ class Intake(commands2.Subsystem):
 
         self.intakeController = self.intakeRotation.getPIDController()
         self.intakeRotEnc = self.intakeRotation.getEncoder(rev.SparkRelativeEncoder.Type.kHallSensor, 42)
-        self.shaftEnc = wpilib.DutyCycleEncoder(0)
+        self.shaftEnc = wpilib.Encoder(1,2)
         
         # Neo PID constants
         kP = 0.022
@@ -40,23 +40,33 @@ class Intake(commands2.Subsystem):
 
         # intake global variables
         self.intakeHomeSetpoint = 0 # top position in rotations (not enc values) for the top position of the intake
-        self.intakeDownSetpoint = -35 # rotations for the bottom position of the intake
+        self.intakeDownSetpoint = 1072 #.567 # rotations for the bottom position of the intake
+        self.ejectSetpoint = 600
 
         # intake motion profiling
         self.kDt = .02
-        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(1500, 160)
+        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(8000, 6000)
         self.controller = wpimath.controller.ProfiledPIDController(
-            .022, 0, 0.00, self.constraints, self.kDt
+            .0005, 0, 0.00, self.constraints, self.kDt
         ) #.022
+
+        self.shaftEnc.reset()
+
+        #self.controller.enableContinuousInput(0,1)
+        
+
 
     def periodic(self) -> None:
         if random.random() > 0.5:
-            logging.debug(f"shaft enc value - {self.shaftEnc.getAbsolutePosition()}")
+            logging.debug(f"shaft enc value - {self.shaftEnc.getDistance()}")
+            #print(self.shaftEnc.getAbsolutePosition())
 
 
     def intakeControllerUpdate(self):
-        rotPower = self.controller.calculate(self.intakeRotEnc.getPosition())
-        self.intakeRotation.set(rotPower)
+        rotPower = self.controller.calculate(self.shaftEnc.getDistance())
+        self.intakeRotation.set(-rotPower)
+        #if random.random() > .8:
+        #    print(f"Power {rotPower}, Pos  {self.shaftEnc.getDistance()}, setpoint : {self.controller.getSetpoint()}")
 
 
     def intakeTempProt(self):
@@ -68,7 +78,18 @@ class Intake(commands2.Subsystem):
 
         # set refernce changes the setpoint - rotations
         #self.intakeController.setReference(self.intakeHomeSetpoint, rev.CANSparkMax.ControlType.kPosition)
+
         self.controller.setGoal(self.intakeHomeSetpoint)
+        #self.controller.setGoal(self.intakeHomeSetpoint)
+        self.intakeDrive.set(0)
+
+    def rotateEject(self):
+        if self.intakeTempProt() > 0:
+            return 1
+
+        # set refernce changes the setpoint - rotations
+        #self.intakeController.setReference(self.intakeHomeSetpoint, rev.CANSparkMax.ControlType.kPosition)
+        self.controller.setGoal(self.ejectSetpoint)
         self.intakeDrive.set(0)
 
     def rotateDown(self):
@@ -86,8 +107,15 @@ class Intake(commands2.Subsystem):
 
     
     def isHomePos(self):
-        if abs(self.intakeRotEnc.getPosition() - self.intakeHomeSetpoint) < 3:
+        if abs(self.shaftEnc.getDistance() - self.intakeHomeSetpoint) < 30:
             return True
 
-       
         return False
+    
+    def isEjectPos(self):
+        if abs(self.shaftEnc.getDistance() - self.ejectSetpoint) < 30:
+            return True
+
+        return False
+    
+    
