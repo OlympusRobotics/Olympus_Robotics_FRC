@@ -141,6 +141,10 @@ class Shooter(commands2.Subsystem):
         
         #return True
     
+    def isUp2Speed(self):
+        if (abs(self.shooterDriveEnc1.getVelocity()) + abs(self.shooterDriveEnc2.getVelocity()))/2 > 5200:
+            return 1
+        return 0
 
 
     def resetFeed(self):
