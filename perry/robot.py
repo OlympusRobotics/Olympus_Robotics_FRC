@@ -27,6 +27,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.twoNote = "twoNote"
         self.preload = "preload"
         self.limeyTest = "limeyTest"
+        self.stage3Note = "stage3Note2"
         self.chooser = wpilib.SendableChooser()
 
         self.chooser.setDefaultOption("Three Note", self.threeNote)
@@ -35,6 +36,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.chooser.addOption("Two note, in front of speaker", self.twoNote)
         self.chooser.addOption("Shoot preload", self.preload)
         self.chooser.addOption("Limey test", self.limeyTest)
+        self.chooser.addOption("stage 3 note", self.stage3Note)
         SmartDashboard.putData("Auto choices", self.chooser)
 
 
@@ -63,7 +65,7 @@ class MyRobot(commands2.TimedCommandRobot):
             #commands2.WaitCommand(.2),
             commands2.InstantCommand(self.stage1, self),
             #commands2.WaitCommand(.75),
-            commands2.WaitCommand(.5),
+            commands2.WaitCommand(1),
             commands2.InstantCommand(self.stage2, self),
             commands2.WaitCommand(.5),
             commands2.InstantCommand(self.stage3, self),
@@ -78,7 +80,9 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.4), self),
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
             commands2.WaitUntilCommand(self.drivetrain.intake.isHomePos),
+            commands2.WaitCommand(1),
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(0), self),
+
         )
 
         self.intakeEject = commands2.SequentialCommandGroup(
@@ -436,10 +440,10 @@ class MyRobot(commands2.TimedCommandRobot):
         #if self.intakeHomeCommand.isScheduled():
         #    return 0  
         
-        if self.xboxController.getYButton():
-            self.drivetrain.intake.intakeRotation.set(.4)
-            self.drivetrain.shouldUpdateIntakeController = False
-            return 0
+        #if self.xboxController.getYButton():
+        #    self.drivetrain.intake.intakeRotation.set(.4)
+        #    self.drivetrain.shouldUpdateIntakeController = False
+        #    return 0
         
         if self.xboxController.getXButton():
             #self.drivetrain.intake.intakeRotation.set(-.4)
@@ -449,12 +453,14 @@ class MyRobot(commands2.TimedCommandRobot):
 
             return 0
         
+        """
         if self.xboxController.getYButtonReleased():
             print("RELEASED Y")
             self.drivetrain.intake.intakeHomeSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition()
             self.drivetrain.intake.intakeDownSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition() - 28
 
             self.drivetrain.shouldUpdateIntakeController = True 
+        """
 
         # maybe rmeove???
         self.drivetrain.intake.intakeRotation.set(0)
@@ -523,8 +529,11 @@ class MyRobot(commands2.TimedCommandRobot):
                 #self.shooter.spinFlywheels()
                 
                     #print("SPINNING")
+
                 self.shooter.spinFlyAnal(self.xboxController.getLeftTriggerAxis()**2)
-                self.shooterAim()
+
+                if self.joystick.getTrigger():
+                    self.shooterAim()
 
             if self.xboxController.getLeftTriggerAxis() < .1:
                 self.shooterInte = 0

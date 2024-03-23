@@ -18,12 +18,6 @@
           }
         },
         {
-          "type": "parallel",
-          "data": {
-            "commands": []
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "pickupnote"
