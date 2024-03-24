@@ -105,7 +105,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.intakeEject = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.drivetrain.intake.rotateEject, self),
             commands2.WaitUntilCommand(self.drivetrain.intake.isEjectPos),
-            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(1), self),
+            commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(-1), self),
             commands2.WaitCommand(.5),
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(0), self),
         )
@@ -215,6 +215,10 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.cmd.runOnce(self.shooter.feedNote)
         )
 
+        self.stopWheels = commands2.SequentialCommandGroup(
+            commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()),
+        )
+
         #NamedCommands.registerCommand("shoot", commands2.InstantCommand(lambda: self.shootCommand.schedule(), self))
         #NamedCommands.registerCommand("intakeTrans", commands2.InstantCommand(lambda: self.drivetrain.intakeCommand.schedule(), self))
         
@@ -222,6 +226,7 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("intakeTrans", self.drivetrain.intakeCommand)
         NamedCommands.registerCommand("justShoot", self.justShootCommand)
         NamedCommands.registerCommand("aimAndShoot", self.aimAndShoot)
+        NamedCommands.registerCommand("stopWheels", self.stopWheels)
         
 
         #autos = ["Dispense", "testAuto", "Dispense2"]
@@ -410,12 +415,13 @@ class MyRobot(commands2.TimedCommandRobot):
         heading = h2 * (math.pi*2)
 
 
-        heading = self.drivetrain.getPose().rotation()
-        if self.drivetrain.shouldFlipPath():
+        #heading = self.drivetrain.getPose().rotation()
+        #if self.drivetrain.shouldFlipPath():
             # flip towards driver pespective if on red side
-            heading = heading.rotateBy(Rotation2d(math.pi))
+        #    heading = heading.rotateBy(Rotation2d(math.pi))
 
-        heading = heading.radians()
+
+        #print(heading)
 
 
         if abs(xspeed) <.10:
@@ -442,6 +448,13 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         # ----------------------- INTAKE CODE -----------------------
+        if self.xboxController.getYButton():
+            self.shooter.spinFlyAnal(-1)
+            return 0
+        
+        if self.xboxController.getAButtonPressed():
+            self.intakeEject.schedule()    
+        
         if self.xboxController.getBButton():
             self.drivetrain.intake.rotateDown()
             self.drivetrain.shouldUpdateIntakeController = True
@@ -519,7 +532,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.shooter.spinFlyAnal(0)
         
         # VERY SMART FIX
-        if not self.transferCommand.isScheduled() and not self.intakeHomeCommand.isScheduled():
+        if not self.transferCommand.isScheduled() and not self.intakeHomeCommand.isScheduled() and not self.intakeEject.isScheduled():
             # climber stuff, need to put shooter in up pos for climbing
             if self.xboxController.getLeftStickButton():
                 self.shooter.targetAmp()
@@ -579,10 +592,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # Reset gyuro pos 
         if self.joystick.getRawButtonPressed(3):
-            if self.drivetrain.shouldFlipPath():
-                self.drivetrain.gyro.set_yaw(180)
-            else:
-                self.drivetrain.gyro.set_yaw(0)
+            self.drivetrain.gyro.set_yaw(0)
 
 if __name__ == "__main__":
     #logging.setLoggerClass

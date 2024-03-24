@@ -22,6 +22,12 @@
           "data": {
             "pathName": "runToCenter"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "stopWheels"
+          }
         }
       ]
     }

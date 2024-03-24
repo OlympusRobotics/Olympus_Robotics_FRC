@@ -45,7 +45,7 @@ class Intake(commands2.Subsystem):
 
         # intake motion profiling
         self.kDt = .02
-        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(5000, 6000)
+        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(16000, 50000)
         self.controller = wpimath.controller.ProfiledPIDController(
             .0005, 0, 0.00, self.constraints, self.kDt
         ) #.022

@@ -33,7 +33,7 @@ class Shooter(commands2.Subsystem):
         self.shooterMaxVelocity = 1000
         self.homeSetpoint = 0 # home position in rotations
         self.shootSetpoint = 0 # shoot position in rotations
-        self.ampSetpoint = 20 # amp position in rotations
+        self.ampSetpoint = 23 # amp position in rotations
 
 
         # 0 rot = 30.6 deg, 14 = 97

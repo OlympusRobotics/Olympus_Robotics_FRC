@@ -51,7 +51,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Pickup4th"
+            "pathName": "PickupStageNote"
           }
         },
         {
@@ -59,15 +59,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "intakeTrans"
+                  "pathName": "ShootStageNote"
                 }
               },
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "Shoot4th"
+                  "name": "intakeTrans"
                 }
               }
             ]
@@ -76,7 +76,7 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "justShoot"
           }
         }
       ]
