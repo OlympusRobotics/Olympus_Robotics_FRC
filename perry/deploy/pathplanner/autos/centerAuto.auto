@@ -14,13 +14,38 @@
         {
           "type": "named",
           "data": {
-            "name": "justShoot"
+            "name": "shoot"
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "runToCenter"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "backFromCenter"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GoBack"
           }
         },
         {

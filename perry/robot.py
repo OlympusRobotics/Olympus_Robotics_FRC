@@ -181,6 +181,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.drivetrain.intakeCommand = commands2.SequentialCommandGroup(
             commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()),
+            commands2.cmd.runOnce(self.shooter.feedNote),
             commands2.cmd.runOnce(self.drivetrain.intake.rotateHome),
             commands2.cmd.runOnce(self.shooter.goHome),
             commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(1)),

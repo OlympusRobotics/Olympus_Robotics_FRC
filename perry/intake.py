@@ -45,9 +45,9 @@ class Intake(commands2.Subsystem):
 
         # intake motion profiling
         self.kDt = .02
-        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(16000, 50000)
-        self.controller = wpimath.controller.ProfiledPIDController(
-            .0005, 0, 0.00, self.constraints, self.kDt
+        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(50000, 100000)
+        self.controller = wpimath.controller.PIDController(
+            .00055, 0, 0.00, self.kDt
         ) #.022
 
         self.shaftEnc.reset()
@@ -79,7 +79,7 @@ class Intake(commands2.Subsystem):
         # set refernce changes the setpoint - rotations
         #self.intakeController.setReference(self.intakeHomeSetpoint, rev.CANSparkMax.ControlType.kPosition)
 
-        self.controller.setGoal(self.intakeHomeSetpoint)
+        self.controller.setSetpoint(self.intakeHomeSetpoint)
         #self.controller.setGoal(self.intakeHomeSetpoint)
         self.intakeDrive.set(0)
 
@@ -89,7 +89,7 @@ class Intake(commands2.Subsystem):
 
         # set refernce changes the setpoint - rotations
         #self.intakeController.setReference(self.intakeHomeSetpoint, rev.CANSparkMax.ControlType.kPosition)
-        self.controller.setGoal(self.ejectSetpoint)
+        self.controller.setSetpoint(self.ejectSetpoint)
         self.intakeDrive.set(0)
 
     def rotateDown(self):
@@ -97,7 +97,7 @@ class Intake(commands2.Subsystem):
             return 1
         
         #self.intakeController.setReference(self.intakeDownSetpoint, rev.CANSparkMax.ControlType.kPosition)
-        self.controller.setGoal(self.intakeDownSetpoint)
+        self.controller.setSetpoint(self.intakeDownSetpoint)
         self.intakeDrive.set(1)
 
 
