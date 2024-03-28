@@ -74,15 +74,13 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.4), self),
             commands2.WaitUntilCommand(self.drivetrain.intake.isHomePos),
             #commands2.WaitCommand(.2),
-            commands2.InstantCommand(self.stage1, self),
+            commands2.InstantCommand(lambda: self.stage1(-0.1), self),
             #commands2.WaitCommand(.75),
             commands2.WaitCommand(1),
-            commands2.InstantCommand(self.stage2, self),
-            commands2.WaitCommand(.5),
-            commands2.InstantCommand(self.stage3, self),
-            commands2.WaitCommand(.2),
-            commands2.InstantCommand(self.stage4, self),
-            commands2.WaitCommand(.1),
+            commands2.InstantCommand(lambda: self.stage2(-0.1), self),
+            commands2.WaitUntilCommand(lambda: not self.shooter.shooterSensor.get()),
+            commands2.PrintCommand("Ended"),
+            #commands2.WaitCommand(0),
             commands2.InstantCommand(self.end, self),
             commands2.InstantCommand(self.startRumble, self),
             commands2.WaitCommand(.5),
@@ -116,6 +114,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.shooterInte = 0
 
         self.shooterPackets = 0
+
+        
+
 
     def configure_auto(self):
         AutoBuilder.configureHolonomic(
@@ -281,13 +282,13 @@ class MyRobot(commands2.TimedCommandRobot):
         # my bad
 
     
-    def stage1(self):
+    def stage1(self, power=-1):
         self.drivetrain.intake.intakeDrive.set(1)
-        self.shooter.feedNote()
+        self.shooter.feedNote(power)
 
-    def stage2(self):
+    def stage2(self, power=-1):
         self.drivetrain.intake.intakeDrive.set(-.7)
-        self.shooter.feedNote()
+        self.shooter.feedNote(power)
        
 
     def stage3(self):
@@ -385,6 +386,7 @@ class MyRobot(commands2.TimedCommandRobot):
         rot = 0.210843373494 * angle - 6.45180722892
         self.shooter.setRot(rot-1) #round(rot-1, 1)
 
+
     def teleopPeriodic(self):
         #self.drivetrain.shouldUpdateIntakeController = False
         """This function is called periodically during teleoperated mode."""
@@ -396,9 +398,7 @@ class MyRobot(commands2.TimedCommandRobot):
         yspeed = -self.joystick.getY()
         tspeed = self.joystick.getTwist()
 
-        if not self.joystick.getTrigger():
-            pass
-        else:
+        if self.joystick.getTrigger() and not self.transferCommand.isScheduled():
             tspeed = self.autoAim()
             if tspeed == -1:
                 tspeed = self.joystick.getTwist()

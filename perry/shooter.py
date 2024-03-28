@@ -1,6 +1,7 @@
 import commands2
 import rev
 from helper import tempProt
+import wpilib
 
 class Shooter(commands2.Subsystem):
     def __init__(self):
@@ -38,7 +39,13 @@ class Shooter(commands2.Subsystem):
 
         # 0 rot = 30.6 deg, 14 = 97
 
+        self.shooterSensor = wpilib.DigitalInput(4)
+
         
+    def periodic(self):
+        # (f"shooter : {self.shooterSensor.get()}")
+        pass
+
     def configFeedMotor(self, motor: rev.SparkPIDController):
         kP = 0.5
         kI = 1e-4
@@ -162,8 +169,8 @@ class Shooter(commands2.Subsystem):
         self.shooterDrive1.set(0)
         self.shooterDrive2.set(0)
         
-    def feedNote(self):
-        self.feedMotor.set(-1)
+    def feedNote(self, power=-1):
+        self.feedMotor.set(power)
 
 
     def setRot(self, rot):
@@ -173,3 +180,7 @@ class Shooter(commands2.Subsystem):
             rot = self.ampSetpoint
 
         self.rotationMotorContoroller.setReference(rot, rev.CANSparkMax.ControlType.kPosition)
+
+
+    def noteSensed(self):
+        return not self.shooterSensor.get()
