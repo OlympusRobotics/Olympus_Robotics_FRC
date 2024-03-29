@@ -59,14 +59,11 @@ class Intake(commands2.Subsystem):
     def periodic(self) -> None:
         if random.random() > 0.5:
             logging.debug(f"shaft enc value - {self.shaftEnc.getDistance()}")
-            #print(self.shaftEnc.getAbsolutePosition())
 
 
     def intakeControllerUpdate(self):
         rotPower = self.controller.calculate(self.shaftEnc.getDistance())
         self.intakeRotation.set(-rotPower)
-        #if random.random() > .8:
-        #    print(f"Power {rotPower}, Pos  {self.shaftEnc.getDistance()}, setpoint : {self.controller.getSetpoint()}")
 
 
     def intakeTempProt(self):

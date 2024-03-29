@@ -42,6 +42,15 @@ class Limey(commands2.Subsystem):
             }
         # 26 deg initial offset
 
+    def getHorizTarget(self):
+        try:
+            targetPose = self.table.getEntry("targetpose_cameraspace").getDoubleArray([])
+            angle = math.atan2(targetPose[0], targetPose[2])
+            return angle
+        
+        except:
+            return -1
+
     def getPose(self):
         poes = self.table.getEntry("BotPoseBlue").getDoubleArray([])
         if len(poes) == 0:

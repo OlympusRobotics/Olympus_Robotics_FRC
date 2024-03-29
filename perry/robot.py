@@ -74,12 +74,11 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.4), self),
             commands2.WaitUntilCommand(self.drivetrain.intake.isHomePos),
             #commands2.WaitCommand(.2),
-            commands2.InstantCommand(lambda: self.stage1(-0.1), self),
+            commands2.InstantCommand(lambda: self.stage1(-1), self),
             #commands2.WaitCommand(.75),
             commands2.WaitCommand(1),
             commands2.InstantCommand(lambda: self.stage2(-0.1), self),
-            commands2.WaitUntilCommand(lambda: not self.shooter.shooterSensor.get()),
-            commands2.PrintCommand("Ended"),
+            commands2.WaitUntilCommand(lambda: not self.shooter.shooterSensor.get()).withTimeout(1.5),
             #commands2.WaitCommand(0),
             commands2.InstantCommand(self.end, self),
             commands2.InstantCommand(self.startRumble, self),
@@ -114,6 +113,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.shooterInte = 0
 
         self.shooterPackets = 0
+        self.aimGyroAngle = 0
 
         
 
@@ -338,8 +338,6 @@ class MyRobot(commands2.TimedCommandRobot):
             for i in range(100):
                 print("!!! ---------------- MOTORS TOO HOT ------------------- !!!")
 
-        #print(f"Motor {motorController.getDeviceId()}, {temp}C")
-
     def teleopInit(self):
         """This function is called once each time the robot enters teleoperated mode."""
         self.drivetrain.resetHarder()   
@@ -352,6 +350,19 @@ class MyRobot(commands2.TimedCommandRobot):
         self.systemTempCheck()
 
     def autoAim(self):
+        """Poll limelight occasionally and pid with gyro angle"""
+        kP = -.01
+        arbFF = .023
+        if self.limey.getHorizTarget() == -1:
+            return ((self.drivetrain.gyro.get_yaw().value_as_double % 360)-self.aimGyroAngle) * kP
+
+        self.aimGyroAngle = 360 * (self.limey.getHorizTarget() / (2 * math.pi)) + self.drivetrain.gyro.get_yaw().value_as_double
+        self.aimGyroAngle = self.aimGyroAngle % 360
+        print(self.aimGyroAngle)
+        return ((self.drivetrain.gyro.get_yaw().value_as_double % 360)-self.aimGyroAngle) * kP
+
+
+    def fautoAim(self):
         kP = .02 #.013
         kI = .006
         tx = self.limey.getLimey()["tx"]
@@ -398,7 +409,7 @@ class MyRobot(commands2.TimedCommandRobot):
         yspeed = -self.joystick.getY()
         tspeed = self.joystick.getTwist()
 
-        if self.joystick.getTrigger() and not self.transferCommand.isScheduled():
+        if self.joystick.getTrigger():
             tspeed = self.autoAim()
             if tspeed == -1:
                 tspeed = self.joystick.getTwist()
@@ -416,13 +427,6 @@ class MyRobot(commands2.TimedCommandRobot):
         heading = h2 * (math.pi*2)
 
 
-        #heading = self.drivetrain.getPose().rotation()
-        #if self.drivetrain.shouldFlipPath():
-            # flip towards driver pespective if on red side
-        #    heading = heading.rotateBy(Rotation2d(math.pi))
-
-
-        #print(heading)
 
 
         if abs(xspeed) <.10:
@@ -481,14 +485,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
             return 0
         
-        """
-        if self.xboxController.getYButtonReleased():
-            print("RELEASED Y")
-            self.drivetrain.intake.intakeHomeSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition()
-            self.drivetrain.intake.intakeDownSetpoint = self.drivetrain.intake.intakeRotEnc.getPosition() - 28
-
-            self.drivetrain.shouldUpdateIntakeController = True 
-        """
 
         # maybe rmeove???
         self.drivetrain.intake.intakeRotation.set(0)
@@ -498,7 +494,6 @@ class MyRobot(commands2.TimedCommandRobot):
         
         if self.xboxController.getXButtonPressed() and self.transferCommand.isScheduled():
             self.transferCommand.cancel()
-            #print("CANCELELIGN") # TODO REMOVE THIS SHIT
 
         if self.shooter.isUp2Speed():
             self.startRumble()
@@ -508,24 +503,12 @@ class MyRobot(commands2.TimedCommandRobot):
         if self.xboxController.getXButtonReleased():
             self.transferCommand.schedule()
 
-        #if self.drivetrain.intake.intakeDrive.getOutputCurrent() > 50:
-        #    self.transferCommand.schedule()
-
-        #print(self.xboxController.getXButton(), self.xboxController.getXButtonPressed())
-
         self.drivetrain.intake.intakeControllerUpdate()
 
         if self.xboxController.getLeftTriggerAxis() > .1:
-            #self.shooter.targetSpeaker()
-            #self.shooter.spinFlywheels()
-
-            #self.shooter.spinFlywheels()
-            
-                #print("SPINNING")
-
             self.shooter.spinFlyAnal(self.xboxController.getLeftTriggerAxis()**2)
 
-            if self.joystick.getTrigger():
+            if self.joystick.getTrigger() and not self.transferCommand.isScheduled():
                 self.shooterAim()
 
         if self.xboxController.getLeftTriggerAxis() < .1:
@@ -563,11 +546,6 @@ class MyRobot(commands2.TimedCommandRobot):
                 self.climber.rest()
             
             
-
-
-                
-                #self.shooter.stopFlywheels()
-                    #print("STOPPING")
 
 
             if self.xboxController.getRightTriggerAxis() > .5:
