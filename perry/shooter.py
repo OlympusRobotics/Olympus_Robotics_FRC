@@ -35,6 +35,7 @@ class Shooter(commands2.Subsystem):
         self.homeSetpoint = 0 # home position in rotations
         self.shootSetpoint = 0 # shoot position in rotations
         self.ampSetpoint = 23 # amp position in rotations
+        self.sourceSetpoint = 5
 
 
         # 0 rot = 30.6 deg, 14 = 97
@@ -107,6 +108,11 @@ class Shooter(commands2.Subsystem):
     def goHome(self):
         self.rotationMotorContoroller.setReference(self.homeSetpoint, rev.CANSparkMax.ControlType.kPosition)
 
+    def targetSource(self):
+        self.rotationMotorContoroller.setReference(self.sourceSetpoint, rev.CANSparkMax.ControlType.kPosition)
+
+    def targetSpeakerFromStage(self):
+        self.rotationMotorContoroller.setReference(6, rev.CANSparkMax.ControlType.kPosition)
 
     def shooterTempProt(self):
         return tempProt(self.shooterDrive1) + tempProt(self.shooterDrive2)

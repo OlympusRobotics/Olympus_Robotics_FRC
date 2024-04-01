@@ -1,0 +1,121 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.41,
+      "y": 5.55
+    },
+    "rotation": 0
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "PickupStageNote"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "StageNotetoSpeaker"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "pickupnote"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "pickup3rd"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "shoot3rd"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CenterFieldNotetoMiddleSub"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MiddleSubtoCenterFieldNote"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}

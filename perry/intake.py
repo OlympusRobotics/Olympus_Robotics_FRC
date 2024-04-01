@@ -45,9 +45,9 @@ class Intake(commands2.Subsystem):
 
         # intake motion profiling
         self.kDt = .02
-        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(50000, 100000)
+        self.constraints = wpimath.trajectory.TrapezoidProfile.Constraints(90000, 150000)
         self.controller = wpimath.controller.PIDController(
-            .00055, 0, 0.00, self.kDt
+            .001, 0, 0, self.kDt
         ) #.022
 
         self.shaftEnc.reset()
