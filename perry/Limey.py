@@ -31,9 +31,9 @@ class Limey(commands2.Subsystem):
             distance = math.sqrt(targetPose[0]**2 + (-targetPose[1])**2 + targetPose[2]**2) #TX,TY,TZ
 
             distanceOffset = 0
-            if distance > 3.5:
-                distanceOffset = .09 * distance
-            angle = math.atan2(-targetPose[1]+.08+distanceOffset, targetPose[2])
+            #if distance > 3.5:
+            #    distanceOffset = .09 * distance
+            angle = math.atan2(-targetPose[1]+.12+distanceOffset, targetPose[2])
             return {
                 "distance": distance,
                 "angle": (180*angle)/(math.pi) + 26

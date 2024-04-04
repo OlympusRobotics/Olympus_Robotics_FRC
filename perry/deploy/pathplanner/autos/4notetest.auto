@@ -43,6 +43,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "pickup3rd"
@@ -65,6 +71,12 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
           }
         },
         {

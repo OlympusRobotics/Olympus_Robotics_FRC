@@ -41,7 +41,8 @@ class Climber(commands2.Subsystem):
         self.rClimberController.setOutputRange(kMinOutput, kMaxOutput)
 
         #ClimberSetpoint
-        self.restingPoint = 0
+        self.leftResting = 0
+        self.rightResting = 0
         self.LeftfullyExtended = 64
         self.RightfullyExtended = 57
 
@@ -65,8 +66,8 @@ class Climber(commands2.Subsystem):
         if self.climberTempProt() > 0:
             return 1
         
-        self.lClimberController.setReference(self.restingPoint, rev.CANSparkMax.ControlType.kPosition)
-        self.rClimberController.setReference(self.restingPoint, rev.CANSparkMax.ControlType.kPosition)
+        self.lClimberController.setReference(self.leftResting, rev.CANSparkMax.ControlType.kPosition)
+        self.rClimberController.setReference(self.rightResting, rev.CANSparkMax.ControlType.kPosition)
         #self.leftClimber.set(-.1)
         #self.rightClimber.set(-.1)
 

@@ -38,6 +38,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.preload = "preload"
         self.limeyTest = "limeyTest"
         self.stage3Note = "stage3Note2"
+        self.stage4Note = "4notetest"
+        self.disrupt = "disruptAll"
+        self.shootCenter = "shootCenter"
         self.chooser = wpilib.SendableChooser()
 
         self.chooser.setDefaultOption("Three Note", self.threeNote)
@@ -47,6 +50,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.chooser.addOption("Shoot preload", self.preload)
         self.chooser.addOption("Limey test", self.limeyTest)
         self.chooser.addOption("stage 3 note", self.stage3Note)
+        self.chooser.addOption("disrupt", self.disrupt)
+        self.chooser.addOption("4 note", self.stage4Note)
+        self.chooser.addOption("go to center and shoot source side", self.shootCenter)
         SmartDashboard.putData("Auto choices", self.chooser)
 
 
@@ -67,6 +73,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
         self.transferCommand = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.shooter.goHome, self),
             commands2.InstantCommand(self.shooter.feedNote, self),
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
             #commands2.InstantCommand(self.shooter.goHome, self),
@@ -145,18 +152,18 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.cmd.runOnce(self.shooter.spinFlywheels),
             commands2.cmd.runOnce(self.shooter.goHome),
             commands2.PrintCommand("SHOOTER RAN"),
-            commands2.WaitCommand(1),
+            commands2.WaitCommand(.7),
             commands2.PrintCommand("FEED NOTE"),
             commands2.cmd.runOnce( self.shooter.feedNote),
             commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(-1)),
-            commands2.WaitCommand(1),
+            commands2.WaitCommand(.5),
             commands2.PrintCommand("FLYWHEEL COMMAND"),
             commands2.cmd.runOnce(self.shooter.stopFlywheels),
             commands2.cmd.runOnce(lambda: self.shooter.feedMotor.set(0)),
             commands2.PrintCommand("                            SHOOT COMMAND RAN"),
             commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(1)),
             commands2.cmd.runOnce(self.drivetrain.intake.rotateDown),
-            commands2.WaitCommand(.5)
+            #commands2.WaitCommand(.5)
         )
 
         self.justShootCommand = commands2.SequentialCommandGroup(
@@ -164,11 +171,11 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.cmd.runOnce(self.shooter.spinFlywheels),
             commands2.cmd.runOnce(self.shooter.goHome),
             commands2.PrintCommand("SHOOTER RAN"),
-            commands2.WaitCommand(1),
+            commands2.WaitCommand(.7),
             commands2.PrintCommand("FEED NOTE"),
             commands2.cmd.runOnce( self.shooter.feedNote),
             commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(-1)),
-            commands2.WaitCommand(1),
+            commands2.WaitCommand(.5),
             commands2.PrintCommand("FLYWHEEL COMMAND"),
             commands2.cmd.runOnce(self.shooter.stopFlywheels),
             commands2.cmd.runOnce(lambda: self.shooter.feedMotor.set(0)),
@@ -352,7 +359,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def autoAim(self):
         """Poll limelight occasionally and pid with gyro angle"""
         kP = -.01
-        kI = -.03
+        kI = -.005
 
         
         arbFF = .023
@@ -557,16 +564,30 @@ class MyRobot(commands2.TimedCommandRobot):
 
             elif not intakeButton and not self.xboxController.getAButton():
                 self.drivetrain.intake.rotateHome()
-                
+            
+            """
+            if self.joystick.getRawButton(1):
+                self.climber.leftClimber.set(-.1)
+                self.climber.rightClimber.set(-.1)
+            
+            else:
+                if self.joystick.getRawButtonReleased(1):
+                    leftLowerPos = self.climber.lClimberRotEnc.getPosition()
+                    rightLowerPos = self.climber.rClimberRotEnc.getPosition()
 
+                    self.climber.LeftfullyExtended += leftLowerPos
+                    self.climber.RightfullyExtended += rightLowerPos
 
+                    self.climber.leftResting = leftLowerPos
+                    self.climber.rightResting = rightLowerPos
+            """
             if self.xboxController.getRightStickButton():
                 self.climber.setUp()
                 #self.shooter.targetAmp()
                 
             else:
                 self.climber.rest()
-            
+                
             
 
 

@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.71,
-      "y": 4.386721190503992
+      "x": 0.7443913814334647,
+      "y": 4.3846486371750615
     },
-    "rotation": -59.74356283647072
+    "rotation": -58.29857033049429
   },
   "command": {
     "type": "sequential",
@@ -20,7 +20,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "runToCenter"
+            "pathName": "goToCenter"
           }
         },
         {
@@ -36,10 +36,16 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "disrupt"
+                  "pathName": "backAgain"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "justShoot"
           }
         },
         {

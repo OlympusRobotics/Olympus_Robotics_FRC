@@ -3,12 +3,12 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
-    "four note"
+    "ShootCenter"
   ],
   "autoFolders": [],
   "defaultMaxVel": 4.1,
   "defaultMaxAccel": 3.72,
-  "defaultMaxAngVel": 540.0,
-  "defaultMaxAngAccel": 720.0,
+  "defaultMaxAngVel": 500.0,
+  "defaultMaxAngAccel": 700.0,
   "maxModuleSpeed": 4.5
 }
