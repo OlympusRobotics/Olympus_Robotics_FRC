@@ -20,49 +20,26 @@
         {
           "type": "path",
           "data": {
-            "pathName": "PickupStageNote"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakeTrans"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "StageNotetoSpeaker"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
             "pathName": "pickupnote"
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "intakeTrans"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "shoot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
+                }
+              }
+            ]
           }
         },
         {
@@ -72,45 +49,53 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "intakeTrans"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "shoot3rd"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "shoot3rd"
+            "pathName": "PickupStageNote"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "StageNotetoSpeaker"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "CenterFieldNotetoMiddleSub"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakeTrans"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "MiddleSubtoCenterFieldNote"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot"
+            "name": "justShoot"
           }
         }
       ]
