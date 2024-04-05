@@ -41,9 +41,12 @@ class MyRobot(commands2.TimedCommandRobot):
         self.stage4Note = "4notetest"
         self.disrupt = "disruptAll"
         self.shootCenter = "shootCenter"
+        self.ampSide3Note = "ampSideCenter3"
         self.chooser = wpilib.SendableChooser()
 
+        
         self.chooser.setDefaultOption("Three Note", self.threeNote)
+        self.chooser.addOption("2 Note amp side, shoot center line note", self.ampSide3Note)
         self.chooser.addOption("Two note, amp side", self.center2Auto)
         self.chooser.addOption("Shoot and run source side", self.centerRun)
         self.chooser.addOption("Two note, in front of speaker", self.twoNote)
