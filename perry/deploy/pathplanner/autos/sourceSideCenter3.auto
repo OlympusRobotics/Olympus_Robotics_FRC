@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.7443913814334647,
-      "y": 4.3846486371750615
+      "x": 0.6487814792310014,
+      "y": 6.727091241135414
     },
-    "rotation": -58.29857033049429
+    "rotation": 60.748563538772984
   },
   "command": {
     "type": "sequential",
@@ -20,7 +20,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "goToCenter"
+            "pathName": "runToTopNote"
           }
         },
         {
@@ -36,7 +36,32 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "backAgain"
+                  "pathName": "runToCenterBack"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "2NoteDriveOutAmp"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "backFromSC3"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
                 }
               }
             ]
@@ -46,12 +71,6 @@
           "type": "named",
           "data": {
             "name": "aimAndShoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "stopWheels"
           }
         }
       ]

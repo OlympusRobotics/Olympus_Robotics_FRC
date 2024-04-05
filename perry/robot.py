@@ -89,7 +89,7 @@ class MyRobot(commands2.TimedCommandRobot):
             #commands2.WaitCommand(0),
             commands2.InstantCommand(self.end, self),
             commands2.InstantCommand(self.startRumble, self),
-            commands2.WaitCommand(.5),
+            commands2.WaitCommand(.2),
             commands2.InstantCommand(self.stopRumble, self)
         )
 
@@ -201,24 +201,23 @@ class MyRobot(commands2.TimedCommandRobot):
         self.aimAndShoot = commands2.SequentialCommandGroup(
             commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()), 
             
+            commands2.InstantCommand(self.shooter.goHome, self),
+            commands2.InstantCommand(self.shooter.feedNote, self),
+            commands2.cmd.runOnce(self.shooter.spinFlywheels),
             commands2.InstantCommand(self.drivetrain.intake.rotateHome, self),
             #commands2.InstantCommand(self.shooter.goHome, self),
             #commands2.InstantCommand(self.drivetrain.intake.transferHome, self),
             commands2.InstantCommand(lambda: self.drivetrain.intake.intakeDrive.set(.4), self),
             commands2.WaitUntilCommand(self.drivetrain.intake.isHomePos),
             #commands2.WaitCommand(.2),
-            commands2.InstantCommand(self.stage1, self),
-            commands2.WaitCommand(.5),
-            #commands2.WaitCommand(1.25),
-            commands2.InstantCommand(self.stage2, self),
-            commands2.WaitCommand(.5),
-            commands2.InstantCommand(self.stage3, self),
-            commands2.WaitCommand(.2),
-            commands2.InstantCommand(self.stage4, self),
-            commands2.WaitCommand(.2),
+            commands2.InstantCommand(lambda: self.stage1(-1), self),
+            #commands2.WaitCommand(.75),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(lambda: self.stage2(-0.1), self),
+            commands2.WaitUntilCommand(lambda: not self.shooter.shooterSensor.get()).withTimeout(1.5),
+            #commands2.WaitCommand(0),
             commands2.InstantCommand(self.end, self),
-            commands2.cmd.runOnce(self.shooter.spinFlywheels),
-            commands2.cmd.WaitCommand(1),
+
             commands2.cmd.runOnce(self.shooterAim),
             commands2.WaitCommand(1.6),
             commands2.cmd.runOnce(self.shooter.feedNote)
