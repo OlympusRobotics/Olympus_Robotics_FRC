@@ -30,7 +30,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "getSecondLine"
+                  "pathName": "backAgain"
                 }
               },
               {
@@ -43,15 +43,21 @@
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "shoot"
+            "pathName": "rotate50Deg"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "backSecondLine"
+            "name": "aimAndShoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "stopWheels"
           }
         }
       ]

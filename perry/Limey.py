@@ -30,7 +30,7 @@ class Limey(commands2.Subsystem):
             targetPose = self.table.getEntry("targetpose_cameraspace").getDoubleArray([])
             distance = math.sqrt(targetPose[0]**2 + (-targetPose[1])**2 + targetPose[2]**2) #TX,TY,TZ
 
-            offset = .41
+            offset = .37
             if distance < 3.4:
                 offset = 0.191256
             print(distance)

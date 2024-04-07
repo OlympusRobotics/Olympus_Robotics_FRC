@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.11,
-        "y": 0.0
+        "x": 1.46,
+        "y": 2.63
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.109999999999999,
-        "y": 1.2246467991473532e-16
+        "x": 1.5297584352394138,
+        "y": 2.6202572557415964
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.11,
-        "y": 1.6051321945748758
+        "x": 1.1200017115145708,
+        "y": 3.34
       },
       "prevControl": {
-        "x": 6.270977383887055,
-        "y": 0.6626917300077363
+        "x": 1.0995138753283287,
+        "y": 3.3673171149149885
       },
       "nextControl": null,
       "isLocked": false,
@@ -39,13 +39,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0,
+    "rotation": -51.56269850893749,
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "ShootCenter",
+  "folder": "CenterLimelight",
   "previewStartingState": {
-    "rotation": 0,
+    "rotation": -49.80762819340828,
     "velocity": 0
   },
   "useDefaultConstraints": true

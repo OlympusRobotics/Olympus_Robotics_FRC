@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.109999999999999,
-        "y": 1.2246467991473532e-16
+        "x": 6.293411858153197,
+        "y": -0.03414639364373617
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.11,
-        "y": 1.6051321945748758
+        "x": 1.46,
+        "y": 2.86
       },
       "prevControl": {
-        "x": 6.270977383887055,
-        "y": 0.6626917300077363
+        "x": 2.368294070923402,
+        "y": 1.699022616112944
       },
       "nextControl": null,
       "isLocked": false,
@@ -43,7 +43,7 @@
     "rotateFast": false
   },
   "reversed": false,
-  "folder": "ShootCenter",
+  "folder": "CenterLimelight",
   "previewStartingState": {
     "rotation": 0,
     "velocity": 0

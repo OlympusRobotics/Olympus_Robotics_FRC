@@ -42,6 +42,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.disrupt = "disruptAll"
         self.shootCenter = "shootCenter"
         self.ampSide3Note = "ampSideCenter3"
+        self.sourceSideCenterLimelight = "sourceSideLimelight2"
         self.chooser = wpilib.SendableChooser()
 
         
@@ -56,6 +57,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.chooser.addOption("disrupt", self.disrupt)
         self.chooser.addOption("4 note", self.stage4Note)
         self.chooser.addOption("go to center from source, pass center notes", self.shootCenter)
+        self.chooser.addOption("shoot source, get center line note, shoot with limelight", self.sourceSideCenterLimelight)
         SmartDashboard.putData("Auto choices", self.chooser)
 
 
@@ -166,7 +168,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.PrintCommand("                            SHOOT COMMAND RAN"),
             commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(1)),
             commands2.cmd.runOnce(self.drivetrain.intake.rotateDown),
-            commands2.WaitCommand(.2499)
+            commands2.WaitCommand(.35)
         )
 
         self.shootCommand = commands2.SequentialCommandGroup(
@@ -240,8 +242,17 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.end, self),
 
             commands2.cmd.runOnce(self.shooterAim),
-            commands2.WaitCommand(1.6),
-            commands2.cmd.runOnce(self.shooter.feedNote)
+            commands2.PrintCommand("TRYING TO AIM"),
+            commands2.RepeatCommand(
+                commands2.cmd.runOnce(lambda: self.drivetrain.driveFromChassisSpeeds(ChassisSpeeds(0,0,-self.autoAim())),self)
+            
+            ).withTimeout(2),
+            commands2.WaitUntilCommand(lambda: 50 > abs((self.drivetrain.gyro.get_yaw().value_as_double)-self.aimGyroAngle)),
+            
+            commands2.PrintCommand("FINISHED AIM"),
+            commands2.cmd.runOnce(self.shooter.feedNote),
+            commands2.WaitCommand(2),
+            commands2.PrintCommand("FINISHED AIM AND SHOOT")
         )
 
         self.stopWheels = commands2.SequentialCommandGroup(
@@ -385,7 +396,7 @@ class MyRobot(commands2.TimedCommandRobot):
         
         arbFF = .023
         if self.limey.getHorizTarget() == -1:
-            pass
+            return 0
         else:
             self.aimGyroAngle = 360 * (self.limey.getHorizTarget() / (2 * math.pi)) + self.drivetrain.gyro.get_yaw().value_as_double
 

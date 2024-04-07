@@ -4,6 +4,7 @@
   "holonomicMode": true,
   "pathFolders": [
     "3NoteCenter",
+    "CenterLimelight",
     "ShootCenter"
   ],
   "autoFolders": [],
