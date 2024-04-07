@@ -24,28 +24,51 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "intakeTrans"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "backAgain"
-                }
-              }
-            ]
+            "name": "intakeTrans"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "aimAndShoot"
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "getSecondLine"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "getThirdLine"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intakeTrans"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
           }
         },
         {

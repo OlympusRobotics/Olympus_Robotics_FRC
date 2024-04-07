@@ -30,10 +30,11 @@ class Limey(commands2.Subsystem):
             targetPose = self.table.getEntry("targetpose_cameraspace").getDoubleArray([])
             distance = math.sqrt(targetPose[0]**2 + (-targetPose[1])**2 + targetPose[2]**2) #TX,TY,TZ
 
-            distanceOffset = 0
-            #if distance > 3.5:
-            #    distanceOffset = .09 * distance
-            angle = math.atan2(-targetPose[1]+.12+distanceOffset, targetPose[2])
+            offset = .41
+            if distance < 3.4:
+                offset = 0.191256
+            print(distance)
+            angle = math.atan2(-targetPose[1]+offset, targetPose[2])
             return {
                 "distance": distance,
                 "angle": (180*angle)/(math.pi) + 26

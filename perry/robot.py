@@ -55,7 +55,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.chooser.addOption("stage 3 note", self.stage3Note)
         self.chooser.addOption("disrupt", self.disrupt)
         self.chooser.addOption("4 note", self.stage4Note)
-        self.chooser.addOption("go to center and shoot source side", self.shootCenter)
+        self.chooser.addOption("go to center from source, pass center notes", self.shootCenter)
         SmartDashboard.putData("Auto choices", self.chooser)
 
 
@@ -150,6 +150,25 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.gyro.set_yaw(0)
         # Load the path you want to follow using its name in the GUI
         #self.shootNamedCommand = self.runOnce(self.shootCommand)
+        self.shootCommandIntakeDelay = commands2.SequentialCommandGroup(
+            commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()),
+            commands2.cmd.runOnce(self.shooter.spinFlywheels),
+            commands2.cmd.runOnce(self.shooter.goHome),
+            commands2.PrintCommand("SHOOTER RAN"),
+            commands2.WaitCommand(.7),
+            commands2.PrintCommand("FEED NOTE"),
+            commands2.cmd.runOnce( self.shooter.feedNote),
+            commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(-1)),
+            commands2.WaitCommand(.5),
+            commands2.PrintCommand("FLYWHEEL COMMAND"),
+            commands2.cmd.runOnce(self.shooter.stopFlywheels),
+            commands2.cmd.runOnce(lambda: self.shooter.feedMotor.set(0)),
+            commands2.PrintCommand("                            SHOOT COMMAND RAN"),
+            commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(1)),
+            commands2.cmd.runOnce(self.drivetrain.intake.rotateDown),
+            commands2.WaitCommand(.2499)
+        )
+
         self.shootCommand = commands2.SequentialCommandGroup(
             commands2.cmd.runOnce(lambda: self.drivetrain.stopMotors()),
             commands2.cmd.runOnce(self.shooter.spinFlywheels),
@@ -166,7 +185,6 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.PrintCommand("                            SHOOT COMMAND RAN"),
             commands2.cmd.runOnce(lambda: self.drivetrain.intake.intakeDrive.set(1)),
             commands2.cmd.runOnce(self.drivetrain.intake.rotateDown),
-            #commands2.WaitCommand(.5)
         )
 
         self.justShootCommand = commands2.SequentialCommandGroup(
@@ -238,6 +256,7 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("justShoot", self.justShootCommand)
         NamedCommands.registerCommand("aimAndShoot", self.aimAndShoot)
         NamedCommands.registerCommand("stopWheels", self.stopWheels)
+        NamedCommands.registerCommand("shootIntakeDelay", self.shootCommandIntakeDelay)
         
 
         #autos = ["Dispense", "testAuto", "Dispense2"]

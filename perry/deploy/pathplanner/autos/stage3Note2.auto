@@ -14,7 +14,7 @@
         {
           "type": "named",
           "data": {
-            "name": "shoot"
+            "name": "shootIntakeDelay"
           }
         },
         {
@@ -76,7 +76,44 @@
         {
           "type": "named",
           "data": {
-            "name": "justShoot"
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GoToCenterFromSub"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "backToSub"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intakeTrans"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "aimAndShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "GoToCenterFromSub"
           }
         }
       ]

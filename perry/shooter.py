@@ -44,7 +44,9 @@ class Shooter(commands2.Subsystem):
 
         
     def periodic(self):
-        # (f"shooter : {self.shooterSensor.get()}")
+        logginEnabled = False
+        if logginEnabled:
+            print(f"shooter : {self.shooterSensor.get()}")
         pass
 
     def configFeedMotor(self, motor: rev.SparkPIDController):

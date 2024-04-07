@@ -57,8 +57,9 @@ class Intake(commands2.Subsystem):
 
 
     def periodic(self) -> None:
-        if random.random() > 0.5:
-            logging.debug(f"shaft enc value - {self.shaftEnc.getDistance()}")
+        #if random.random() > 0.5:
+        #    print(f"shaft enc value - {self.shaftEnc.getDistance()}")
+        pass
 
 
     def intakeControllerUpdate(self):

@@ -43,6 +43,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "2NoteDriveOutAmp"
@@ -71,6 +77,12 @@
           "type": "named",
           "data": {
             "name": "aimAndShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "2NoteDriveOutAmp"
           }
         }
       ]
