@@ -74,10 +74,18 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):
             self.drivetrain.stopDrivetrain()
         else:
+            self.manualDrive()
+    
+    def manualDrive(self) -> None:
+        """
+        Field Oriented Drive
+        """
+        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(-self.xSpeed, -self.ySpeed, -self.rot, self.drivetrain.gyro.getRotation2d())
+        self.drivetrain.driveFO(speeds)
 
-            self.driveWithJoystick()
-
-            
-            
-    def driveWithJoystick(self) -> None:
-        self.drivetrain.driveFO(-self.xSpeed, -self.ySpeed, -self.rot)
+    def autoDrive(self) -> None:
+        """
+        Robot Oriented Drive
+        """
+        speeds = ChassisSpeeds.fromRobotRelativeSpeeds(-self.xSpeed, -self.ySpeed, -self.rot, self.drivetrain.gyro.getRotation2d())
+        self.drivetrain.driveRO(speeds)
