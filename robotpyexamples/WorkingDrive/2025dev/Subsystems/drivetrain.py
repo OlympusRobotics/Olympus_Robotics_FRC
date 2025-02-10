@@ -11,8 +11,6 @@ from wpilib import DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import SwerveDrive4Odometry, SwerveDrive4Kinematics, ChassisSpeeds, SwerveModuleState
 
-"""Please Select which version of the Swerve Code that you want to use and the configs related to them"""
-#import Subsystems.NewSwerveModule as SM
 import Subsystems.OldSwerveModule as SM
 
 def ticks2rad(EncoderPositon):
@@ -34,33 +32,11 @@ def gyro2Rot2d(gyro: phoenix6.hardware.Pigeon2):
     
 class Drivetrain(commands2.Subsystem):
     def __init__(self):
-
         #SwerveModule/hardware init
-
-        #Old Swerve Configs
-        self.flSM = SM.swerveModule(1, 2, 9, 0.51, 0.0, 0.00) #Tuned
-        self.frSM = SM.swerveModule(3, 4, 10, 0.51, 0.0, 0.001) #Tuned
+        self.flSM = SM.swerveModule(1, 2, 9, 0.51, 0.0, 0.00)
+        self.frSM = SM.swerveModule(3, 4, 10, 0.51, 0.0, 0.001)
         self.blSM = SM.swerveModule(5, 6, 11, 0.5, 0.0, 0.0) 
         self.brSM = SM.swerveModule(7, 8, 12, 0.51, 0.0, 0.002)
-
-        self.flSM.rotationMotor.setInverted(True)
-        self.frSM.rotationMotor.setInverted(True)
-        self.blSM.rotationMotor.setInverted(True)
-        self.brSM.rotationMotor.setInverted(True)
-
-        self.flSM.driveMotor.setInverted(True)
-        self.frSM.driveMotor.setInverted(True)
-        self.blSM.driveMotor.setInverted(True)
-        self.brSM.driveMotor.setInverted(True)
-
-        
-
-
-        #New Swerve Configs
-        """ self.flSM = SM.swerveModule(1, 2, 0)
-        self.frSM = SM.swerveModule(3, 4, 1)
-        self.blSM = SM.swerveModule(5, 6, 2)
-        self.brSM = SM.swerveModule(7, 8, 3) """
 
         self.gyro = phoenix6.hardware.Pigeon2(13)
         self.gyro.set_yaw(0)
@@ -80,7 +56,7 @@ class Drivetrain(commands2.Subsystem):
             self.kinematics,
             Rotation2d(),
             (
-                self.flSM.getPosition(),
+                self.flSM.getPosition(), #Gets individual swerve module positions (Check Subsystems/OldSwerveModule.py for more details)
                 self.frSM.getPosition(),
                 self.blSM.getPosition(),
                 self.brSM.getPosition()
@@ -124,22 +100,15 @@ class Drivetrain(commands2.Subsystem):
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
 
-    def driveFO(self, 
-        xSpeed: float, 
-        ySpeed: float, 
-        rotation: float,  
-        #periodSeconds: float
-    ) -> None:
+    def driveFO(self, speeds: ChassisSpeeds) -> None:
                 
-        self.chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            xSpeed, ySpeed, rotation, self.gyro.getRotation2d()
-        )
+        speeds = ChassisSpeeds(speeds.vx, speeds.vy, speeds.omega)
 
         # Convert to swerve module states
-        swerveModuleStates = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        swerveModuleStates = self.kinematics.toSwerveModuleStates(speeds)
         
         SwerveDrive4Kinematics.desaturateWheelSpeeds(
-            swerveModuleStates, 4.0 #should be 4.6 (MK4I) or 4.72 (Thrifty Bot Swerve) m/s free speed
+            swerveModuleStates, 4.6 #should be 4.6 (MK4I)
         )
 
         self.flSM.setState(swerveModuleStates[0])
@@ -149,56 +118,26 @@ class Drivetrain(commands2.Subsystem):
         
 
         
-    def driveRO(self, 
-        xSpeed: float, 
-        ySpeed: float, 
-        rotation: float,  
-    ) -> None:
-        
+    def driveRO(self, speeds: ChassisSpeeds) -> None:        
         """
         Method to drive the robot in Robot Relative mode.
         :param xSpeed: Speed of the robot in the x direction (forward).
         :param ySpeed: Speed of the robot in the y direction (sideways).
         :param rot: Angular rate of the robot.
         """
-        self.chassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(xSpeed, ySpeed, rotation, self.gyro.getRotation2d())
 
-        swerveModuleStates = self.kinematics.toSwerveModuleStates(self.chassisSpeeds)
+        speeds = ChassisSpeeds(speeds.vx, speeds.vy, speeds.omega)
+
+        swerveModuleStates = self.kinematics.toSwerveModuleStates(speeds)
         
-        """ wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
-            swerveModuleStates, 4.0 #should be 4.6 (MK4I) or 4.72 (Thrifty Bot Swerve) m/s free speed
-        ) """
+        wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
+            swerveModuleStates, 4.6 #should be 4.6m/s free speed (MK4I)
+        )
         
         self.flSM.setState(swerveModuleStates[0])
         self.frSM.setState(swerveModuleStates[1])
         self.blSM.setState(swerveModuleStates[2])
         self.brSM.setState(swerveModuleStates[3])
-
-    def drive(self, speeds: ChassisSpeeds):
-        speeds = ChassisSpeeds(speeds.vx, speeds.vy, speeds.omega)
-        frontLeft, frontRight, backLeft, backRight = self.kinematics.toSwerveModuleStates(speeds)
-
-        SwerveModuleState.optimize(frontLeft,
-        Rotation2d(ticks2rad(self.flSM.rotationEncoder.get_absolute_position()._value)))
-
-        SwerveModuleState.optimize(frontRight,
-        Rotation2d(ticks2rad(self.frSM.rotationEncoder.get_absolute_position()._value)))
-
-        SwerveModuleState.optimize(backLeft,
-        Rotation2d(ticks2rad(self.blSM.rotationEncoder.get_absolute_position()._value)))
-
-        SwerveModuleState.optimize(backRight,
-        Rotation2d(ticks2rad(self.brSM.rotationEncoder.get_absolute_position()._value)))
-
-        self.flSM.rotationMotor.set(self.flSM.rotationPIDController.calculate(self.flSM.rotationEncoder.get_absolute_position()._value, frontLeft.angle.radians()))
-        self.frSM.rotationMotor.set(self.frSM.rotationPIDController.calculate(self.frSM.rotationEncoder.get_absolute_position()._value, frontRight.angle.radians()))
-        self.blSM.rotationMotor.set(self.blSM.rotationPIDController.calculate(self.blSM.rotationEncoder.get_absolute_position()._value, frontLeft.angle.radians()))
-        self.brSM.rotationMotor.set(self.brSM.rotationPIDController.calculate(self.brSM.rotationEncoder.get_absolute_position()._value, frontRight.angle.radians()))
-
-        self.flSM.driveMotor.set(frontLeft.speed)
-        self.frSM.driveMotor.set(frontRight.speed)
-        self.blSM.driveMotor.set(backLeft.speed)
-        self.brSM.driveMotor.set(backRight.speed)
 
 
     def updateOdometry(self):
