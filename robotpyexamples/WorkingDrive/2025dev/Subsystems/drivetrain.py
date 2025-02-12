@@ -15,20 +15,6 @@ import Subsystems.OldSwerveModule as SM
 
 def ticks2rad(EncoderPositon):
     return EncoderPositon * (2*math.pi)
-
-def gyro2Rot2d(gyro: phoenix6.hardware.Pigeon2):
-    yaw = gyro.get_yaw().value_as_double
-
-    h = yaw % 360
-
-    if h < 0:
-        h += 360
-    
-    h2 = h/360
-
-    heading = h2 * (math.pi * 2)
-
-    return Rotation2d(heading)
     
 class Drivetrain(commands2.Subsystem):
     def __init__(self):
