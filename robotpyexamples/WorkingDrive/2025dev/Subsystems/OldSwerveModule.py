@@ -115,14 +115,9 @@ class swerveModule(commands2.Subsystem):
         rotationOutput = self.rotationPIDController.calculate(ticks2rad(self.rotationEncoder.get_absolute_position().value_as_double), newState.angle.radians())
         rotationFF = self.rotationMotorFeedForward.calculate(self.rotationPIDController.getSetpoint())
 
-
-        #self.driveMotor.set_control(phoenix6.controls.VoltageOut(driveOutput + driveFF))
-        #self.rotationMotor.setVoltage(rotationOutput + rotationFF)
-
-        #self.driveMotor.set(driveOutput)
         self.driveMotor.set(newState.speed)
         self.rotationMotor.set(rotationOutput)
-        #self.rotationMotor.set(rotationOutput)
+
 
     def stopAllMotors(self):
         self.driveMotor.stopMotor()
