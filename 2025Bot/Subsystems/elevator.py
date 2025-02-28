@@ -25,17 +25,19 @@ class Elevator(Subsystem):
         leaderConfig = rev.SparkMaxConfig()
         brake = leaderConfig.setIdleMode(idleMode=rev.SparkMaxConfig.IdleMode.kBrake)
         limit = leaderConfig.smartCurrentLimit(30)
-        
-        leaderConfig.apply(brake)
-        leaderConfig.apply(limit)
+
+        leaderConfig.closedLoop.pid(0.005, 0.0, 0.0, rev.ClosedLoopSlot.kSlot0)
+        leaderConfig.closedLoop.outputRange(-1,1)
+        leaderConfig.closedLoop.FeedbackSensor(rev.SparkMaxConfig().closedLoop.FeedbackSensor.kPrimaryEncoder)
+        leaderConfig.closedLoop.maxMotion.maxAcceleration(1000).maxVelocity(1000).allowedClosedLoopError(0.4)
+
         
         self.elevatorMoveMotor1.configure(leaderConfig, self.elevatorMoveMotor1.ResetMode.kResetSafeParameters, self.elevatorMoveMotor1.PersistMode.kPersistParameters)     
 
+        self.closedLoopController = self.elevatorMoveMotor1.getClosedLoopController()
+
         #Config Elevator motor ID 11
-        followerConfig = rev.SparkMaxConfig()
-        followerConfig.follow(10)
-        followerConfig.apply(brake)
-        followerConfig.apply(limit)
+        followerConfig = rev.SparkMaxConfig().follow(10).apply(brake).apply(limit)
 
         self.elevatorMoveMotor2.configure(followerConfig, self.elevatorMoveMotor2.ResetMode.kResetSafeParameters, self.elevatorMoveMotor2.PersistMode.kPersistParameters)
         
@@ -68,6 +70,5 @@ class Elevator(Subsystem):
         self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
         self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF) #Figure out sparkMAX Follower mode
 
-    def manualControl(self, input):
-        self.elevatorMoveMotor1.set(input)
-        self.elevatorMoveMotor2.set(input)
+    def manualControl(self):
+        self.closedLoopController.setReference(42, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)

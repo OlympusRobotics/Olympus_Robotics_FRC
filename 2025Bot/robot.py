@@ -1,4 +1,3 @@
-
 import commands2
 import ntcore
 import pathplannerlib.config
@@ -13,6 +12,7 @@ import elasticlib
 from Subsystems.drivetrain import Drivetrain
 from Subsystems.Limelight import limelight
 from Subsystems.LED import led
+from Subsystems.ir import irTest
 from wpimath.kinematics import SwerveModuleState, ChassisSpeeds
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
 from pathplannerlib.controller import PPHolonomicDriveController
@@ -45,6 +45,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.drivetrain = drivetrain
         self.limelight = limelight()
         self.led = led()
+        self.ir = irTest()
         self.pdp = wpilib.PowerDistribution(1, wpilib.PowerDistribution.ModuleType.kRev)
 
         #Auto selection
@@ -70,6 +71,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.limelightTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Limelight Temp", "Limelight is getting to hot. Please disable and shutdown before any damage occurs.")
         self.drivetrainTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "device Temp", "one or more drivetrain device temperatyres are way too hot. Please disable and shutdown before any damage occurs.")
         self.algaeIntakeTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Climber Motor Temps", "One or more climber motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.")
+
+        wpilib.SmartDashboard.putNumber("ENC 10", self.elevator.elevatorEncoder1.getPosition())
+        wpilib.SmartDashboard.putNumber("ENC 11", self.elevator.elevatorEncoder2.getPosition())
  
     def getAutoCommand(self):
         """ 
@@ -133,10 +137,7 @@ class MyRobot(commands2.TimedCommandRobot):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-        self.elevator.manualControl(self.applyDeadband(self.controller.getLeftY()) / 2)
-        print(f"ENC 10 Value: {self.elevator.elevatorEncoder1.getPosition()} | ENC 11 Value: { self.elevator.elevatorEncoder2.getPosition()}")
-        
-        self.led.white()
+        wpilib.SmartDashboard.putNumber("ir value", self.ir.test())
             
         return super().testPeriodic()
 
