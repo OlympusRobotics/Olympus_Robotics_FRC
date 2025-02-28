@@ -13,8 +13,8 @@ from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
 
 kWheelRadius = 0.0508 #Wheel radius in Meters
 kDriveEncoderRes = 2048 #TalonFX Encoder Resolution
-kMaxAngularVelocity = math.pi
-kMaxAngularAcceleration = math.tau
+kMaxVoltage = 13
+kMaxModSpeed = 4.72
 kGearRatio = 6.75
 
 def enc2Distance(EncoderPosition) -> float: #Converts the current position of the Motor (rotations) into a unit of distance traveled (Meters)
@@ -49,7 +49,7 @@ class swerveModule(commands2.Subsystem):
         self.rotationMotor = rev.SparkMax(RotationMotorID, rev.SparkMax.MotorType.kBrushless)
         self.rotationEncoder = wpilib.AnalogEncoder(RotationEncoderPort, 1, EncoderOffset)
 
-        #Just to make sure that the correct settings are actually applied to the motors.
+        #Applies motor configurations for all swerve module instances.
         motorConfig = phoenix6.configs.TalonFXConfiguration()
 
         inverted = motorConfig.motor_output.with_inverted(phoenix6.signals.InvertedValue.CLOCKWISE_POSITIVE)
@@ -71,25 +71,28 @@ class swerveModule(commands2.Subsystem):
 
         self.rotationMotor.configure(rotationConfig, self.rotationMotor.ResetMode.kResetSafeParameters, self.rotationMotor.PersistMode.kNoPersistParameters)
 
-        
-        #Feed Forward Control
-        self.rotationMotorFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(1, 0.5)
-
-
         super().__init__()
 
     def setDrivePID(self, kP: float, kI: float, kD: float):
+        """ 
+        Sets the drive PID constants and initializes the PID controller.
+        """
         self.drivePIDController = wpimath.controller.PIDController(
             kP,  # Proportional gain
             kI,   # Integral gain
             kD,   # Derivative gain
             
         )
-
     def setDriveFF(self, kS: float, kV: float, kA: float):
+        """ 
+        Sets the feedforward constants and initalizes the feedforward controller.
+        """
         self.driveMotorFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(kS, kV, kA)
     
     def setRotationPID(self, kP: float, kI: float, kD: float):
+        """ 
+        Sets the drive PID constants and initializes the PID controller.
+        """
         self.rotationPIDController = wpimath.controller.PIDController(
             kP,  # Proportional gain
             kI,   # Integral gain
@@ -98,6 +101,14 @@ class swerveModule(commands2.Subsystem):
 
         self.rotationPIDController.enableContinuousInput(-math.pi, math.pi)
         self.rotationPIDController.setSetpoint(0.0)
+        
+        
+    def isTooHot(self):
+        if (self.driveMotor.get_device_temp().value_as_double < 90 and self.rotationMotor.getMotorTemperature() < 90):
+            return False
+        else:
+            return True
+        
         
     def getState(self):
         """

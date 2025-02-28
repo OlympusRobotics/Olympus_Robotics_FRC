@@ -8,6 +8,9 @@ kBreathingSpeed = 2
 
 class led(commands2.Subsystem):
     def __init__(self):
+        """ 
+        Initializes the led strip and sets the relevant settings for the leds. 
+        """
         self.led = AddressableLED(0)
         self.timer = Timer()
 

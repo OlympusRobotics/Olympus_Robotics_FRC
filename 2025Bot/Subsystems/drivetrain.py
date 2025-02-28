@@ -13,6 +13,9 @@ from wpimath.kinematics import SwerveDrive4Odometry, SwerveDrive4Kinematics, Cha
 
 import Subsystems.SwerveModule as SM
 
+kMaxModuleSpeed = 4.72
+kMaxRobotSpeed = 4.0
+
 class Drivetrain(commands2.Subsystem):
     def __init__(self):
         #SwerveModule/hardware init
@@ -23,7 +26,8 @@ class Drivetrain(commands2.Subsystem):
 
         self.gyro = phoenix6.hardware.Pigeon2(9)
         self.gyro.set_yaw(0)
-
+        
+        #Setting PID and FF constants.
         self.flSM.setDrivePID(0.017352, 0.0, 0.0)
         self.frSM.setDrivePID(0.015337, 0.0, 0.0)
         self.blSM.setDrivePID(0.015337, 0.0, 0.0)
@@ -39,7 +43,7 @@ class Drivetrain(commands2.Subsystem):
         self.blSM.setDriveFF(0.06791, 0.017169, 0.00066838)
         self.brSM.setDriveFF(0.048067, 0.016905, 0.0005649)
         
-
+        #Create a ChassisSpeeds instance.
         self.chassisSpeeds = ChassisSpeeds(0, 0, 0)
 
         #Location init for kinematics
@@ -81,7 +85,20 @@ class Drivetrain(commands2.Subsystem):
             Pose2d()
         )
     
+    def gyroIsTooHot(self):
+        if (self.gyro.get_temperature().value_as_double < 90):
+            return False
+        else:
+            return True
+        
+    def drivetrainIsTooHot(self):
+        if (self.flSM.isTooHot() or self.frSM.isTooHot() or self.blSM.isTooHot() or self.brSM.isTooHot() or self.gyroIsTooHot()):
+            return True
+        
     def getPose(self):
+        """ 
+        Returns the current robot pose on the field.
+        """
         return self.odometry.getPose()
     
     def resetPose(self, pose2d: wpimath.geometry.Pose2d):
@@ -103,6 +120,9 @@ class Drivetrain(commands2.Subsystem):
         )
     
     def getChassisSpeeds(self):
+        """ 
+        Gets the current speed of the robot (x, y, omega).
+        """
         return self.chassisSpeeds
     
     def shouldFlipPath(self):
@@ -110,25 +130,11 @@ class Drivetrain(commands2.Subsystem):
         # This will flip the path being followed to the red side of the field.
         # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
         return DriverStation.getAlliance() == DriverStation.Alliance.kRed
-
-    def drive(self, speeds: ChassisSpeeds) -> None:
-                
-        speeds = ChassisSpeeds(speeds.vx, speeds.vy, speeds.omega)
-
-        # Convert to swerve module states
-        swerveModuleStates = self.kinematics.toSwerveModuleStates(speeds)
-        
-        SwerveDrive4Kinematics.desaturateWheelSpeeds(
-            swerveModuleStates, 4.72 #should be 4.6 (MK4I) or 4.72 (Thrifty Bot Swerve) m/s free speed
-        )
-
-
-        self.flSM.setState(swerveModuleStates[0])
-        self.frSM.setState(swerveModuleStates[1])
-        self.blSM.setState(swerveModuleStates[2])
-        self.brSM.setState(swerveModuleStates[3])
-
+    
     def updateOdometry(self):
+        """ 
+        Updates the robot angle and the position of all of the wheels.
+        """
         self.odometry.update(
             self.gyro.getRotation2d(),
             (
@@ -140,8 +146,30 @@ class Drivetrain(commands2.Subsystem):
         )        
 
     def stopDrivetrain(self):
+        """ 
+        This method stops all of the motors on the drivetrain until the drive command is called again.
+        """
         self.flSM.stopAllMotors()
         self.frSM.stopAllMotors()
         self.blSM.stopAllMotors()
         self.brSM.stopAllMotors()
 
+    def drive(self, speeds: ChassisSpeeds) -> None:
+        """ 
+        Sets each wheel speed in order to make the robot move. 
+        """
+                
+        speeds = ChassisSpeeds(speeds.vx, speeds.vy, speeds.omega)
+
+        # Convert to swerve module states
+        swerveModuleStates = self.kinematics.toSwerveModuleStates(speeds)
+        
+        SwerveDrive4Kinematics.desaturateWheelSpeeds(
+            swerveModuleStates, kMaxRobotSpeed #should be 4.6 (MK4I) or 4.72 (Thrifty Bot Swerve) m/s free speed
+        )
+
+
+        self.flSM.setState(swerveModuleStates[0])
+        self.frSM.setState(swerveModuleStates[1])
+        self.blSM.setState(swerveModuleStates[2])
+        self.brSM.setState(swerveModuleStates[3])

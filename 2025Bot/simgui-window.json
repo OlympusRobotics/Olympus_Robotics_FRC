@@ -16,6 +16,11 @@
     }
   },
   "Table": {
+    "0x965B9C9E,2": {
+      "Column 0  Width": "130",
+      "Column 1  Weight": "1.0000",
+      "RefScale": "13"
+    },
     "0xE56EC1C2,4": {
       "Column 0  Weight": "1.0000",
       "Column 1  Weight": "1.0000",
@@ -42,16 +47,16 @@
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "250,465",
-      "Size": "796,240"
+      "Size": "796,73"
     },
     "###NetworkTables": {
       "Collapsed": "0",
-      "Pos": "260,162",
-      "Size": "750,185"
+      "Pos": "260,163",
+      "Size": "750,184"
     },
     "###NetworkTables Info": {
       "Collapsed": "0",
-      "Pos": "254,132",
+      "Pos": "239,63",
       "Size": "750,145"
     },
     "###Other Devices": {
