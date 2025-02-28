@@ -47,10 +47,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.square = "Test"
         
-        self.pdp = wpilib.PowerDistribution(1, wpilib.PowerDistribution.ModuleType.kRev)
-
-        commands2.InstantCommand(self.drivetrain.stopDrivetrain(), self)
-        
         # get the default instance of NetworkTables
         nt = ntcore.NetworkTableInstance.getDefault()
 
@@ -59,7 +55,6 @@ class MyRobot(commands2.TimedCommandRobot):
         self.pub = topic.publish()
         
         self.field = wpilib.Field2d()
-        # Do this in either robot or subsystem init
 
         self.timer = wpilib.Timer()
         self.timer.start()
@@ -76,11 +71,6 @@ class MyRobot(commands2.TimedCommandRobot):
         self.autoCommand.schedule()
         return super().autonomousInit()
         
-    def autonomousPeriodic(self):
-        #self.drivetrain.updateOdometry()
-        return super().autonomousPeriodic()
-
-
     def robotPeriodic(self): 
         self.drivetrain.updateOdometry()  
         self.pub.set([self.drivetrain.flSM.getState(),self.drivetrain.frSM.getState(),self.drivetrain.blSM.getState(),self.drivetrain.brSM.getState()])    
@@ -89,9 +79,8 @@ class MyRobot(commands2.TimedCommandRobot):
         self.getCurrents()
         
         wpilib.SmartDashboard.putData("Field", self.field)
-        # Do this in either robot periodic or subsystem periodic
+
         self.field.setRobotPose(self.drivetrain.odometry.getPose())
-        #self.getPDPStats()
        
 
         return super().robotPeriodic()
@@ -136,12 +125,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
             
     def manualDrive(self) -> None:
-        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(-self.xSpeed, -self.ySpeed, -self.rot, self.drivetrain.gyro.getRotation2d())
+        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(self.xSpeed, self.ySpeed, self.rot, self.drivetrain.gyro.getRotation2d())
         self.drivetrain.drive(speeds)
 
-    def autoDrive(self) -> None:
-        speeds = ChassisSpeeds.fromRobotRelativeSpeeds(-self.xSpeed, -self.ySpeed, -self.rot, self.drivetrain.gyro.getRotation2d())
-        self.drivetrain.drive(speeds)
         
     def getTemps(self):
         wpilib.SmartDashboard.putNumber("FLD Temp", self.drivetrain.flSM.driveMotor.get_device_temp().value_as_double)
@@ -169,6 +155,3 @@ class MyRobot(commands2.TimedCommandRobot):
         wpilib.SmartDashboard.putNumber("BRD current", self.drivetrain.brSM.driveMotor.get_stator_current().value_as_double)
         wpilib.SmartDashboard.putNumber("BRR current", self.drivetrain.brSM.rotationMotor.getOutputCurrent())
         
-    def getPDPStats(self):
-        wpilib.SmartDashboard.putNumber("Total Current Draw", self.pdp.getTotalCurrent())
-        wpilib.SmartDashboard.putNumber("Total Power Draw", self.pdp.getTotalPower())

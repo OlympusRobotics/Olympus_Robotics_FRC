@@ -17,13 +17,13 @@ kMaxAngularVelocity = math.pi
 kMaxAngularAcceleration = math.tau
 kGearRatio = 6.75
 
-def talonFXtoDistance(EncoderPosition) -> float: #Converts the current position of the Motor (rotations) into a unit of distance traveled (Meters)
+def enc2Distance(EncoderPosition) -> float: #Converts the current position of the Motor (rotations) into a unit of distance traveled (Meters)
     return ((EncoderPosition / kGearRatio) * (2 * math.pi * kWheelRadius))
 
 def rps2mps(rotations) -> float: #Converts from rotations per second to meters per Second
     return ((rotations * (2 * math.pi * kWheelRadius)) / kGearRatio)
 
-def encToRad(value): #converts the encoder value (a range from 0 to 1) to a value in radians.
+def enc2Rad(value): #converts the encoder value (a range from 0 to 1) to a value in radians.
     radians = (value - 0.5) * 2 *math.pi
     return radians
 
@@ -52,11 +52,12 @@ class swerveModule(commands2.Subsystem):
         #Just to make sure that the correct settings are actually applied to the motors.
         motorConfig = phoenix6.configs.TalonFXConfiguration()
 
-        #inverted = motorConfig.motor_output.with_inverted(1)
+        inverted = motorConfig.motor_output.with_inverted(phoenix6.signals.InvertedValue.CLOCKWISE_POSITIVE)
         brake = motorConfig.motor_output.with_neutral_mode(phoenix6.signals.NeutralModeValue.BRAKE)
         currents = motorConfig.current_limits.with_stator_current_limit_enable(True)
         currents.with_stator_current_limit(40)
 
+        motorConfig.with_motor_output(inverted)
         motorConfig.with_current_limits(currents)
         motorConfig.with_motor_output(brake)
         motorConfig.serialize()
@@ -66,12 +67,12 @@ class swerveModule(commands2.Subsystem):
         rotationConfig = rev.SparkMaxConfig()
         rotationConfig.smartCurrentLimit(40)
         rotationConfig.setIdleMode(rotationConfig.IdleMode.kBrake)
+        rotationConfig.inverted(True)
 
         self.rotationMotor.configure(rotationConfig, self.rotationMotor.ResetMode.kResetSafeParameters, self.rotationMotor.PersistMode.kNoPersistParameters)
 
         
         #Feed Forward Control
-        self.driveMotorFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(0.069667, 0.017075)
         self.rotationMotorFeedForward = wpimath.controller.SimpleMotorFeedforwardMeters(1, 0.5)
 
 
@@ -104,7 +105,7 @@ class swerveModule(commands2.Subsystem):
         """
         return SwerveModuleState(
             rps2mps(self.driveMotor.get_velocity().value_as_double), #Gets the speed of the wheels in m/s
-            Rotation2d(encToRad(self.rotationEncoder.get())) #Converts the position into radians as rotation2d requests
+            Rotation2d(enc2Rad(self.rotationEncoder.get())) #Converts the position into radians as rotation2d requests
         )        
     
     def getPosition(self):
@@ -112,8 +113,8 @@ class swerveModule(commands2.Subsystem):
         Gets the current position of a swerve module (both the drive and rotation motors)
         """
         return SwerveModulePosition(
-            talonFXtoDistance(self.driveMotor.get_position().value_as_double), #gets the current position of the wheels
-            Rotation2d(encToRad(self.rotationEncoder.get())) #Converts the position into radians as rotation2d requests
+            enc2Distance(self.driveMotor.get_position().value_as_double), #gets the current position of the wheels
+            Rotation2d(enc2Rad(self.rotationEncoder.get())) #Converts the position into radians as rotation2d requests
         )
     
     def setState(
@@ -123,13 +124,13 @@ class swerveModule(commands2.Subsystem):
         """
         Sets a new state for the swerve module to move to.
         """
-        newState.optimize(Rotation2d(encToRad(self.rotationEncoder.get())))
-        newState.cosineScale(Rotation2d(encToRad(self.rotationEncoder.get())))
+        newState.optimize(Rotation2d(enc2Rad(self.rotationEncoder.get())))
+        newState.cosineScale(Rotation2d(enc2Rad(self.rotationEncoder.get())))
 
         driveOutput = self.drivePIDController.calculate(rps2mps(self.driveMotor.get_velocity().value_as_double), newState.speed)
         driveFF = self.driveMotorFeedForward.calculate(newState.speed)
 
-        rotationOutput = self.rotationPIDController.calculate(encToRad(self.rotationEncoder.get()), newState.angle.radians())
+        rotationOutput = self.rotationPIDController.calculate(enc2Rad(self.rotationEncoder.get()), newState.angle.radians())
 
         #self.driveMotor.setVoltage((newState.speed / 4.72) * 13)
         self.driveMotor.setVoltage(driveOutput + driveFF)
