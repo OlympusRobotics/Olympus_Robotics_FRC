@@ -8,7 +8,7 @@ import wpimath.controller
 import wpimath.geometry
 import wpimath.kinematics
 import pathplannerlib
-import elasticlib
+import util.elasticlib as elasticlib
 from Subsystems.drivetrain import Drivetrain
 from Subsystems.Limelight import limelight
 from Subsystems.LED import led
@@ -47,6 +47,17 @@ class MyRobot(commands2.TimedCommandRobot):
         self.led = led()
         self.ir = irTest()
         self.pdp = wpilib.PowerDistribution(1, wpilib.PowerDistribution.ModuleType.kRev)
+        self.DS = wpilib.DriverStation
+        self.chooser = wpilib.SendableChooser()
+
+        self.chooser.addOption("Test1", None)
+        self.chooser.addOption("Test2", None)
+        self.chooser.addOption("Test3", None)
+        self.chooser.addOption("Test4", None)
+
+        self.chooser.setDefaultOption("Test1", None)
+
+        wpilib.SmartDashboard.putData("Auto Options", self.chooser)
 
         #Auto selection
         self.square = "Test"
@@ -62,18 +73,21 @@ class MyRobot(commands2.TimedCommandRobot):
         self.field = wpilib.Field2d()
 
         #Creates and starts a timer object.
-        self.timer = wpilib.Timer()
-        self.timer.start()
+        
          
-        self.testNoti = elasticlib.Notification(elasticlib.NotificationLevel.INFO, "test", "test")
-        self.climberTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Climber Motor Temps", "One or more climber motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.")
+        self.testNoti = elasticlib.Notification(level=elasticlib.NotificationLevel.INFO, title="test", description="test")
+        """ self.climberTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Climber Motor Temps", "One or more climber motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.")
         self.elevatorTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Elevator Motor Temps", "One or more elevator motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.")
         self.limelightTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Limelight Temp", "Limelight is getting to hot. Please disable and shutdown before any damage occurs.")
         self.drivetrainTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "device Temp", "one or more drivetrain device temperatyres are way too hot. Please disable and shutdown before any damage occurs.")
-        self.algaeIntakeTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Climber Motor Temps", "One or more climber motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.")
+        self.algaeIntakeTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Climber Motor Temps", "One or more climber motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.") """
 
-        wpilib.SmartDashboard.putNumber("ENC 10", self.elevator.elevatorEncoder1.getPosition())
-        wpilib.SmartDashboard.putNumber("ENC 11", self.elevator.elevatorEncoder2.getPosition())
+        wpilib.SmartDashboard.putBoolean("ir value", self.ir.test())
+
+        self.timer = wpilib.Timer()
+        self.timer.start()
+
+
  
     def getAutoCommand(self):
         """ 
@@ -112,13 +126,17 @@ class MyRobot(commands2.TimedCommandRobot):
             ]   
       
         #Publishes the motor temps on Smart Dashboard.
-        self.getTemps()
+        """ self.getTemps()
         self.DrivetrainTempCheck()
-        self.limelightTempCheck()
+        self.limelightTempCheck() """
         
         #Adds the robot pose to the field that was constructed in robotInit.
         wpilib.SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.drivetrain.odometry.getPose())
+
+        self.getBatteryVoltage()
+        self.getTemps()
+        self.getMatchTime()
        
 
         return super().robotPeriodic()
@@ -137,7 +155,15 @@ class MyRobot(commands2.TimedCommandRobot):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-        wpilib.SmartDashboard.putBoolean("ir value", self.ir.test())
+        if (self.controller.getAButton()):
+            self.limelight.aiPipeline()
+
+        if (self.controller.getBButton()):
+            self.limelight.aprilTagPipeline()
+
+        wpilib.SmartDashboard.putBoolean("Target", self.limelight.targetCheck())
+
+        
             
         return super().testPeriodic()
 
@@ -188,19 +214,12 @@ class MyRobot(commands2.TimedCommandRobot):
         wpilib.SmartDashboard.putNumber("Robot Power Draw", self.pdp.getTotalPower())
         wpilib.SmartDashboard.putNumber("Robot Current Draw", self.pdp.getTotalCurrent())
         
-    def DrivetrainTempCheck(self):
-        """ 
-        Checks if the drivetrain device temps are way too hot (90c or higher) and sends a warning to the driver and operator to disable and shutdown the robot before any damage occurs. 
-        """
-        if (self.drivetrain.drivetrainIsTooHot()):
-            elasticlib.send_notification(self.drivetrainTempWarning)
-    
-    def limelightTempCheck(self):
-        """ 
-        Checks both the cpu and general device temps on the limelight and warns the driver and operator if the temps are too high. 
-        """
-        if (self.limelight.isTooHot()):
-            elasticlib.send_notification(self.limelightTempWarning)
+    def getBatteryVoltage(self):
+        wpilib.SmartDashboard.putNumber("Battery Voltage", wpilib.RobotController.getBatteryVoltage())
+
+    def getMatchTime(self):
+        wpilib.SmartDashboard.putNumber("Match Time",  self.timer.getMatchTime())
+        print(self.timer.getMatchTime())
             
         
         

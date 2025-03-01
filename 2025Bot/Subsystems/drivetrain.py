@@ -47,10 +47,10 @@ class Drivetrain(commands2.Subsystem):
         self.chassisSpeeds = ChassisSpeeds(0, 0, 0)
 
         #Location init for kinematics
-        frontLeft = Translation2d(.324, .324)
-        frontRight = Translation2d(.324, -.324)
-        backLeft = Translation2d(-.324, .324)
-        backRight = Translation2d(-.324, -.324)
+        frontLeft = Translation2d(.290, .290)
+        frontRight = Translation2d(.290, -.290)
+        backLeft = Translation2d(-.290, .290)
+        backRight = Translation2d(-.290, -.290)
 
         self.kinematics = SwerveDrive4Kinematics(frontLeft, frontRight, backLeft, backRight)
 
