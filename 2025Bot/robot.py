@@ -137,7 +137,7 @@ class MyRobot(commands2.TimedCommandRobot):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-        wpilib.SmartDashboard.putNumber("ir value", self.ir.test())
+        wpilib.SmartDashboard.putBoolean("ir value", self.ir.test())
             
         return super().testPeriodic()
 
