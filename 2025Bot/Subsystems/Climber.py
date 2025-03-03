@@ -25,15 +25,14 @@ class climber(commands2.Subsystem):
         MAXMotionConfig.maxAcceleration(1000)
         MAXMotionConfig.allowedClosedLoopError(0.06)
 
-        #climber motor 1 Configuration
+        #climber motor 2 Configuration
         climberRotationConfig2 = rev.SparkMaxConfig()
         climberRotationConfig2.apply(climberRotationConfig)
         climberRotationConfig2.follow(15)
 
         self.climberRotationMotor1.configure(climberRotationConfig, self.climberRotationMotor1.ResetMode.kResetSafeParameters, self.climberRotationMotor1.PersistMode.kPersistParameters)
         self.climberRotationMotor2.configure(climberRotationConfig2, self.climberRotationMotor2.ResetMode.kResetSafeParameters, self.climberRotationMotor2.PersistMode.kPersistParameters)
-        
-        #Closed Loop Configuration
+    
         self.climberClosedLoop = self.climberRotationMotor1.getClosedLoopController()
 
         #climber Positions
