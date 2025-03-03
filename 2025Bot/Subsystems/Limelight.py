@@ -47,6 +47,18 @@ class limelight(commands2.Subsystem):
         Sets the pipeline meant for apriltag tracking
         """
         self.table.getEntry("pipeline").setInteger(0)
+
+    def aprilTagPipelineLeft(self):
+        """ 
+        Sets the pipeline meant for apriltag tracking
+        """
+        self.table.getEntry("pipeline").setInteger(2)
+
+    def aprilTagPipelineRight(self):
+        """ 
+        Sets the pipeline meant for apriltag tracking
+        """
+        self.table.getEntry("pipeline").setInteger(3)
     
     def targetCheck(self):
         """ 

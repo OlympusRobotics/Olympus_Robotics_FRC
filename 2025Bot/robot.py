@@ -12,12 +12,13 @@ import util.elasticlib as elasticlib
 from Subsystems.drivetrain import Drivetrain
 from Subsystems.Limelight import limelight
 from Subsystems.LED import led
-from Subsystems.ir import irTest
 from wpimath.kinematics import SwerveModuleState, ChassisSpeeds
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from Subsystems.elevator import Elevator
+from Subsystems.AlgaeArm import algaeArm
+from Subsystems.Climber import climber
 
 drivetrain = Drivetrain()
 
@@ -44,9 +45,10 @@ class MyRobot(commands2.TimedCommandRobot):
         self.elevator = Elevator()
         self.drivetrain = drivetrain
         self.limelight = limelight()
+        self.algaeArm = algaeArm()
+        self.climber = climber()
         self.led = led()
-        self.ir = irTest()
-        self.pdp = wpilib.PowerDistribution(1, wpilib.PowerDistribution.ModuleType.kRev)
+        
         self.DS = wpilib.DriverStation
         self.chooser = wpilib.SendableChooser()
 
@@ -73,17 +75,6 @@ class MyRobot(commands2.TimedCommandRobot):
         self.field = wpilib.Field2d()
 
         #Creates and starts a timer object.
-        
-         
-        self.testNoti = elasticlib.Notification(level=elasticlib.NotificationLevel.INFO, title="test", description="test")
-        """ self.climberTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Climber Motor Temps", "One or more climber motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.")
-        self.elevatorTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Elevator Motor Temps", "One or more elevator motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.")
-        self.limelightTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Limelight Temp", "Limelight is getting to hot. Please disable and shutdown before any damage occurs.")
-        self.drivetrainTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "device Temp", "one or more drivetrain device temperatyres are way too hot. Please disable and shutdown before any damage occurs.")
-        self.algaeIntakeTempWarning = elasticlib.Notification(elasticlib.NotificationLevel.WARNING, "Climber Motor Temps", "One or more climber motor temperatures are getting too hot. Please disable and shutdown before any damage occurs.") """
-
-        wpilib.SmartDashboard.putBoolean("ir value", self.ir.test())
-
         self.timer = wpilib.Timer()
         self.timer.start()
 
@@ -124,16 +115,13 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.brSM.driveMotor.get_device_temp().value_as_double, self.drivetrain.brSM.rotationMotor.getMotorTemperature(),
             self.drivetrain.gyro.get_temperature().value_as_double
             ]   
-      
-        #Publishes the motor temps on Smart Dashboard.
-        """ self.getTemps()
-        self.DrivetrainTempCheck()
-        self.limelightTempCheck() """
+        wpilib.SmartDashboard.putBoolean("Target", self.limelight.targetCheck())
         
         #Adds the robot pose to the field that was constructed in robotInit.
         wpilib.SmartDashboard.putData("Field", self.field)
         self.field.setRobotPose(self.drivetrain.odometry.getPose())
 
+        #Publishes the hardware telemetry values to SmartDashboard.
         self.getBatteryVoltage()
         self.getTemps()
         self.getMatchTime()
@@ -148,20 +136,20 @@ class MyRobot(commands2.TimedCommandRobot):
         return value if abs(value) > deadband else 0
     
     def testInit(self) -> None:
-        elasticlib.send_notification(self.testNoti)
         return super().testInit()
     
     def testPeriodic(self):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-        if (self.controller.getAButton()):
+        """ if (self.controller.getAButton()):
             self.limelight.aiPipeline()
 
         if (self.controller.getBButton()):
             self.limelight.aprilTagPipeline()
 
-        wpilib.SmartDashboard.putBoolean("Target", self.limelight.targetCheck())
+        self.elevator.setMAXmotion() """
+        self.climber.setClimbPosition()
 
         
             

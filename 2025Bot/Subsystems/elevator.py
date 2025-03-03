@@ -13,10 +13,13 @@ def rpm2rps(rpm):
 
 class Elevator(Subsystem):
     def __init__(self):
+
         #Motor init
         self.elevatorMoveMotor1 = rev.SparkMax(10, rev.SparkMax.MotorType.kBrushless)
         self.elevatorMoveMotor2 = rev.SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.outtakeMotor = rev.SparkMax(12, rev.SparkMax.MotorType.kBrushless)
+
+        self.irSensor = wpilib.DigitalInput(0)
 
         self.elevatorEncoder1 = self.elevatorMoveMotor1.getEncoder()
         self.elevatorEncoder2 = self.elevatorMoveMotor2.getEncoder()
@@ -51,6 +54,11 @@ class Elevator(Subsystem):
 
         super().__init__()
 
+    def setMAXmotion(self):
+        self.goal = TrapezoidProfile.State(15, 0)
+        
+        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        
 
     def setL1(self):
         self.goal = TrapezoidProfile.State(15, 0)
@@ -69,6 +77,33 @@ class Elevator(Subsystem):
         
         self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
         self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF) #Figure out sparkMAX Follower mode
+
+    def setL3(self):
+        self.goal = TrapezoidProfile.State(55, 0)
+        
+        calculatePID = self.PIDcontroller.calculate(self.elevatorEncoder.getPosition(), self.goal.position)
+        calculateFF = self.feedForward.calculate(rpm2rps(self.elevatorEncoder.getVelocity()), self.goal.velocity)
+        
+        self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
+        self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF) #Figure out sparkMAX Follower mode
+
+    def setL4(self):
+        self.goal = TrapezoidProfile.State(75, 0)
+        
+        calculatePID = self.PIDcontroller.calculate(self.elevatorEncoder.getPosition(), self.goal.position)
+        calculateFF = self.feedForward.calculate(rpm2rps(self.elevatorEncoder.getVelocity()), self.goal.velocity)
+        
+        self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
+        self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF) #Figure out sparkMAX Follower mode
+
+    def flyWheelSpin(self):
+        self.outtakeMotor.set(1)
+    
+    def outtakeStop(self):
+        self.outtakeMotor.stopMotor()
+
+    def coralCheck(self):
+        return self.irSensor.get()
 
     def manualControl(self):
         self.closedLoopController.setReference(42, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
