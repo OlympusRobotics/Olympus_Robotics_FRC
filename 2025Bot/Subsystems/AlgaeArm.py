@@ -36,6 +36,12 @@ class algaeArm(commands2.Subsystem):
         self.intakePosition = 20
 
         super().__init__()
+        
+    def isIntakePos(self):
+        if (self.armRotationEncoder.getPosition() >= 19.0 or self.armRotationEncoder.getPosition() <= 22.0):
+            return True
+        else:
+            return False
 
     def setHomePosition(self):
         self.armClosedLoop.setReference(self.homePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
@@ -44,6 +50,12 @@ class algaeArm(commands2.Subsystem):
         self.armClosedLoop.setReference(self.intakePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
 
     def intake(self):
-        self.intakeMotor.set(.4)
+        self.intakeMotor.set(.2)
+        
+    def stopIntakeMotor(self):
+        self.intakeMotor.stopMotor()
+        
+    def algaeEject(self):
+        self.intakeMotor.set(-.2)
 
         

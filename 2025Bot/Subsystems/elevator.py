@@ -63,43 +63,27 @@ class Elevator(Subsystem):
     def setL1(self):
         self.goal = TrapezoidProfile.State(15, 0)
         
-        calculatePID = self.PIDcontroller.calculate(self.elevatorEncoder.getPosition(), self.goal.position)
-        calculateFF = self.feedForward.calculate(rpm2rps(self.elevatorEncoder.getVelocity()), self.goal.velocity)
-        
-        self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
-        self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF)
+        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
         
     def setL2(self):
         self.goal = TrapezoidProfile.State(35, 0)
         
-        calculatePID = self.PIDcontroller.calculate(self.elevatorEncoder.getPosition(), self.goal.position)
-        calculateFF = self.feedForward.calculate(rpm2rps(self.elevatorEncoder.getVelocity()), self.goal.velocity)
-        
-        self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
-        self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF) #Figure out sparkMAX Follower mode
+        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL3(self):
         self.goal = TrapezoidProfile.State(55, 0)
         
-        calculatePID = self.PIDcontroller.calculate(self.elevatorEncoder.getPosition(), self.goal.position)
-        calculateFF = self.feedForward.calculate(rpm2rps(self.elevatorEncoder.getVelocity()), self.goal.velocity)
-        
-        self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
-        self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF) #Figure out sparkMAX Follower mode
+        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL4(self):
         self.goal = TrapezoidProfile.State(75, 0)
         
-        calculatePID = self.PIDcontroller.calculate(self.elevatorEncoder.getPosition(), self.goal.position)
-        calculateFF = self.feedForward.calculate(rpm2rps(self.elevatorEncoder.getVelocity()), self.goal.velocity)
-        
-        self.elevatorMoveMotor1.setVoltage(calculatePID + calculateFF)
-        self.elevatorMoveMotor2.setVoltage(calculatePID + calculateFF) #Figure out sparkMAX Follower mode
+        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def flyWheelSpin(self):
         self.outtakeMotor.set(1)
     
-    def outtakeStop(self):
+    def flyWheelStop(self):
         self.outtakeMotor.stopMotor()
 
     def coralCheck(self):

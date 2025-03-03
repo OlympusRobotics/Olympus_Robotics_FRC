@@ -73,11 +73,54 @@ class MyRobot(commands2.TimedCommandRobot):
         
         #Initializes a field for odometry tracking.
         self.field = wpilib.Field2d()
+        
+        #Commands
+        
+        intakeCoral = commands2.ConditionalCommand(
+            commands2.InstantCommand(self.elevator.flyWheelStop(), self),
+            commands2.InstantCommand(self.elevator.flyWheelSpin(), self),
+            self.elevator.coralCheck()
+            )
+        
+        self.algaeEjectReturnHome = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.algaeArm.algaeEject, self),
+            commands2.WaitCommand(1),
+            commands2.InstantCommand(self.algaeArm.setHomePosition(), self)
+        )
+        
+        self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
+            intakeCoral,
+            commands2.WaitCommand(0.2),
+            commands2.InstantCommand(self.elevator.setL1(), self)
+        )
+        
+        self.intakeCoralTransferL2 = commands2.SequentialCommandGroup(
+            intakeCoral,
+            commands2.WaitCommand(0.2),
+            commands2.InstantCommand(self.elevator.setL2(), self)
+        )
+        
+        self.intakeCoralTransferL3 = commands2.SequentialCommandGroup(
+            intakeCoral,
+            commands2.WaitCommand(0.2),
+            commands2.InstantCommand(self.elevator.setL3(), self)
+        )
+        
+        self.intakeCoralTransferL4 = commands2.SequentialCommandGroup(
+            intakeCoral,
+            commands2.WaitCommand(0.2),
+            commands2.InstantCommand(self.elevator.setL4(), self)
+        )
 
         #Creates and starts a timer object.
         self.timer = wpilib.Timer()
         self.timer.start()
-
+        
+    def applyDeadband(self, value, deadband=0.08):
+        """ 
+        Applys a deadband to stop controller drifting.
+        """
+        return value if abs(value) > deadband else 0
 
  
     def getAutoCommand(self):
@@ -129,11 +172,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         return super().robotPeriodic()
 
-    def applyDeadband(self, value, deadband=0.08):
-        """ 
-        Applys a deadband to stop controller drifting.
-        """
-        return value if abs(value) > deadband else 0
     
     def testInit(self) -> None:
         return super().testInit()
@@ -149,7 +187,9 @@ class MyRobot(commands2.TimedCommandRobot):
             self.limelight.aprilTagPipeline()
 
         self.elevator.setMAXmotion() """
-        self.climber.setClimbPosition()
+        #self.climber.setClimbPosition()
+        
+        self.intakeCoralTransferL3.execute()
 
         
             
