@@ -76,7 +76,7 @@ class MyRobot(commands2.TimedCommandRobot):
         
         #Commands
         
-        intakeCoral = commands2.ConditionalCommand(
+        """ intakeCoral = commands2.ConditionalCommand(
             commands2.InstantCommand(self.elevator.flyWheelStop(), self),
             commands2.InstantCommand(self.elevator.flyWheelSpin(), self),
             self.elevator.coralCheck()
@@ -110,7 +110,7 @@ class MyRobot(commands2.TimedCommandRobot):
             intakeCoral,
             commands2.WaitCommand(0.2),
             commands2.InstantCommand(self.elevator.setL4(), self)
-        )
+        ) """
 
         #Creates and starts a timer object.
         self.timer = wpilib.Timer()
@@ -180,17 +180,15 @@ class MyRobot(commands2.TimedCommandRobot):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-        """ if (self.controller.getAButton()):
-            self.limelight.aiPipeline()
+        if (self.controller.getAButton()):
+            self.limelight.aprilTagPipelineLeft()
 
         if (self.controller.getBButton()):
-            self.limelight.aprilTagPipeline()
+            self.limelight.aprilTagPipelineRight()
 
-        self.elevator.setMAXmotion() """
-        #self.climber.setClimbPosition()
-        
-        self.intakeCoralTransferL3.execute()
+        #self.elevator.setMAXmotion()
 
+        #self.elevator.manualControl(self.applyDeadband(self.controller.getLeftY()))
         
             
         return super().testPeriodic()

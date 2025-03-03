@@ -40,7 +40,10 @@ class Elevator(Subsystem):
         self.closedLoopController = self.elevatorMoveMotor1.getClosedLoopController()
 
         #Config Elevator motor ID 11
-        followerConfig = rev.SparkMaxConfig().follow(10).apply(brake).apply(limit)
+        followerConfig = rev.SparkMaxConfig()
+        followerConfig.follow(10)
+        followerConfig.apply(brake)
+        followerConfig.apply(limit)
 
         self.elevatorMoveMotor2.configure(followerConfig, self.elevatorMoveMotor2.ResetMode.kResetSafeParameters, self.elevatorMoveMotor2.PersistMode.kPersistParameters)
         
@@ -55,30 +58,20 @@ class Elevator(Subsystem):
         super().__init__()
 
     def setMAXmotion(self):
-        self.goal = TrapezoidProfile.State(15, 0)
-        
-        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(0, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
         
 
-    def setL1(self):
-        self.goal = TrapezoidProfile.State(15, 0)
-        
+    def setL1(self):       
         self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
         
     def setL2(self):
-        self.goal = TrapezoidProfile.State(35, 0)
-        
-        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(35, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL3(self):
-        self.goal = TrapezoidProfile.State(55, 0)
-        
-        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL4(self):
-        self.goal = TrapezoidProfile.State(75, 0)
-        
-        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(75, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def flyWheelSpin(self):
         self.outtakeMotor.set(1)
@@ -89,5 +82,5 @@ class Elevator(Subsystem):
     def coralCheck(self):
         return self.irSensor.get()
 
-    def manualControl(self):
-        self.closedLoopController.setReference(42, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+    def manualControl(self, input):
+        self.elevatorMoveMotor1.setVoltage(input)

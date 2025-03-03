@@ -36,29 +36,23 @@ class limelight(commands2.Subsystem):
         angularVel = tx * kP
         return angularVel
     
-    def aiPipeline(self):
-        """ 
-        Sets the pipeline meant for ai tracking
-        """
-        self.table.getEntry("pipeline").setInteger(1)
-    
-    def aprilTagPipeline(self):
-        """ 
-        Sets the pipeline meant for apriltag tracking
-        """
-        self.table.getEntry("pipeline").setInteger(0)
-
     def aprilTagPipelineLeft(self):
         """ 
         Sets the pipeline meant for apriltag tracking
         """
-        self.table.getEntry("pipeline").setInteger(2)
+        self.table.getEntry("pipeline").setValue(0)
 
     def aprilTagPipelineRight(self):
         """ 
         Sets the pipeline meant for apriltag tracking
         """
-        self.table.getEntry("pipeline").setInteger(3)
+        self.table.getEntry("pipeline").setValue(1)
+
+    def aiPipeline(self):
+        """ 
+        Sets the pipeline meant for ai tracking
+        """
+        self.table.getEntry("pipeline").setValue(2)
     
     def targetCheck(self):
         """ 
