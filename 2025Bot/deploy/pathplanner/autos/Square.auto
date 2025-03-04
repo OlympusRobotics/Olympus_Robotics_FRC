@@ -27,6 +27,12 @@
           "data": {
             "pathName": "SQ4"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbFinal"
+          }
         }
       ]
     }

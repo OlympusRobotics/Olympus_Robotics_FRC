@@ -5,27 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "SQ1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SQ2"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SQ3"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "SQ4"
+            "name": "ClimbFinal"
           }
         }
       ]

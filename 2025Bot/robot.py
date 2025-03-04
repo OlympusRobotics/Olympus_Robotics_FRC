@@ -20,7 +20,12 @@ from Subsystems.elevator import Elevator
 from Subsystems.AlgaeArm import algaeArm
 from Subsystems.Climber import climber
 
+#initalizes the subsystems outside of the class to avoid multiple instances of the subsystems being created while using the test command.
 drivetrain = Drivetrain()
+elevator = Elevator()
+limelight = limelight()
+algaeArm = algaeArm()
+climber = climber()
 
 #Autobuilder configures the settings for accurate auto following. Called outside of class to avoid multiple instances of the drivetrain being created.
 AutoBuilder.configure(
@@ -42,18 +47,24 @@ class MyRobot(commands2.TimedCommandRobot):
     def robotInit(self) -> None:
         """Robot initialization function"""
         self.controller = wpilib.XboxController(0)
-        self.elevator = Elevator()
+
+        self.elevator = elevator
         self.drivetrain = drivetrain
-        self.limelight = limelight()
-        self.algaeArm = algaeArm()
-        self.climber = climber()
+        self.limelight = limelight
+        self.algaeArm = algaeArm
+        self.climber = climber
         self.led = led()
         
         self.DS = wpilib.DriverStation
+
+        #autos
+        #self.test = "Test"
+        #self.square = "Square"
+
         self.chooser = wpilib.SendableChooser()
 
-        self.chooser.addOption("Test1", None)
-        self.chooser.addOption("Test2", None)
+        """ self.chooser.addOption("Test", self.test)
+        self.chooser.addOption("Square", self.square) """
         self.chooser.addOption("Test3", None)
         self.chooser.addOption("Test4", None)
 
@@ -77,7 +88,8 @@ class MyRobot(commands2.TimedCommandRobot):
         
         #Commands
         self.algaeEjectReturnHome = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.algaeArm.algaeEject, self).andThen(commands2.WaitCommand(1)),
+            commands2.InstantCommand(self.algaeArm.algaeEject, self),
+            commands2.WaitCommand(1),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
             commands2.InstantCommand(self.algaeArm.setHomePosition, self)
         )
@@ -125,14 +137,11 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
             commands2.InstantCommand(self.elevator.flyWheelStop, self)
-        )
+        ) 
 
         self.climbFinal = commands2.SequentialCommandGroup(
-            commands2.ParallelCommandGroup(
-            commands2.InstantCommand(self.climber.setHomePosition, self),
-            commands2.InstantCommand(self.elevator.setHome, self)
-            ),
-            commands2.InstantCommand(self.climber.setClimbPosition, self),
+            commands2.InstantCommand(self.algaeArm.setHomePosition).alongWith(commands2.InstantCommand(self.elevator.setHome)),
+            commands2.InstantCommand(self.climber.setClimbPosition, self)
         )
 
         #sending commands above to Pathplanner
@@ -192,7 +201,7 @@ class MyRobot(commands2.TimedCommandRobot):
         """ 
         Selects the auto to be run.
         """
-        self.autoSelected = self.square
+        self.autoSelected = self.chooser.getSelected()
         auto = PathPlannerAuto(self.autoSelected)
 
         return auto
@@ -208,12 +217,14 @@ class MyRobot(commands2.TimedCommandRobot):
 
     
     def testInit(self) -> None:
+        self.climbFinal.schedule()
         return super().testInit()
     
     def testPeriodic(self):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
+
         #Calibration testing
         #self.elevator.manualControl(self.applyDeadband(self.controller.getLeftY()))
         #self.algaeArm.manualControl(self.applyDeadband(self.controller.getRightY()))
