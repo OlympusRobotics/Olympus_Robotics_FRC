@@ -100,6 +100,9 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.WaitCommand(1),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)
         )
+
+        self.elevatorReturnHome = commands2.InstantCommand(self.elevator.setHome(), self)
+
         
         self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
@@ -125,14 +128,6 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.elevator.setL3, self)
         )
         
-        self.intakeCoralTransferL4 = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
-            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self),
-            commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL4, self)
-        )
-
         self.coralEject = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
@@ -147,10 +142,10 @@ class MyRobot(commands2.TimedCommandRobot):
         #sending commands above to Pathplanner
         NamedCommands.registerCommand("AlgaeEjectReturnHome", self.algaeEjectReturnHome)
         NamedCommands.registerCommand("AlgaeIntake", self.algaeIntake)
+        NamedCommands.registerCommand("elevatorReturnHome", self.elevatorReturnHome)
         NamedCommands.registerCommand("IntakeCoralTransferL1", self.intakeCoralTransferL1)
         NamedCommands.registerCommand("IntakeCoralTransferL2", self.intakeCoralTransferL2)
         NamedCommands.registerCommand("IntakeCoralTransferL3", self.intakeCoralTransferL3)
-        NamedCommands.registerCommand("IntakeCoralTransferL4", self.intakeCoralTransferL4)
         NamedCommands.registerCommand("CoralEject", self.coralEject)
         NamedCommands.registerCommand("ClimbFinal", self.climbFinal)
 
