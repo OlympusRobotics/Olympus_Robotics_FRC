@@ -57,9 +57,8 @@ class Elevator(Subsystem):
 
         super().__init__()
 
-    def setMAXmotion(self):
+    def setHome(self):
         self.closedLoopController.setReference(0, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
-        
 
     def setL1(self):       
         self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
@@ -74,13 +73,13 @@ class Elevator(Subsystem):
         self.closedLoopController.setReference(75, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def flyWheelSpin(self):
-        self.outtakeMotor.set(1)
+        self.outtakeMotor.set(.5)
     
     def flyWheelStop(self):
         self.outtakeMotor.stopMotor()
 
     def coralCheck(self):
-        return self.irSensor.get()
+        return not self.irSensor.get()
 
     def manualControl(self, input):
         self.elevatorMoveMotor1.setVoltage(input)

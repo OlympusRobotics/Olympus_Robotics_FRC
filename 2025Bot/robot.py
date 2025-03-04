@@ -13,7 +13,7 @@ from Subsystems.drivetrain import Drivetrain
 from Subsystems.Limelight import limelight
 from Subsystems.LED import led
 from wpimath.kinematics import SwerveModuleState, ChassisSpeeds
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from Subsystems.elevator import Elevator
@@ -73,74 +73,83 @@ class MyRobot(commands2.TimedCommandRobot):
         
         #Initializes a field for odometry tracking.
         self.field = wpilib.Field2d()
+
         
         #Commands
-        
-        """ intakeCoral = commands2.ConditionalCommand(
-            commands2.InstantCommand(self.elevator.flyWheelStop(), self),
-            commands2.InstantCommand(self.elevator.flyWheelSpin(), self),
-            self.elevator.coralCheck()
-            )
-        
         self.algaeEjectReturnHome = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.algaeArm.algaeEject, self),
+            commands2.InstantCommand(self.algaeArm.algaeEject, self).andThen(commands2.WaitCommand(1)),
+            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
+            commands2.InstantCommand(self.algaeArm.setHomePosition, self)
+        )
+
+        self.algaeIntake = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
+            commands2.InstantCommand(self.algaeArm.intake, self),
             commands2.WaitCommand(1),
-            commands2.InstantCommand(self.algaeArm.setHomePosition(), self)
+            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)
         )
         
         self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
-            intakeCoral,
+            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self),
             commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL1(), self)
+            commands2.InstantCommand(self.elevator.setL1, self)
         )
         
         self.intakeCoralTransferL2 = commands2.SequentialCommandGroup(
-            intakeCoral,
+            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self),
             commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL2(), self)
+            commands2.InstantCommand(self.elevator.setL2, self)
         )
         
         self.intakeCoralTransferL3 = commands2.SequentialCommandGroup(
-            intakeCoral,
+            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self),
             commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL3(), self)
+            commands2.InstantCommand(self.elevator.setL3, self)
         )
         
         self.intakeCoralTransferL4 = commands2.SequentialCommandGroup(
-            intakeCoral,
+            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self),
             commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL4(), self)
-        ) """
+            commands2.InstantCommand(self.elevator.setL4, self)
+        )
+
+        self.coralEject = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self)
+        )
+
+        self.climbFinal = commands2.SequentialCommandGroup(
+            commands2.ParallelCommandGroup(
+            commands2.InstantCommand(self.climber.setHomePosition, self),
+            commands2.InstantCommand(self.elevator.setHome, self)
+            ),
+            commands2.InstantCommand(self.climber.setClimbPosition, self),
+        )
+
+        #sending commands above to Pathplanner
+        NamedCommands.registerCommand("AlgaeEjectReturnHome", self.algaeEjectReturnHome)
+        NamedCommands.registerCommand("AlgaeIntake", self.algaeIntake)
+        NamedCommands.registerCommand("IntakeCoralTransferL1", self.intakeCoralTransferL1)
+        NamedCommands.registerCommand("IntakeCoralTransferL2", self.intakeCoralTransferL2)
+        NamedCommands.registerCommand("IntakeCoralTransferL3", self.intakeCoralTransferL3)
+        NamedCommands.registerCommand("IntakeCoralTransferL4", self.intakeCoralTransferL4)
+        NamedCommands.registerCommand("CoralEject", self.coralEject)
+        NamedCommands.registerCommand("ClimbFinal", self.climbFinal)
+
 
         #Creates and starts a timer object.
         self.timer = wpilib.Timer()
         self.timer.start()
-        
-    def applyDeadband(self, value, deadband=0.08):
-        """ 
-        Applys a deadband to stop controller drifting.
-        """
-        return value if abs(value) > deadband else 0
 
- 
-    def getAutoCommand(self):
-        """ 
-        Selects the auto to be run.
-        """
-        self.autoSelected = self.square
-        auto = PathPlannerAuto(self.autoSelected)
-
-        return auto
-    
-    def autonomousInit(self):
-        """ 
-        Runs the auto selection.
-        """
-        self.autoCommand = PathPlannerAuto("Test")
-
-        self.autoCommand.schedule()
-        return super().autonomousInit()
-        
     def robotPeriodic(self): 
         """ 
         Method that runs every 20ms regardless of what mode the robot is in.
@@ -171,6 +180,31 @@ class MyRobot(commands2.TimedCommandRobot):
        
 
         return super().robotPeriodic()
+        
+    def applyDeadband(self, value, deadband=0.08):
+        """ 
+        Applys a deadband to stop controller drifting.
+        """
+        return value if abs(value) > deadband else 0
+
+ 
+    def getAutoCommand(self):
+        """ 
+        Selects the auto to be run.
+        """
+        self.autoSelected = self.square
+        auto = PathPlannerAuto(self.autoSelected)
+
+        return auto
+    
+    def autonomousInit(self):
+        """ 
+        Runs the auto selection.
+        """
+        self.autoCommand = PathPlannerAuto("Test")
+
+        self.autoCommand.schedule()
+        return super().autonomousInit()
 
     
     def testInit(self) -> None:
@@ -180,16 +214,10 @@ class MyRobot(commands2.TimedCommandRobot):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-        if (self.controller.getAButton()):
-            self.limelight.aprilTagPipelineLeft()
-
-        if (self.controller.getBButton()):
-            self.limelight.aprilTagPipelineRight()
-
-        #self.elevator.setMAXmotion()
-
+        #Calibration testing
         #self.elevator.manualControl(self.applyDeadband(self.controller.getLeftY()))
-        
+        #self.algaeArm.manualControl(self.applyDeadband(self.controller.getRightY()))
+        #self.climber.manualControl(self.applyDeadband(self.controller.getRightY()))
             
         return super().testPeriodic()
 
@@ -197,6 +225,7 @@ class MyRobot(commands2.TimedCommandRobot):
         """
         Manual control mode that runs every 20 ms. 
         """
+        #Drive Controls
         self.xSpeed = self.applyDeadband(self.controller.getLeftY()) * 4
         self.ySpeed = self.applyDeadband(self.controller.getLeftX()) * 4
         
@@ -216,6 +245,17 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.stopDrivetrain()
         else:
             self.manualDrive()
+
+        #Switch april tag tracking offsets
+        if (self.controller.getLeftBumper()):
+            self.limelight.aprilTagPipelineLeft()
+
+        if (self.controller.getRightBumper()):
+            self.limelight.aprilTagPipelineRight()
+
+        #switch to algae Tracking pipeline
+        if (self.controller.getAButton()):
+            self.limelight.aiPipeline()
 
             
     def manualDrive(self) -> None:
@@ -245,7 +285,5 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def getMatchTime(self):
         wpilib.SmartDashboard.putNumber("Match Time",  self.timer.getMatchTime())
-        print(self.timer.getMatchTime())
+        #print(self.timer.getMatchTime())
             
-        
-        

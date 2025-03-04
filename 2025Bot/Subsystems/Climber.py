@@ -47,4 +47,7 @@ class climber(commands2.Subsystem):
     def setClimbPosition(self):
         self.climberClosedLoop.setReference(self.climbPosition, self.climberRotationMotor1.ControlType.kMAXMotionPositionControl)
 
+    def manualControl(self, input):
+        self.climberRotationMotor1.setVoltage(input)
+
         

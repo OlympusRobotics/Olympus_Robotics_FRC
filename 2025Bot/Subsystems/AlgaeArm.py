@@ -58,4 +58,7 @@ class algaeArm(commands2.Subsystem):
     def algaeEject(self):
         self.intakeMotor.set(-.2)
 
+    def manualControl(self, input):
+        self.armRotationMotor.setVoltage(input)
+
         
