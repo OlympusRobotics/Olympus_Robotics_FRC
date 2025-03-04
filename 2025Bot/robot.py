@@ -10,7 +10,8 @@ import wpimath.kinematics
 import pathplannerlib
 import util.elasticlib as elasticlib
 from Subsystems.drivetrain import Drivetrain
-from Subsystems.Limelight import limelight
+from Subsystems.Limelight4 import limelight4
+from Subsystems.Limelight2 import limelight2
 from Subsystems.LED import led
 from wpimath.kinematics import SwerveModuleState, ChassisSpeeds
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
@@ -23,7 +24,8 @@ from Subsystems.Climber import climber
 #initalizes the subsystems outside of the class to avoid multiple instances of the subsystems being created while using the test command.
 drivetrain = Drivetrain()
 elevator = Elevator()
-limelight = limelight()
+limelight4 = limelight4()
+limelight2 = limelight2()
 algaeArm = algaeArm()
 climber = climber()
 
@@ -50,7 +52,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.elevator = elevator
         self.drivetrain = drivetrain
-        self.limelight = limelight
+        self.limelightAlgae = limelight4
+        self.limelightAprilTag = limelight2
         self.algaeArm = algaeArm
         self.climber = climber
         self.led = led()
@@ -102,6 +105,13 @@ class MyRobot(commands2.TimedCommandRobot):
         )
 
         self.elevatorReturnHome = commands2.InstantCommand(self.elevator.setHome(), self)
+
+        self.algaeArmRaise = commands2.InstantCommand(self.algaeArm.setIntakePosition)
+
+        self.elevatorL1 = commands2.InstantCommand(self.elevator.setL1(), self)
+        self.elevatorL2 = commands2.InstantCommand(self.elevator.setL2(), self)
+        self.elevatorL3 = commands2.InstantCommand(self.elevator.setL3(), self)
+        self.elevatorL4 = commands2.InstantCommand(self.elevator.setL4(), self)
 
         
         self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
@@ -171,7 +181,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.brSM.driveMotor.get_device_temp().value_as_double, self.drivetrain.brSM.rotationMotor.getMotorTemperature(),
             self.drivetrain.gyro.get_temperature().value_as_double
             ]   
-        wpilib.SmartDashboard.putBoolean("Target", self.limelight.targetCheck())
+        
         
         #Adds the robot pose to the field that was constructed in robotInit.
         wpilib.SmartDashboard.putData("Field", self.field)
@@ -223,7 +233,7 @@ class MyRobot(commands2.TimedCommandRobot):
         #Calibration testing
         #self.elevator.manualControl(self.applyDeadband(self.controller.getLeftY()))
         #self.algaeArm.manualControl(self.applyDeadband(self.controller.getRightY()))
-        #self.climber.manualControl(self.applyDeadband(self.controller.getRightY()))
+        #self.climber.manualControl(self.applyDeadband(self.controller.getRightY()))        
             
         return super().testPeriodic()
 
@@ -236,9 +246,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.ySpeed = self.applyDeadband(self.controller.getLeftX()) * 4
         
         #Auto aim code
-        if (self.limelight.targetCheck() and self.controller.getLeftTriggerAxis() == 1):
+        if (self.limelightAprilTag.targetCheck() and self.controller.getLeftTriggerAxis() == 1):
             self.led.green()
-            self.rot = self.limelight.aim()
+            self.rot = self.limelightAprilTag.aim()
         else:
             self.led.greenBreathing()
             self.rot = self.applyDeadband(self.controller.getRightX()) * 4
@@ -253,15 +263,12 @@ class MyRobot(commands2.TimedCommandRobot):
             self.manualDrive()
 
         #Switch april tag tracking offsets
-        if (self.controller.getLeftBumper()):
-            self.limelight.aprilTagPipelineLeft()
-
-        if (self.controller.getRightBumper()):
-            self.limelight.aprilTagPipelineRight()
-
-        #switch to algae Tracking pipeline
         if (self.controller.getAButton()):
-            self.limelight.aiPipeline()
+            self.limelightAprilTag.aprilTagPipelineLeft()
+
+        if (self.controller.getBButton()):
+            self.limelightAprilTag.aprilTagPipelineRight()
+
 
             
     def manualDrive(self) -> None:
