@@ -38,7 +38,13 @@ class algaeArm(commands2.Subsystem):
         super().__init__()
         
     def isIntakePos(self):
-        if (self.armRotationEncoder.getPosition() >= 19.0 or self.armRotationEncoder.getPosition() <= 22.0):
+        if (self.armRotationEncoder.getPosition() >= 19.0 and self.armRotationEncoder.getPosition() <= 22.0):
+            return True
+        else:
+            return False
+        
+    def isTooHot(self):
+        if (self.armRotationMotor.getMotorTemperature() > 90 or self.intakeMotor.getMotorTemperature() > 90):
             return True
         else:
             return False

@@ -17,16 +17,6 @@ class limelight4(commands2.Subsystem):
     def getTX(self):
         return self.table.getEntry("tx").getDouble(0)
         
-    def isTooHot(self):
-        hw = self.getHW()
-        cpuTemp = hw[1]
-        deviceTemp = hw[3]
-        
-        if (cpuTemp > 70 or deviceTemp > 70):
-            return True
-        else:
-            return False
-
     def aim(self):
         """  
         Auto aim method (Tracks both apriltags, Coral, and Algae)
@@ -54,6 +44,8 @@ class limelight4(commands2.Subsystem):
         Sets the pipeline meant for ai tracking
         """
         self.table.getEntry("pipeline").setValue(2)
+        
+        return "Algae"
     
     def targetCheck(self):
         """ 

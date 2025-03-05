@@ -15,16 +15,6 @@ class limelight2(commands2.Subsystem):
     
     def getTX(self):
         return self.table.getEntry("tx").getDouble(0)
-        
-    def isTooHot(self):
-        hw = self.getHW()
-        cpuTemp = hw[1]
-        deviceTemp = hw[3]
-        
-        if (cpuTemp > 70 or deviceTemp > 70):
-            return True
-        else:
-            return False
 
     def aim(self):
         """  
@@ -41,12 +31,16 @@ class limelight2(commands2.Subsystem):
         Sets the pipeline meant for apriltag tracking
         """
         self.table.getEntry("pipeline").setValue(0)
+        
+        return "ApriltagLeft"
 
     def aprilTagPipelineRight(self):
         """ 
         Sets the pipeline meant for apriltag tracking
         """
         self.table.getEntry("pipeline").setValue(1)
+        
+        return "ApriltagRight"
 
     
     def targetCheck(self):

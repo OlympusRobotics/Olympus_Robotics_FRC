@@ -95,6 +95,13 @@ class Drivetrain(commands2.Subsystem):
         if (self.flSM.isTooHot() or self.frSM.isTooHot() or self.blSM.isTooHot() or self.brSM.isTooHot() or self.gyroIsTooHot()):
             return True
         
+        else:
+            return False
+        
+
+        return drivetrainDeviceTemps
+        
+        
     def getPose(self):
         """ 
         Returns the current robot pose on the field.

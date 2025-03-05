@@ -56,6 +56,12 @@ class Elevator(Subsystem):
         self.setPoint = TrapezoidProfile.State()
 
         super().__init__()
+        
+    def isTooHot(self):
+        if (self.elevatorMoveMotor1.getMotorTemperature() > 90 or self.elevatorMoveMotor2.getMotorTemperature() > 90 or self.outtakeMotor.getMotorTemperature() > 90):
+            return True
+        else:
+            return False
 
     def setHome(self):
         self.closedLoopController.setReference(0, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
@@ -68,9 +74,6 @@ class Elevator(Subsystem):
 
     def setL3(self):
         self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
-
-    def setL4(self):
-        self.closedLoopController.setReference(75, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def flyWheelSpin(self):
         self.outtakeMotor.set(.5)

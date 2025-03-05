@@ -4,7 +4,7 @@ import commands2
 import math
 
 kLedBuffer = 150
-kBreathingSpeed = 2
+kBreathingSpeed = 3
 
 class led(commands2.Subsystem):
     def __init__(self):
