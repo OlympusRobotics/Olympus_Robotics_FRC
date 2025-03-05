@@ -104,7 +104,7 @@ class swerveModule(commands2.Subsystem):
         
         
     def isTooHot(self):
-        if (self.driveMotor.get_device_temp().value_as_double < 90 or self.rotationMotor.getMotorTemperature() < 90):
+        if ((self.driveMotor.get_device_temp().value_as_double < 90) or (self.rotationMotor.getMotorTemperature() < 90)):
             return False
         else:
             return True

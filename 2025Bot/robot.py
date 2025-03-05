@@ -142,6 +142,18 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.elevator.setHome, self)
         ) 
 
+        self.coralUnstuck = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.elevator.coralUnstuck, self),
+            commands2.WaitCommand(0.3),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self)
+        )
+
+        self.coralIntake = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self)
+        )
+
         self.climbFinal = commands2.InstantCommand(self.algaeArm.setHomePosition).alongWith(commands2.InstantCommand(self.elevator.setHome))
 
         #sending commands above to Pathplanner
@@ -159,7 +171,8 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("IntakeCoralTransferL3", self.intakeCoralTransferL3)
         NamedCommands.registerCommand("CoralEject", self.coralEject)
         NamedCommands.registerCommand("ClimbFinal", self.climbFinal)
-
+        NamedCommands.registerCommand("CoralUnstuck", self.coralUnstuck)
+        NamedCommands.registerCommand("CoralIntake", self.coralIntake)
 
         #Creates and starts a timer object.
         self.timer = wpilib.Timer()
@@ -220,9 +233,17 @@ class MyRobot(commands2.TimedCommandRobot):
         """
 
         #Calibration testing
-        #self.elevator.manualControl(self.applyDeadband(self.driverController.getLeftY()))
-        #self.algaeArm.manualControl(self.applyDeadband(self.driverController.getRightY()))
-        #self.climber.manualControl(self.applyDeadband(self.driverController.getRightY()))        
+        self.elevator.manualControl(self.applyDeadband(self.driverController.getLeftY()))
+        self.algaeArm.manualControl(self.applyDeadband(self.operatorController.getLeftY()))
+
+        wpilib.SmartDashboard.getNumber("Elevator Position", self.elevator.elevatorEncoder1.getPosition())
+        wpilib.SmartDashboard.getNumber("Algae Arm Position", self.algaeArm.armRotationEncoder.getPosition())
+
+        wpilib.SmartDashboard.getNumber("FL Position", self.drivetrain.flSM.rotationEncoder.get())
+        wpilib.SmartDashboard.getNumber("FR Position", self.drivetrain.frSM.rotationEncoder.get())
+        wpilib.SmartDashboard.getNumber("BL Position", self.drivetrain.blSM.rotationEncoder.get())
+        wpilib.SmartDashboard.getNumber("BR Position", self.drivetrain.brSM.rotationEncoder.get())
+
             
         return super().testPeriodic()
 
@@ -246,31 +267,10 @@ class MyRobot(commands2.TimedCommandRobot):
             self.limelightAprilTag.aprilTagPipelineRight()
             self.aimMode = self.limelightAprilTag.aprilTagPipelineRight()
             
-        #Driver/Operator Controller Bindings
-        if (self.driverController.getStartButton()):
+        if (self.driverController.getYButton()):
             self.limelightAlgae.aiPipeline()
             self.aimMode = self.limelightAlgae.aiPipeline()
             
-        if (self.driverController.getXButton()):
-            self.algaeIntake
-            
-        if (self.driverController.getYButton()):
-            self.algaeEjectReturnHome
-            
-        if (self.driverController.getPOV() == 0 or self.operatorController.getPOV() == 0):
-            self.elevatorL3
-            
-        if (self.driverController.getPOV() == 90 or self.operatorController.getPOV() == 90):
-            self.elevatorL2
-            
-        if (self.driverController.getPOV() == 180 or self.operatorController.getPOV() == 180):
-            self.elevatorL1
-            
-        if (self.driverController.getPOV() == 180 or self.operatorController.getPOV() == 180):
-            self.elevatorReturnHome
-            
-        if (self.driverController.getRightTriggerAxis == 1 or self.operatorController.getRightTriggerAxis() == 1):
-            self.coralEject  
             
         #Auto aim code
         if (self.aimMode == "ApriltagLeft" and self.limelightAprilTag.targetCheck() and  self.driverController.getLeftTriggerAxis() == 1):
@@ -292,6 +292,48 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.stopDrivetrain()
         else:
             self.manualDrive()
+
+        if (self.driverController.getRightTriggerAxis() == 1):
+            self.elevator.flyWheelSpin()
+        
+        #Operator Controls
+        if (self.operatorController.getLeftTriggerAxis() == 1):
+            self.coralIntake
+
+        if (self.operatorController.getRightTriggerAxis() == 1):
+            self.coralEject
+
+        if (self.operatorController.getLeftBumper()):
+            self.algaeIntake
+
+        if (self.operatorController.getRightBumper()):
+            self.algaeEjectReturnHome
+
+        if (self.operatorController.getYButton()):
+            self.algaeArm.intakePosition()
+
+        if (self.operatorController.getAButton()):
+            self.algaeArm.setHomePosition()
+
+        if (self.operatorController.getXButton()):
+            self.elevator.setHomePosition()
+
+        if (self.operatorController.getBButton()):
+            self.coralUnstuck
+
+        if (self.operatorController.getLeftStickButton()):
+            self.elevator.manualControl(self.operatorController.getLeftY())
+
+        if (self.operatorController.getPOV() == 270):
+            self.elevatorL3
+
+        if (self.operatorController.getPOV() == 90):
+            self.elevatorL2
+
+        if (self.operatorController.getPOV() == 180):
+            self.elevatorL1
+
+        #Add Fang Subsystem
 
     def manualDrive(self) -> None:
         """ 

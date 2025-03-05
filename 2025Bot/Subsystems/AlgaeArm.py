@@ -44,7 +44,7 @@ class algaeArm(commands2.Subsystem):
             return False
         
     def isTooHot(self):
-        if (self.armRotationMotor.getMotorTemperature() > 90 or self.intakeMotor.getMotorTemperature() > 90):
+        if ((self.armRotationMotor.getMotorTemperature() > 90) or (self.intakeMotor.getMotorTemperature() > 90)):
             return True
         else:
             return False

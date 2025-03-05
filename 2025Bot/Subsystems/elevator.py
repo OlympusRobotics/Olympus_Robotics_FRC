@@ -58,7 +58,7 @@ class Elevator(Subsystem):
         super().__init__()
         
     def isTooHot(self):
-        if (self.elevatorMoveMotor1.getMotorTemperature() > 90 or self.elevatorMoveMotor2.getMotorTemperature() > 90 or self.outtakeMotor.getMotorTemperature() > 90):
+        if ((self.elevatorMoveMotor1.getMotorTemperature() > 90) or (self.elevatorMoveMotor2.getMotorTemperature() > 90) or (self.outtakeMotor.getMotorTemperature() > 90)):
             return True
         else:
             return False
@@ -80,6 +80,9 @@ class Elevator(Subsystem):
     
     def flyWheelStop(self):
         self.outtakeMotor.stopMotor()
+    
+    def coralUnstuck(self):
+        self.outtakeMotor.set(-.5)
 
     def coralCheck(self):
         return not self.irSensor.get()
