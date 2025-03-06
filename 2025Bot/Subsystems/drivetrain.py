@@ -96,11 +96,7 @@ class Drivetrain(commands2.Subsystem):
             return True
         
         else:
-            return False
-        
-
-        return drivetrainDeviceTemps
-        
+            return False        
         
     def getPose(self):
         """ 
