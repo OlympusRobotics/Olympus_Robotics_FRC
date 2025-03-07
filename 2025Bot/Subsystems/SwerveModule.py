@@ -67,7 +67,7 @@ class swerveModule(commands2.Subsystem):
         rotationConfig = rev.SparkMaxConfig()
         rotationConfig.smartCurrentLimit(40)
         rotationConfig.setIdleMode(rotationConfig.IdleMode.kBrake)
-        rotationConfig.inverted(True)
+        #rotationConfig.inverted(True)
 
         self.rotationMotor.configure(rotationConfig, self.rotationMotor.ResetMode.kResetSafeParameters, self.rotationMotor.PersistMode.kNoPersistParameters)
 
@@ -143,8 +143,8 @@ class swerveModule(commands2.Subsystem):
 
         rotationOutput = self.rotationPIDController.calculate(enc2Rad(self.rotationEncoder.get()), newState.angle.radians())
 
-        #self.driveMotor.setVoltage((newState.speed / 4.72) * 13)
-        self.driveMotor.setVoltage(driveOutput + driveFF)
+        self.driveMotor.setVoltage((newState.speed / 4.72) * 13)
+        #self.driveMotor.setVoltage(driveOutput + driveFF)
         self.rotationMotor.set(rotationOutput)
 
     def stopAllMotors(self):

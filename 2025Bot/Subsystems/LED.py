@@ -3,7 +3,7 @@ import wpilib
 import commands2
 import math
 
-kLedBuffer = 150
+kLedBuffer = 46
 kBreathingSpeed = 3
 
 class led(commands2.Subsystem):
@@ -52,7 +52,7 @@ class led(commands2.Subsystem):
 
     def green(self):
         for i in range(kLedBuffer):
-            self.ledData[i].setLED(Color.kGreen)
+            self.ledData[i].setLED(Color.kWhite)
 
         self.led.setData(self.ledData)
 

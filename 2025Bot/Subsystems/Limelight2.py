@@ -1,6 +1,7 @@
 import ntcore
 import commands2
 
+
 class limelight2(commands2.Subsystem):
     def __init__(self):
         #Call the limelight network tables instance.
@@ -25,6 +26,22 @@ class limelight2(commands2.Subsystem):
 
         angularVel = tx * kP
         return angularVel
+    
+    def aimAndRange(self):
+        tx = self.getTX()
+        kP = 0.15
+
+        angularVel = tx * kP
+
+        limelightSpeeds = self.table.getEntry("targetpose_cameraspace").getDoubleArray([0,0,0,0,0,0])
+
+        horizontalSpeeds = limelightSpeeds[0] * kP
+
+        forwardSpeeds = limelightSpeeds[2] * kP
+        horizontalSpeeds = limelightSpeeds[0] * kP
+
+        return [-forwardSpeeds, horizontalSpeeds, angularVel]
+
     
     def aprilTagPipelineLeft(self):
         """ 

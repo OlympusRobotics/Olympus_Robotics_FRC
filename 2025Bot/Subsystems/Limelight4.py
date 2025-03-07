@@ -26,7 +26,7 @@ class limelight4(commands2.Subsystem):
 
         angularVel = tx * kP
         return angularVel
-    
+        
     def aprilTagPipelineLeft(self):
         """ 
         Sets the pipeline meant for apriltag tracking

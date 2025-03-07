@@ -192,7 +192,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.field.setRobotPose(self.drivetrain.odometry.getPose())
         
         self.getBatteryVoltage()
-        self.robotIsTooHot()
+        #self.robotIsTooHot()
         self.getMatchTime()
        
         return super().robotPeriodic()
@@ -233,16 +233,19 @@ class MyRobot(commands2.TimedCommandRobot):
         """
 
         #Calibration testing
-        self.elevator.manualControl(self.applyDeadband(self.driverController.getLeftY()))
+        """ self.elevator.manualControl(self.applyDeadband(self.driverController.getLeftY()))
         self.algaeArm.manualControl(self.applyDeadband(self.operatorController.getLeftY()))
 
         wpilib.SmartDashboard.getNumber("Elevator Position", self.elevator.elevatorEncoder1.getPosition())
-        wpilib.SmartDashboard.getNumber("Algae Arm Position", self.algaeArm.armRotationEncoder.getPosition())
+        wpilib.SmartDashboard.getNumber("Algae Arm Position", self.algaeArm.armRotationEncoder.getPosition()) """
 
-        wpilib.SmartDashboard.getNumber("FL Position", self.drivetrain.flSM.rotationEncoder.get())
-        wpilib.SmartDashboard.getNumber("FR Position", self.drivetrain.frSM.rotationEncoder.get())
-        wpilib.SmartDashboard.getNumber("BL Position", self.drivetrain.blSM.rotationEncoder.get())
-        wpilib.SmartDashboard.getNumber("BR Position", self.drivetrain.brSM.rotationEncoder.get())
+        #wpilib.SmartDashboard.putNumberArray("Limelight 3d values",self.limelightAprilTag.aimAndRange())
+
+        wpilib.SmartDashboard.putNumber("FL POS", self.drivetrain.flSM.rotationEncoder.get())
+        wpilib.SmartDashboard.putNumber("FR POS", self.drivetrain.frSM.rotationEncoder.get())
+        wpilib.SmartDashboard.putNumber("BL POS", self.drivetrain.blSM.rotationEncoder.get())
+        wpilib.SmartDashboard.putNumber("BR POS", self.drivetrain.brSM.rotationEncoder.get())
+
 
             
         return super().testPeriodic()
@@ -270,6 +273,13 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.driverController.getYButton()):
             self.limelightAlgae.aiPipeline()
             self.aimMode = self.limelightAlgae.aiPipeline()
+
+        if (self.driverController.getXButton()):
+            speeds = self.limelightAprilTag.aimAndRange()
+
+            self.xSpeed = speeds[0] * 4
+            self.ySpeed = speeds[1] * 4
+            self.rot = speeds[2] * 4
             
             
         #Auto aim code
@@ -332,6 +342,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         if (self.operatorController.getPOV() == 180):
             self.elevatorL1
+
 
         #Add Fang Subsystem
 
