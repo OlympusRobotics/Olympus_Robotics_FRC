@@ -13,3 +13,5 @@ Github repo for code and documentation for FRC team 4982.
  Bob - 2023 season
  
  Perry - 2024 season
+
+ Riptide - 2025 season
