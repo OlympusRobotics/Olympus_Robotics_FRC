@@ -10,7 +10,7 @@ class algaeRemover(commands2.Subsystem):
         #Encoder Initialization
         self.armRotationEncoder = self.armRotationMotor.getEncoder()
 
-        #Algae intake/outtake arm motor Configuration
+        #Algae remover arm Configuration
         armRotationConfig = rev.SparkMaxConfig()
         armRotationConfig.setIdleMode(rev.SparkMaxConfig.IdleMode.kBrake)
         armRotationConfig.smartCurrentLimit(30)
@@ -35,12 +35,10 @@ class algaeRemover(commands2.Subsystem):
         self.Position1 = 20
         self.Position2 = 20
 
-        0
-
         super().__init__()
         
     def isTooHot(self):
-        if ((self.armRotationMotor.getMotorTemperature() > 90) or (self.intakeMotor.getMotorTemperature() > 90)):
+        if (self.armRotationMotor.getMotorTemperature() > 90):
             return True
         else:
             return False

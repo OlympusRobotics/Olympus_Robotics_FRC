@@ -11,8 +11,8 @@
       "style": "0",
       "userScale": "2",
       "width": "1344",
-      "xpos": "278",
-      "ypos": "80"
+      "xpos": "0",
+      "ypos": "23"
     }
   },
   "Table": {
@@ -36,18 +36,18 @@
     },
     "###Addressable LEDs": {
       "Collapsed": "0",
-      "Pos": "579,29",
-      "Size": "165,35"
+      "Pos": "580,29",
+      "Size": "165,660"
     },
     "###FMS": {
       "Collapsed": "0",
       "Pos": "5,541",
-      "Size": "66,35"
+      "Size": "169,184"
     },
     "###Joysticks": {
       "Collapsed": "0",
-      "Pos": "250,465",
-      "Size": "104,35"
+      "Pos": "242,466",
+      "Size": "796,240"
     },
     "###NetworkTables": {
       "Collapsed": "0",
@@ -61,8 +61,8 @@
     },
     "###Other Devices": {
       "Collapsed": "0",
-      "Pos": "1051,62",
-      "Size": "253,695"
+      "Pos": "1022,71",
+      "Size": "290,695"
     },
     "###RoboRIO": {
       "Collapsed": "0",
@@ -72,12 +72,12 @@
     "###System Joysticks": {
       "Collapsed": "0",
       "Pos": "5,350",
-      "Size": "148,35"
+      "Size": "192,218"
     },
     "###Timing": {
       "Collapsed": "0",
       "Pos": "5,150",
-      "Size": "85,35"
+      "Size": "135,150"
     },
     "Debug##Default": {
       "Collapsed": "0",
@@ -87,7 +87,7 @@
     "Robot State": {
       "Collapsed": "0",
       "Pos": "5,20",
-      "Size": "99,35"
+      "Size": "99,116"
     }
   }
 }
