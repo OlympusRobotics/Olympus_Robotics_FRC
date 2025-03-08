@@ -19,6 +19,7 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from Subsystems.elevator import Elevator
 from Subsystems.AlgaeArm import algaeArm
+from Subsystems.AlgaeRemover import algaeRemover
 #from Subsystems.Climber import climber
 
 #initalizes the subsystems outside of the class to avoid multiple instances of the subsystems being created while using the test command.
@@ -27,6 +28,7 @@ elevator = Elevator()
 limelight4 = limelight4()
 limelight2 = limelight2()
 algaeArm = algaeArm()
+algaeRemover = algaeRemover()
 #climber = climber()
 
 #Autobuilder configures the settings for accurate auto following. Called outside of class to avoid multiple instances of the drivetrain being created.
@@ -56,6 +58,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.limelightAlgae = limelight4
         self.limelightAprilTag = limelight2
         self.algaeArm = algaeArm
+        self.algaeRemover = algaeRemover
         #self.climber = climber
         self.led = led()
         self.DS = wpilib.DriverStation
@@ -96,7 +99,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.elevatorL1 = commands2.InstantCommand(self.elevator.setL1(), self)
         self.elevatorL2 = commands2.InstantCommand(self.elevator.setL2(), self)
         self.elevatorL3 = commands2.InstantCommand(self.elevator.setL3(), self)
-        
+
+        self.setAlgaeRemoverHomePosition = commands2.InstantCommand(self.algaeRemover.setHomePosition, self)
+        self.setAlgaeRemoverPosition1 = commands2.InstantCommand(self.algaeRemover.setPostion1, self)
+        self.setAlgaeRemoverPosition2 = commands2.InstantCommand(self.algaeRemover.setPostion2, self)
+
         self.algaeEjectReturnHome = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.algaeArm.algaeEject, self),
             commands2.WaitCommand(1),
@@ -160,6 +167,10 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("AlgaeEjectReturnHome", self.algaeEjectReturnHome)
         NamedCommands.registerCommand("AlgaeArmIntakePosition", self.algaeArmIntakePosition)
         NamedCommands.registerCommand("AlgaeArmHomePosition", self.algaeArmHomePosition)
+
+        NamedCommands.registerCommand("setAlgaeRemoverHomePosition", self.setAlgaeRemoverHomePosition)
+        NamedCommands.registerCommand("setAlgaeRemoverPosition1", self.setAlgaeRemoverPosition1)
+        NamedCommands.registerCommand("setAlgaeRemoverPosition2", self.setAlgaeRemoverPosition2)
         
         NamedCommands.registerCommand("elevatorReturnHome", self.elevatorReturnHome)
         NamedCommands.registerCommand("elevatorL1", self.elevatorL1)
@@ -241,10 +252,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         #wpilib.SmartDashboard.putNumberArray("Limelight 3d values",self.limelightAprilTag.aimAndRange())
 
-        wpilib.SmartDashboard.putNumber("FL POS", self.drivetrain.flSM.rotationEncoder.get())
-        wpilib.SmartDashboard.putNumber("FR POS", self.drivetrain.frSM.rotationEncoder.get())
-        wpilib.SmartDashboard.putNumber("BL POS", self.drivetrain.blSM.rotationEncoder.get())
-        wpilib.SmartDashboard.putNumber("BR POS", self.drivetrain.brSM.rotationEncoder.get())
+        self.led.rainbow()
 
 
             
