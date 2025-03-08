@@ -1,0 +1,43 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SQ1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SQ2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SQ3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "SQ4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbFinal"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
