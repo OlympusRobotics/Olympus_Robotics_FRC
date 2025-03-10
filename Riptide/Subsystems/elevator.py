@@ -19,8 +19,6 @@ class Elevator(Subsystem):
         self.elevatorMoveMotor2 = rev.SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.outtakeMotor = rev.SparkMax(12, rev.SparkMax.MotorType.kBrushless)
 
-        self.irSensor = wpilib.DigitalInput(0)
-
         self.elevatorEncoder1 = self.elevatorMoveMotor1.getEncoder()
         self.elevatorEncoder2 = self.elevatorMoveMotor2.getEncoder()
 
@@ -76,16 +74,13 @@ class Elevator(Subsystem):
         self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def flyWheelSpin(self):
-        self.outtakeMotor.set(.5)
+        self.outtakeMotor.set(-.6)
     
     def flyWheelStop(self):
         self.outtakeMotor.stopMotor()
     
     def coralUnstuck(self):
-        self.outtakeMotor.set(-.5)
+        self.outtakeMotor.set(.6)
 
-    def coralCheck(self):
-        return not self.irSensor.get()
-
-    def manualControl(self, input):
+    def manualControl(self, input):        
         self.elevatorMoveMotor1.setVoltage(input)

@@ -1,0 +1,152 @@
+{
+  "version": 1.0,
+  "grid_size": 128,
+  "tabs": [
+    {
+      "name": "Robot",
+      "grid_layout": {
+        "layouts": [],
+        "containers": [
+          {
+            "title": "FMSInfo",
+            "x": 1920.0,
+            "y": 896.0,
+            "width": 640.0,
+            "height": 128.0,
+            "type": "FMSInfo",
+            "properties": {
+              "topic": "/FMSInfo",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Battery Voltage",
+            "x": 1408.0,
+            "y": 768.0,
+            "width": 512.0,
+            "height": 128.0,
+            "type": "Voltage View",
+            "properties": {
+              "topic": "/SmartDashboard/Battery Voltage",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": 11.8,
+              "max_value": 13.7,
+              "divisions": 5,
+              "inverted": false,
+              "orientation": "horizontal"
+            }
+          },
+          {
+            "title": "Auto Options",
+            "x": 1920.0,
+            "y": 768.0,
+            "width": 640.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Options",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "limelight-algae",
+            "x": 1408.0,
+            "y": 0.0,
+            "width": 1152.0,
+            "height": 768.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/limelight-algae",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "limelight-tags",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1408.0,
+            "height": 640.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/limelight-tags",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Coral loaded",
+            "x": 1408.0,
+            "y": 1024.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Coral loaded",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "AprilTag Target",
+            "x": 1408.0,
+            "y": 896.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/AprilTag Target",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Algae Target",
+            "x": 1664.0,
+            "y": 896.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Algae Target",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Field",
+            "x": 0.0,
+            "y": 640.0,
+            "width": 1408.0,
+            "height": 640.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/Field",
+              "period": 0.06,
+              "field_game": "Reefscape",
+              "robot_width": 0.85,
+              "robot_length": 0.85,
+              "show_other_objects": true,
+              "show_trajectories": true,
+              "field_rotation": 0.0,
+              "robot_color": 4294198070,
+              "trajectory_color": 4294967295
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

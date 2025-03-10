@@ -19,10 +19,10 @@ kMaxRobotSpeed = 4.0
 class Drivetrain(commands2.Subsystem):
     def __init__(self):
         #SwerveModule/hardware init
-        self.flSM = SM.swerveModule(1, 2, 0, 0.092)
+        self.flSM = SM.swerveModule(1, 2, 0, 0.093)
         self.frSM = SM.swerveModule(3, 4, 1, 0.368)
-        self.blSM = SM.swerveModule(5, 6, 2, 0.017) 
-        self.brSM = SM.swerveModule(7, 8, 3, 0.810)
+        self.blSM = SM.swerveModule(5, 6, 2, 0.012) 
+        self.brSM = SM.swerveModule(7, 8, 3, 0.801)
 
         self.gyro = phoenix6.hardware.Pigeon2(9)
         self.gyro.set_yaw(0)

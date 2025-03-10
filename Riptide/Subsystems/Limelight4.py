@@ -5,7 +5,7 @@ class limelight4(commands2.Subsystem):
     def __init__(self):
         #Call the limelight network tables instance.
         self.table = ntcore.NetworkTableInstance.getDefault().getTable("limelight-algae")
-        self.table.getEntry("pipeline").setValue(2)
+        self.table.getEntry("pipeline").setValue(0)
         super().__init__()
 
     def getHW(self):
@@ -26,6 +26,21 @@ class limelight4(commands2.Subsystem):
 
         angularVel = tx * kP
         return angularVel
+    
+    def aimAndRange(self):
+        tx = self.getTX()
+        kP = 0.15
+
+        angularVel = tx * kP
+
+        limelightSpeeds = self.table.getEntry("targetpose_cameraspace").getDoubleArray([0,0,0,0,0,0])
+
+        horizontalSpeeds = limelightSpeeds[0] * kP
+
+        forwardSpeeds = limelightSpeeds[2] * kP
+        horizontalSpeeds = limelightSpeeds[0] * kP
+
+        return [-forwardSpeeds, horizontalSpeeds, angularVel]
         
     def aprilTagPipelineLeft(self):
         """ 

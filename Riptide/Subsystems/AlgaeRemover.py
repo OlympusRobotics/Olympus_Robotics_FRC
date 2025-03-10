@@ -32,7 +32,7 @@ class algaeRemover(commands2.Subsystem):
 
         #Arm Positions
         self.homePosition = 0
-        self.Position1 = 20
+        self.Position1 = 10
         self.Position2 = 20
 
         super().__init__()
@@ -44,7 +44,7 @@ class algaeRemover(commands2.Subsystem):
             return False
 
     def setHomePosition(self):
-        self.armClosedLoop.setReference(self.homePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
+        self.armClosedLoop.setReference(self.homePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl, )
 
     def setPostion1(self):
         self.armClosedLoop.setReference(self.Position1, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
