@@ -272,7 +272,12 @@ class MyRobot(commands2.TimedCommandRobot):
         else:
             self.elevator.manualControl(controllerSpeed) """
         
-        wpilib.SmartDashboard.putBoolean("Coral", self.coralCheck())
+        #Ir Sensor temporary replacement testing
+        
+        wpilib.SmartDashboard.putNumber("outtakeVelocity", self.elevator.outtakeEncoder.getVelocity())
+        wpilib.SmartDashboard.putNumber("outtakeCurrent", self.elevator.outtakeMotor.getOutputCurrent())
+
+        self.elevator.flyWheelSpin()
 
         
 

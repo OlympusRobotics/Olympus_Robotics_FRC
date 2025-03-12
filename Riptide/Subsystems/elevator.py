@@ -21,6 +21,7 @@ class Elevator(Subsystem):
 
         self.elevatorEncoder1 = self.elevatorMoveMotor1.getEncoder()
         self.elevatorEncoder2 = self.elevatorMoveMotor2.getEncoder()
+        self.outtakeEncoder = self.outtakeMotor.getEncoder()
 
         #Config Elevator motor ID 10
         leaderConfig = rev.SparkMaxConfig()
@@ -73,12 +74,20 @@ class Elevator(Subsystem):
     def setL3(self):
         self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
-    def coralCheck(self):
+    def coralCheck1(self):
         if self.outtakeMotor.getOutputCurrent() > 10:
             return True
         else:
             return False
-
+        
+    def coralCheck2(self):
+        initalOuttakeVelocity = self.outtakeEncoder.getVelocity()
+        
+        if self.outtakeEncoder.getVelocity() < initalOuttakeVelocity:
+            return True
+        else:
+            return False
+        
     def flyWheelSpin(self):
         self.outtakeMotor.set(-.6)
     

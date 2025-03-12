@@ -3,7 +3,7 @@ import wpilib
 import commands2
 import math
 
-kLedBuffer = 45
+kLedBuffer = 40
 kBreathingSpeed = 3
 
 class led(commands2.Subsystem):
