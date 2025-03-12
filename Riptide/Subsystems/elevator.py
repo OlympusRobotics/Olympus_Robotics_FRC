@@ -73,6 +73,12 @@ class Elevator(Subsystem):
     def setL3(self):
         self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
+    def coralCheck(self):
+        if self.outtakeMotor.getOutputCurrent() > 10:
+            return True
+        else:
+            return False
+
     def flyWheelSpin(self):
         self.outtakeMotor.set(-.6)
     
