@@ -100,6 +100,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.elevatorL3 = commands2.InstantCommand(self.elevator.setL3, self)
 
         self.setAlgaeRemoverHomePosition = commands2.InstantCommand(self.algaeRemover.setHomePosition, self)
+        self.setAlgaeRemoverReadyPosition = commands2.InstantCommand(self.algaeRemover.setReadyPosition, self)
         self.setAlgaeRemoverPosition1 = commands2.InstantCommand(self.algaeRemover.setPostion1, self)
         self.setAlgaeRemoverPosition2 = commands2.InstantCommand(self.algaeRemover.setPostion2, self)
 
@@ -111,11 +112,13 @@ class MyRobot(commands2.TimedCommandRobot):
         )
 
         self.algaeIntake = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
+            #commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
             commands2.InstantCommand(self.algaeArm.intake, self),
             commands2.WaitCommand(0.5),
+            commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
+            commands2.WaitCommand(0.2),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
-            commands2.InstantCommand(self.algaeArm.setEjectPosition, self)
+            #commands2.InstantCommand(self.algaeArm.setEjectPosition, self)
             
         )
                 
@@ -163,7 +166,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.coralIntake = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
-            commands2.WaitUntilCommand(condition=self.coralCheck),
+            commands2.WaitCommand(1),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
             #commands2.WaitCommand(0.1),
             commands2.InstantCommand(self.elevator.flyWheelStop, self)
         )
@@ -187,6 +191,7 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("AlgaeArmHomePosition", self.algaeArmHomePosition)
 
         NamedCommands.registerCommand("setAlgaeRemoverHomePosition", self.setAlgaeRemoverHomePosition)
+        NamedCommands.registerCommand("setAlgaeRemoverReadyPosition", self.setAlgaeRemoverReadyPosition)
         NamedCommands.registerCommand("setAlgaeRemoverPosition1", self.setAlgaeRemoverPosition1)
         NamedCommands.registerCommand("setAlgaeRemoverPosition2", self.setAlgaeRemoverPosition2)
         
@@ -254,7 +259,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
     
     def testInit(self) -> None:
-        self.coralIntake.schedule()
+        #self.coralIntake.schedule()
+        self.algaeIntake.schedule()
         return super().testInit()
     
     def testPeriodic(self):
@@ -274,10 +280,7 @@ class MyRobot(commands2.TimedCommandRobot):
         
         #Ir Sensor temporary replacement testing
         
-        wpilib.SmartDashboard.putNumber("outtakeVelocity", self.elevator.outtakeEncoder.getVelocity())
-        wpilib.SmartDashboard.putNumber("outtakeCurrent", self.elevator.outtakeMotor.getOutputCurrent())
-
-        self.elevator.flyWheelSpin()
+        
 
         
 
@@ -293,6 +296,7 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.robotIsTooHot()
 
         wpilib.SmartDashboard.putBoolean("Apriltag Target", self.limelight.targetCheck())
+            
             
         return super().testPeriodic()
 

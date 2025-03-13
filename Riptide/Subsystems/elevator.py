@@ -74,22 +74,14 @@ class Elevator(Subsystem):
     def setL3(self):
         self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
-    def coralCheck1(self):
-        if self.outtakeMotor.getOutputCurrent() > 10:
-            return True
-        else:
-            return False
-        
-    def coralCheck2(self):
-        initalOuttakeVelocity = self.outtakeEncoder.getVelocity()
-        
-        if self.outtakeEncoder.getVelocity() < initalOuttakeVelocity:
+    def coralCheck(self):
+        if self.outtakeMotor.getOutputCurrent() > 11:
             return True
         else:
             return False
         
     def flyWheelSpin(self):
-        self.outtakeMotor.set(-.6)
+        self.outtakeMotor.set(-.2)
     
     def flyWheelStop(self):
         self.outtakeMotor.stopMotor()
