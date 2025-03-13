@@ -14,16 +14,15 @@ class algaeRemover(commands2.Subsystem):
         armRotationConfig = rev.SparkMaxConfig()
         armRotationConfig.setIdleMode(rev.SparkMaxConfig.IdleMode.kBrake)
         armRotationConfig.smartCurrentLimit(30)
-        armRotationConfig.inverted(True)
 
         armPIDConfig = armRotationConfig.closedLoop
-        armPIDConfig.pid(0.01, 0, 0, rev.ClosedLoopSlot.kSlot0)
+        armPIDConfig.pidf(0.01, 0, 0, 0.002, rev.ClosedLoopSlot.kSlot0)
         armPIDConfig.FeedbackSensor.kPrimaryEncoder
 
         MAXMotionConfig = armPIDConfig.maxMotion
-        MAXMotionConfig.maxVelocity(1000)
-        MAXMotionConfig.maxAcceleration(1000)
-        MAXMotionConfig.allowedClosedLoopError(0.06)
+        MAXMotionConfig.maxVelocity(4000)
+        MAXMotionConfig.maxAcceleration(4000)
+        MAXMotionConfig.allowedClosedLoopError(0.1)
 
         self.armRotationMotor.configure(armRotationConfig, self.armRotationMotor.ResetMode.kResetSafeParameters, self.armRotationMotor.PersistMode.kPersistParameters)
         
@@ -32,9 +31,9 @@ class algaeRemover(commands2.Subsystem):
 
         #Arm Positions
         self.homePosition = 0
-        self.readyPosition = 25
-        self.Position1 = 20
-        self.Position2 = 30
+        self.readyPosition = 7
+        self.Position1 = 6
+        self.Position2 = 8.8
 
         super().__init__()
         
@@ -48,7 +47,7 @@ class algaeRemover(commands2.Subsystem):
         self.armClosedLoop.setReference(self.homePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
 
     def setReadyPosition(self):
-        self.armClosedLoop.setReference(self.homePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
+        self.armClosedLoop.setReference(self.readyPosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
 
     def setPostion1(self):
         self.armClosedLoop.setReference(self.Position1, self.armRotationMotor.ControlType.kMAXMotionPositionControl)

@@ -15,16 +15,16 @@ class algaeArm(commands2.Subsystem):
         armRotationConfig = rev.SparkMaxConfig()
         armRotationConfig.setIdleMode(rev.SparkMaxConfig.IdleMode.kBrake)
         armRotationConfig.smartCurrentLimit(30)
-        armRotationConfig.inverted(True)
+        armRotationConfig.inverted(False)
 
         armPIDConfig = armRotationConfig.closedLoop
-        armPIDConfig.pid(0.01, 0, 0, rev.ClosedLoopSlot.kSlot0)
+        armPIDConfig.pid(0.009, 0.000002, 0.0009, rev.ClosedLoopSlot.kSlot0)
         armPIDConfig.FeedbackSensor.kPrimaryEncoder
 
         MAXMotionConfig = armPIDConfig.maxMotion
-        MAXMotionConfig.maxVelocity(1000)
-        MAXMotionConfig.maxAcceleration(1000)
-        MAXMotionConfig.allowedClosedLoopError(0.06)
+        MAXMotionConfig.maxVelocity(2500)
+        MAXMotionConfig.maxAcceleration(2500)
+        MAXMotionConfig.allowedClosedLoopError(0.2)
 
         self.armRotationMotor.configure(armRotationConfig, self.armRotationMotor.ResetMode.kResetSafeParameters, self.armRotationMotor.PersistMode.kPersistParameters)
         
@@ -34,7 +34,7 @@ class algaeArm(commands2.Subsystem):
         #Arm Positions
         self.homePosition = 0
         self.algaeEjectPosition = 2
-        self.intakePosition = 9
+        self.intakePosition = 8.1
 
         super().__init__()
         
@@ -60,7 +60,7 @@ class algaeArm(commands2.Subsystem):
         self.armClosedLoop.setReference(self.algaeEjectPosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
 
     def intake(self):
-        self.intakeMotor.set(.4)
+        self.intakeMotor.set(.3)
         
     def stopIntakeMotor(self):
         self.intakeMotor.stopMotor()
@@ -69,7 +69,7 @@ class algaeArm(commands2.Subsystem):
         self.intakeMotor.set(-.2)
 
     def algaeCheck(self):
-        if self.intakeMotor.getOutputCurrent() > 24:
+        if self.intakeMotor.getOutputCurrent() > 30:
             return True
         else:
             return False

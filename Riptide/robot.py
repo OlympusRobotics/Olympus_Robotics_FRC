@@ -112,13 +112,13 @@ class MyRobot(commands2.TimedCommandRobot):
         )
 
         self.algaeIntake = commands2.SequentialCommandGroup(
-            #commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
+            commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
             commands2.InstantCommand(self.algaeArm.intake, self),
-            commands2.WaitCommand(0.5),
+            commands2.WaitCommand(0.4),
             commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
             commands2.WaitCommand(0.2),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
-            #commands2.InstantCommand(self.algaeArm.setEjectPosition, self)
+            commands2.InstantCommand(self.algaeArm.setEjectPosition, self)
             
         )
                 
@@ -260,7 +260,7 @@ class MyRobot(commands2.TimedCommandRobot):
     
     def testInit(self) -> None:
         #self.coralIntake.schedule()
-        self.algaeIntake.schedule()
+        #self.algaeIntake.schedule()
         return super().testInit()
     
     def testPeriodic(self):
@@ -268,32 +268,32 @@ class MyRobot(commands2.TimedCommandRobot):
         A test routine that runs every 20 ms. Very useful for new methods.
         """
 
-        #Calibration
-        """ controllerSpeed = self.applyDeadband(self.operatorController.getLeftY())
-
-        if (controllerSpeed == 0):
-            self.elevator.elevatorMoveMotor1.stopMotor()
-            self.elevator.elevatorMoveMotor2.stopMotor()
-
+        self.xSpeed = self.applyDeadband(self.driverController.getLeftY()) * 4
+        self.ySpeed = self.applyDeadband(self.driverController.getLeftX()) * 4
+        self.rot = self.applyDeadband(self.driverController.getRightX()) * 4
+            
+        if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):
+            self.drivetrain.stopDrivetrain()
         else:
-            self.elevator.manualControl(controllerSpeed) """
-        
-        #Ir Sensor temporary replacement testing
-        
-        
+            self.manualDrive()
+
+        if (self.driverController.getAButton()):
+            self.setAlgaeRemoverPosition1.schedule()
+
+        if (self.driverController.getYButton()):
+            self.setAlgaeRemoverPosition2.schedule()
+
+        if (self.driverController.getBButton()):
+            self.setAlgaeRemoverReadyPosition.schedule()
+
+        if (self.driverController.getXButton()):
+            self.setAlgaeRemoverHomePosition.schedule()
 
         
-
-        """ if (controllerSpeed == 0):
-            self.algaeArm.armRotationMotor.stopMotor()
-
-        else:
-            self.algaeArm.manualControl(controllerSpeed) """
 
         wpilib.SmartDashboard.getNumber("Elevator Position", self.elevator.elevatorEncoder1.getPosition())
         wpilib.SmartDashboard.getNumber("Algae Arm Position", self.algaeArm.armRotationEncoder.getPosition())
 
-        #self.robotIsTooHot()
 
         wpilib.SmartDashboard.putBoolean("Apriltag Target", self.limelight.targetCheck())
             

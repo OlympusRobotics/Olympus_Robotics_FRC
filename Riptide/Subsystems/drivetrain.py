@@ -33,10 +33,10 @@ class Drivetrain(commands2.Subsystem):
         self.blSM.setDrivePID(0.015337, 0.0, 0.0)
         self.brSM.setDrivePID(0.017195, 0.0, 0.0)
 
-        self.flSM.setRotationPID(0.555, 0.0, 0.002)
+        self.flSM.setRotationPID(0.56, 0.0, 0.0045)
         self.frSM.setRotationPID(0.505, 0.0, 0.001)
-        self.blSM.setRotationPID(0.51, 0.0, 0.002)
-        self.brSM.setRotationPID(0.52, 0.0, 0.00)
+        self.blSM.setRotationPID(0.567, 0.0, 0.00)
+        self.brSM.setRotationPID(0.53, 0.0, 0.00)
 
         self.flSM.setDriveFF(0.069667, 0.017075, 0.0006183)
         self.frSM.setDriveFF(0.055517, 0.016857, 0.00044453)
