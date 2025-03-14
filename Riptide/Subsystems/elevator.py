@@ -28,10 +28,10 @@ class Elevator(Subsystem):
         brake = leaderConfig.setIdleMode(idleMode=rev.SparkMaxConfig.IdleMode.kBrake)
         limit = leaderConfig.smartCurrentLimit(30)
 
-        leaderConfig.closedLoop.pid(0.005, 0.0, 0.0, rev.ClosedLoopSlot.kSlot0)
+        leaderConfig.closedLoop.pidf(0.024, 0.0, 0.0003, 0.000001, rev.ClosedLoopSlot.kSlot0)
         leaderConfig.closedLoop.outputRange(-1,1)
         leaderConfig.closedLoop.FeedbackSensor(rev.SparkMaxConfig().closedLoop.FeedbackSensor.kPrimaryEncoder)
-        leaderConfig.closedLoop.maxMotion.maxAcceleration(1000).maxVelocity(1000).allowedClosedLoopError(0.4)
+        leaderConfig.closedLoop.maxMotion.maxAcceleration(5000).maxVelocity(5000).allowedClosedLoopError(0.4)
 
         
         self.elevatorMoveMotor1.configure(leaderConfig, self.elevatorMoveMotor1.ResetMode.kResetSafeParameters, self.elevatorMoveMotor1.PersistMode.kPersistParameters)     
@@ -45,14 +45,6 @@ class Elevator(Subsystem):
         followerConfig.apply(limit)
 
         self.elevatorMoveMotor2.configure(followerConfig, self.elevatorMoveMotor2.ResetMode.kResetSafeParameters, self.elevatorMoveMotor2.PersistMode.kPersistParameters)
-        
-        self.constraints = TrapezoidProfile.Constraints(1, 0.7)
-        self.PIDcontroller = wpimath.controller.ProfiledPIDController(1, 0.0, 0.0, self.constraints)
-
-        self.feedForward = wpimath.controller.ElevatorFeedforward(0.1, 0.02, 0.6) #Retune pls
-
-        self.goal = TrapezoidProfile.State()
-        self.setPoint = TrapezoidProfile.State()
 
         super().__init__()
         
@@ -65,14 +57,17 @@ class Elevator(Subsystem):
     def setHome(self):
         self.closedLoopController.setReference(0, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
+    def setintake(self):
+        self.closedLoopController.setReference(35.5, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+
     def setL1(self):       
-        self.closedLoopController.setReference(15, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(52, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
         
     def setL2(self):
-        self.closedLoopController.setReference(35, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(61, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL3(self):
-        self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(84, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def coralCheck(self):
         if self.outtakeMotor.getOutputCurrent() > 11:

@@ -95,6 +95,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.algaeEjectPosition = commands2.InstantCommand(self.algaeArm.setEjectPosition, self)
 
         self.elevatorReturnHome = commands2.InstantCommand(self.elevator.setHome, self)
+        self.elevatorIntakePosition = commands2.InstantCommand(self.elevator.setintake, self)
         self.elevatorL1 = commands2.InstantCommand(self.elevator.setL1, self)
         self.elevatorL2 = commands2.InstantCommand(self.elevator.setL2, self)
         self.elevatorL3 = commands2.InstantCommand(self.elevator.setL3, self)
@@ -151,11 +152,11 @@ class MyRobot(commands2.TimedCommandRobot):
         
         self.coralEject = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
-            commands2.WaitCommand(.1),
-            commands2.WaitUntilCommand(condition=self.coralCheck),
+            commands2.WaitCommand(2),
+            #commands2.WaitUntilCommand(condition=self.coralCheck),
             commands2.InstantCommand(self.elevator.flyWheelStop, self),
-            commands2.WaitCommand(.5),
-            commands2.InstantCommand(self.elevator.setHome, self)
+            commands2.WaitCommand(.5)
+            #commands2.InstantCommand(self.elevator.setHome, self)
         ) 
 
         self.coralUnstuck = commands2.SequentialCommandGroup(
@@ -168,7 +169,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitCommand(1),
             commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
-            #commands2.WaitCommand(0.1),
+            commands2.WaitCommand(0.1),
             commands2.InstantCommand(self.elevator.flyWheelStop, self)
         )
 
@@ -196,6 +197,7 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("setAlgaeRemoverPosition2", self.setAlgaeRemoverPosition2)
         
         NamedCommands.registerCommand("elevatorReturnHome", self.elevatorReturnHome)
+        NamedCommands.registerCommand("ElevatorIntake", self.elevatorIntakePosition)
         NamedCommands.registerCommand("elevatorL1", self.elevatorL1)
         NamedCommands.registerCommand("elevatorL2", self.elevatorL2)
         NamedCommands.registerCommand("elevatorL3", self.elevatorL3)
@@ -261,33 +263,36 @@ class MyRobot(commands2.TimedCommandRobot):
     def testInit(self) -> None:
         #self.coralIntake.schedule()
         #self.algaeIntake.schedule()
+        #self.elevatorIntakePosition.schedule()
+        #self.coralIntake.schedule()
+        #self.elevatorL1.schedule()
+
         return super().testInit()
     
     def testPeriodic(self):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-
-        self.xSpeed = self.applyDeadband(self.driverController.getLeftY()) * 4
-        self.ySpeed = self.applyDeadband(self.driverController.getLeftX()) * 4
-        self.rot = self.applyDeadband(self.driverController.getRightX()) * 4
             
-        if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):
+        """if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):
             self.drivetrain.stopDrivetrain()
         else:
             self.manualDrive()
-
+"""
         if (self.driverController.getAButton()):
-            self.setAlgaeRemoverPosition1.schedule()
+            self.setAlgaeRemoverReadyPosition.schedule()
 
         if (self.driverController.getYButton()):
             self.setAlgaeRemoverPosition2.schedule()
 
         if (self.driverController.getBButton()):
-            self.setAlgaeRemoverReadyPosition.schedule()
+            self.coralIntake.schedule()
 
         if (self.driverController.getXButton()):
-            self.setAlgaeRemoverHomePosition.schedule()
+            self.elevatorIntakePosition.schedule()
+
+        if (self.driverController.getRightBumper()):
+            self.coralEject.schedule()
 
         
 
