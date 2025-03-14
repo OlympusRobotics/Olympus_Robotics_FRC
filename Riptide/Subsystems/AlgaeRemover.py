@@ -20,8 +20,8 @@ class algaeRemover(commands2.Subsystem):
         armPIDConfig.FeedbackSensor.kPrimaryEncoder
 
         MAXMotionConfig = armPIDConfig.maxMotion
-        MAXMotionConfig.maxVelocity(4000)
-        MAXMotionConfig.maxAcceleration(4000)
+        MAXMotionConfig.maxVelocity(3000)
+        MAXMotionConfig.maxAcceleration(5000)
         MAXMotionConfig.allowedClosedLoopError(0.1)
 
         self.armRotationMotor.configure(armRotationConfig, self.armRotationMotor.ResetMode.kResetSafeParameters, self.armRotationMotor.PersistMode.kPersistParameters)
@@ -33,7 +33,7 @@ class algaeRemover(commands2.Subsystem):
         self.homePosition = 0
         self.readyPosition = 7
         self.Position1 = 6
-        self.Position2 = 8.8
+        self.Position2 = 9
 
         super().__init__()
         

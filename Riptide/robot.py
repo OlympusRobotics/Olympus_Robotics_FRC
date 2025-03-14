@@ -159,18 +159,20 @@ class MyRobot(commands2.TimedCommandRobot):
             #commands2.InstantCommand(self.elevator.setHome, self)
         ) 
 
-        self.coralUnstuck = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.coralUnstuck, self),
-            commands2.WaitCommand(0.3),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self)
-        )
-
         self.coralIntake = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitCommand(1),
             commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
             commands2.WaitCommand(0.1),
             commands2.InstantCommand(self.elevator.flyWheelStop, self)
+        )
+
+        self.coralUnstuck = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.elevator.coralUnstuck, self),
+            commands2.WaitCommand(0.3),
+            commands2.InstantCommand(self.elevator.flyWheelStop, self),
+            commands2.WaitCommand(0.5),
+            self.coralIntake
         )
 
         self.elevatorResetPosition = commands2.SequentialCommandGroup(
@@ -228,7 +230,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.field.setRobotPose(self.drivetrain.odometry.getPose())
 
         wpilib.SmartDashboard.putBoolean("AprilTag Target", self.limelight.targetCheck())
-        wpilib.SmartDashboard.putBoolean("Coral loaded", self.coralCheck())
+        wpilib.SmartDashboard.putBoolean("Coral loaded", self.elevator.coralCheck())
         
         self.getBatteryVoltage()
        
@@ -266,6 +268,7 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.elevatorIntakePosition.schedule()
         #self.coralIntake.schedule()
         #self.elevatorL1.schedule()
+        self.coralUnstuck.schedule()
 
         return super().testInit()
     

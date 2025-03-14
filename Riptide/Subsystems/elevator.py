@@ -70,7 +70,7 @@ class Elevator(Subsystem):
         self.closedLoopController.setReference(84, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def coralCheck(self):
-        if self.outtakeMotor.getOutputCurrent() > 11:
+        if self.outtakeMotor.getOutputCurrent() > 20:
             return True
         else:
             return False
