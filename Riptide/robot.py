@@ -48,8 +48,8 @@ AutoBuilder.configure(
 class MyRobot(commands2.TimedCommandRobot):
     def robotInit(self) -> None:
         """Robot initialization function"""
-        self.driverController = wpilib.XboxController(0)
-        self.operatorController = wpilib.XboxController(1)
+        self.driverController = wpilib.XboxController(1)
+        self.operatorController = wpilib.XboxController(0)
 
         self.elevator = elevator
         self.drivetrain = drivetrain
@@ -353,14 +353,23 @@ class MyRobot(commands2.TimedCommandRobot):
             self.manualDrive()
 
         if (self.driverController.getRightTriggerAxis() >= 0.5):
-            self.elevator.flyWheelSpin()
+            self.elevator.outtakeMotor.setVoltage(-.2)
+        
+        elif (self.driverController.getRightTriggerAxis() <= .4):
+            if (self.operatorController.getRightTriggerAxis() <= .4):
+                self.elevator.outtakeMotor.setVoltage(0)
+
 
         #Operator Controls
         if (self.operatorController.getLeftTriggerAxis() >= 0.5):
             self.coralIntake.schedule()
 
         if (self.operatorController.getRightTriggerAxis() >= 0.5):
-            self.coralEject.schedule()
+            self.elevator.outtakeMotor.setVoltage(-.2)
+        
+        elif (self.operatorController.getRightTriggerAxis() <= .4):
+            if (self.driverController.getRightTriggerAxis() <= .4):
+                self.elevator.outtakeMotor.setVoltage(0)
 
         if (self.operatorController.getLeftBumper()):
             self.algaeIntake.schedule()
@@ -381,7 +390,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.coralUnstuck.schedule()
 
 
-        if (self.operatorController.getPOV() == 270):
+        if (self.operatorController.getPOV() == 0):
             self.elevator.setL3()
 
         if (self.operatorController.getPOV() == 90):
@@ -389,12 +398,30 @@ class MyRobot(commands2.TimedCommandRobot):
 
         if (self.operatorController.getPOV() == 180):
             self.elevator.setL1()
+        
+        if (self.operatorController.getPOV() == 270):
+            self.elevator.setintake()
 
         if (self.operatorController.getStartButton()):
             self.climbFinal.schedule()
+        
+        if (self.operatorController.getLeftY() >= .1 or self.operatorController.getLeftY() <=-.1):
+            self.elevator.elevatorMoveMotor1.set(self.operatorController.getLeftY())
+
+        if (self.operatorController.getRightY() >= .1 or self.operatorController.getRightY() <=-.1):
+            self.elevator.elevatorMoveMotor1.set(self.operatorController.getRightY())
 
         if (self.operatorController.getBackButton()):
             self.elevatorResetPosition.schedule()
+            
+        if (self.operatorController.getRightStickButton()):
+            self.setAlgaeRemoverReadyPosition.schedule()
+        
+        if (self.operatorController.getRightY() >=.5):
+            self.setAlgaeRemoverPosition2.schedule()
+                   
+        if (self.operatorController.getRightY() <= -.5):
+            self.setAlgaeRemoverPosition1.schedule()
 
         if ((self.operatorController.getPOV() == 0) and (self.operatorController.getXButton())):
             self.setAlgaeRemoverPosition1.schedule()
