@@ -315,15 +315,6 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.driverController.getRightBumperButton()):
             self.limelight.aprilTagPipelineRight()
 
-        self.xSpeed = self.applyDeadband(self.driverController.getLeftY()) * 4
-        self.ySpeed = self.applyDeadband(self.driverController.getLeftX()) * 4
-        self.rot = self.applyDeadband(self.driverController.getRightX()) * 4
-            
-        if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):
-            self.drivetrain.stopDrivetrain()
-        else:
-            self.manualDrive()
-
         if (self.driverController.getLeftTriggerAxis() > 0.5):
 
             if (self.limelight.targetCheck()):
@@ -332,6 +323,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
             else:
                 self.rot = self.applyDeadband(self.driverController.getRightX()) * 4
+
+        else:
+            self.rot = self.applyDeadband(self.driverController.getRightX()) * 4
             
 
         if (self.driverController.getXButton()): 
@@ -346,6 +340,11 @@ class MyRobot(commands2.TimedCommandRobot):
             self.xSpeed = self.applyDeadband(self.driverController.getLeftY()) * 4
             self.ySpeed = self.applyDeadband(self.driverController.getLeftX()) * 4
 
+
+        if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):
+            self.drivetrain.stopDrivetrain()
+        else:
+            self.manualDrive()
 
         #Operator Controls
 
@@ -368,8 +367,16 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.operatorController.getBButton()):
             self.coralUnstuck.schedule()
 
+        elevatorSpeed = -self.applyDeadband(self.operatorController.getLeftY())
+        
+        if (elevatorSpeed < 0 and self.elevator.elevatorEncoder1.getPosition() <= self.elevator.homePos) or (elevatorSpeed > 0 and self.elevator.elevatorEncoder1.getPosition() >= self.elevator.L3Pos):
+            # If the elevator has passed one of the limits, stop the motor
+            self.elevator.elevatorMoveMotor1.stopMotor()
+        else:
+            # Otherwise, continue moving the elevator
+            self.elevator.elevatorMoveMotor1.set(elevatorSpeed)
 
-        if (self.operatorController.getPOV() == 0):
+        """ if (self.operatorController.getPOV() == 0):
             self.elevatorL3.schedule()
 
         if (self.operatorController.getPOV() == 90):
@@ -379,7 +386,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.elevatorL1.schedule()
         
         if (self.operatorController.getPOV() == 270):
-            self.elevator.setintake()
+            self.elevator.setintake() """
 
         if (self.operatorController.getStartButton()):
             self.climbFinal.schedule()

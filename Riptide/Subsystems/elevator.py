@@ -46,6 +46,11 @@ class Elevator(Subsystem):
 
         self.elevatorMoveMotor2.configure(followerConfig, self.elevatorMoveMotor2.ResetMode.kResetSafeParameters, self.elevatorMoveMotor2.PersistMode.kPersistParameters)
 
+        self.homePos = 0
+        self.intakePos = 35
+        self.L1Pos = 47
+        self.L2Pos = 55
+        self.L3Pos = 75
         super().__init__()
         
     def isTooHot(self):
