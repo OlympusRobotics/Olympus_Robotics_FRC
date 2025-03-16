@@ -25,6 +25,7 @@ class limelight4(commands2.Subsystem):
         kP = 0.15
 
         angularVel = tx * kP
+        print(angularVel)
         return angularVel
     
     def aimAndRange(self):

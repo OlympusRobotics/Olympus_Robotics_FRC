@@ -28,10 +28,10 @@ class Elevator(Subsystem):
         brake = leaderConfig.setIdleMode(idleMode=rev.SparkMaxConfig.IdleMode.kBrake)
         limit = leaderConfig.smartCurrentLimit(30)
 
-        leaderConfig.closedLoop.pidf(0.024, 0.0, 0.0003, 0.000001, rev.ClosedLoopSlot.kSlot0)
+        leaderConfig.closedLoop.pidf(0.057, 0.0, 0.006, 0.000001, rev.ClosedLoopSlot.kSlot0)
         leaderConfig.closedLoop.outputRange(-1,1)
         leaderConfig.closedLoop.FeedbackSensor(rev.SparkMaxConfig().closedLoop.FeedbackSensor.kPrimaryEncoder)
-        leaderConfig.closedLoop.maxMotion.maxAcceleration(5000).maxVelocity(5000).allowedClosedLoopError(0.4)
+        leaderConfig.closedLoop.maxMotion.maxAcceleration(6000).maxVelocity(5000).allowedClosedLoopError(0.4)
 
         
         self.elevatorMoveMotor1.configure(leaderConfig, self.elevatorMoveMotor1.ResetMode.kResetSafeParameters, self.elevatorMoveMotor1.PersistMode.kPersistParameters)     
@@ -58,25 +58,25 @@ class Elevator(Subsystem):
         self.closedLoopController.setReference(0, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setintake(self):
-        self.closedLoopController.setReference(35.5, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(34, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL1(self):       
-        self.closedLoopController.setReference(52, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(47,self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
         
     def setL2(self):
-        self.closedLoopController.setReference(61, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL3(self):
-        self.closedLoopController.setReference(84, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(75, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def coralCheck(self):
-        if self.outtakeMotor.getOutputCurrent() > 20:
+        if (self.outtakeMotor.getOutputCurrent() > 21):
             return True
         else:
             return False
         
     def flyWheelSpin(self):
-        self.outtakeMotor.set(-.2)
+        self.outtakeMotor.set(-.5)
     
     def flyWheelStop(self):
         self.outtakeMotor.stopMotor()
