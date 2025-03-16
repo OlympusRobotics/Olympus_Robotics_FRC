@@ -63,12 +63,12 @@ class MyRobot(commands2.TimedCommandRobot):
         
         #autos
         self.test = "OutOfStartLine"
-        #self.centerLine = "CenterLineAuto"
+        self.centerLineScore = "Center to H Score"
 
         self.chooser = wpilib.SendableChooser()
 
         self.chooser.setDefaultOption("OutOfStartLine", self.test)
-        #self.chooser.addOption("CenterLineAuto", self.centerLine)
+        self.chooser.addOption("CenterLineScoreAuto", self.centerLineScore)
         """ self.chooser.addOption("Test3", None)
         self.chooser.addOption("Test4", None)
         self.chooser.addOption("Test5", None) """
@@ -346,6 +346,9 @@ class MyRobot(commands2.TimedCommandRobot):
         else:
             self.manualDrive()
 
+        if (self.driverController.getAButton()):
+            self.drivetrain.resetPose()
+
         #Operator Controls
 
         if (self.operatorController.getLeftBumper()):
@@ -390,7 +393,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         if (self.operatorController.getStartButton()):
             self.climbFinal.schedule()
-        
 
         if (self.operatorController.getBackButton()):
             self.elevatorResetPosition.schedule()
