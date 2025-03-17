@@ -5,22 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "spin"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "elevatorL3"
-                }
-              }
-            ]
+            "pathName": "spin"
           }
         },
         {
@@ -39,12 +26,6 @@
           "type": "wait",
           "data": {
             "waitTime": 2.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "CoralEject"
           }
         }
       ]

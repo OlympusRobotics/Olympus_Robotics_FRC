@@ -36,8 +36,8 @@ AutoBuilder.configure(
     drivetrain.getChassisSpeeds,
     lambda speeds, feedforwards: drivetrain.drive(speeds),
     PPHolonomicDriveController(
-        PIDConstants(7, 0.0, 0.0),
-        PIDConstants(7, 0.0, 0.0),
+        PIDConstants(9, 0.0, 0.0),
+        PIDConstants(11.2, 0.0, 0.0),
     ),
     RobotConfig.fromGUISettings(),
     drivetrain.shouldFlipPath,
@@ -62,12 +62,12 @@ class MyRobot(commands2.TimedCommandRobot):
         self.irSensor = wpilib.DigitalInput(0)
         
         #autos
-        self.test = "OutOfStartLine"
+        self.test = "1 Meter Auto"
         self.centerLineScore = "Center to H Score"
 
         self.chooser = wpilib.SendableChooser()
 
-        self.chooser.setDefaultOption("OutOfStartLine", self.test)
+        self.chooser.setDefaultOption("One Meter Auto", self.test)
         self.chooser.addOption("CenterLineScoreAuto", self.centerLineScore)
         """ self.chooser.addOption("Test3", None)
         self.chooser.addOption("Test4", None)
@@ -322,10 +322,10 @@ class MyRobot(commands2.TimedCommandRobot):
                 self.rot = self.limelight.aim()
 
             else:
-                self.rot = self.applyDeadband(self.driverController.getRightX()) * 4
+                self.rot = self.applyDeadband(-self.driverController.getRightX()) * 4
 
         else:
-            self.rot = self.applyDeadband(self.driverController.getRightX()) * 4
+            self.rot = self.applyDeadband(-self.driverController.getRightX()) * 4
             
 
         if (self.driverController.getXButton()): 
@@ -337,8 +337,8 @@ class MyRobot(commands2.TimedCommandRobot):
             self.rot = speeds[2] * 4
 
         else:
-            self.xSpeed = self.applyDeadband(self.driverController.getLeftY()) * 4
-            self.ySpeed = self.applyDeadband(self.driverController.getLeftX()) * 4
+            self.xSpeed = self.applyDeadband(-self.driverController.getLeftY()) * 4
+            self.ySpeed = self.applyDeadband(-self.driverController.getLeftX()) * 4
 
 
         if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):

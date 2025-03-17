@@ -52,7 +52,7 @@ class swerveModule(commands2.Subsystem):
         #Applies motor configurations for all swerve module instances.
         motorConfig = phoenix6.configs.TalonFXConfiguration()
 
-        inverted = motorConfig.motor_output.with_inverted(phoenix6.signals.InvertedValue.CLOCKWISE_POSITIVE)
+        inverted = motorConfig.motor_output.with_inverted(phoenix6.signals.InvertedValue.COUNTER_CLOCKWISE_POSITIVE)
         brake = motorConfig.motor_output.with_neutral_mode(phoenix6.signals.NeutralModeValue.BRAKE)
         currents = motorConfig.current_limits.with_stator_current_limit_enable(True)
         currents.with_stator_current_limit(40)
