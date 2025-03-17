@@ -11,22 +11,34 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Center to H"
+                  "pathName": "spin"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "elevatorL2"
+                  "name": "elevatorL3"
                 }
               }
             ]
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Center to H"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopDrivetrain"
+          }
+        },
+        {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 2.0
           }
         },
         {

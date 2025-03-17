@@ -55,6 +55,11 @@
           "open": true
         }
       },
+      "SPARK MAX [8] RELATIVE ENCODER": {
+        "header": {
+          "open": true
+        }
+      },
       "Talon FX (v6)[0]": {
         "header": {
           "open": true

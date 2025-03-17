@@ -114,11 +114,11 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.algaeIntake = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.algaeArm.intake, self),
-            commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
-            commands2.WaitCommand(0.4),
+            #commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
+            commands2.WaitCommand(0.5),
             commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
-            commands2.WaitCommand(0.6),
-            commands2.InstantCommand(self.algaeArm.setEjectPosition, self),
+            commands2.WaitCommand(.6),
+           # commands2.InstantCommand(self.algaeArm.setEjectPosition, self),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)           
             
         )
@@ -352,17 +352,21 @@ class MyRobot(commands2.TimedCommandRobot):
         #Operator Controls
 
         if (self.operatorController.getLeftBumper()):
-            self.algaeIntake.schedule()
+            self.algaeArm.intake()
 
-        if (self.operatorController.getRightBumper()):
-            self.algaeEjectReturnHome.schedule()
+        elif (self.operatorController.getRightBumper()):
+            self.algaeArm.algaeEject()
+
+        else:
+            self.algaeArm.intakeMotor.stopMotor()
+
         
 
-        if (self.operatorController.getYButton()):
+        """ if (self.operatorController.getYButton()):
             self.algaeArmIntakePosition.schedule()
 
         if (self.operatorController.getAButton()):
-            self.algaeArm.setHomePosition()
+            self.algaeArm.setHomePosition() """
 
         if (self.operatorController.getXButton()):
             self.elevatorReturnHome.schedule()
@@ -370,7 +374,14 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.operatorController.getBButton()):
             self.coralUnstuck.schedule()
 
-        elevatorSpeed = -self.applyDeadband(self.operatorController.getLeftY())
+        algaeSpeed = self.applyDeadband(self.operatorController.getRightY()) * .22
+
+        if (self.driverController.getRightStickButton()):
+            self.algaeArm.armRotationMotor.set(algaeSpeed)
+        else:
+            self.algaeArm.armRotationMotor.stopMotor()
+
+        elevatorSpeed = -self.applyDeadband(self.operatorController.getLeftY()) * .5
         
         if (elevatorSpeed < 0 and self.elevator.elevatorEncoder1.getPosition() <= self.elevator.homePos) or (elevatorSpeed > 0 and self.elevator.elevatorEncoder1.getPosition() >= self.elevator.L3Pos):
             # If the elevator has passed one of the limits, stop the motor
@@ -397,14 +408,16 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.operatorController.getBackButton()):
             self.elevatorResetPosition.schedule()
             
-        if (self.operatorController.getRightStickButton()):
+        if (self.operatorController.getPOV() == 270):
             self.setAlgaeRemoverReadyPosition.schedule()
         
-        if (self.operatorController.getRightY() >=.5):
+        if (self.operatorController.getPOV() ==.5):
             self.setAlgaeRemoverPosition1.schedule()
                    
-        if (self.operatorController.getRightY() <= -.5):
+        if (self.operatorController.getPOV() == -.5):
             self.setAlgaeRemoverPosition2.schedule()
+        
+        
 
         """ if (self.operatorController.getLeftTriggerAxis() > 0.6):
             #self.elevator.outtakeMotor.set(-.4)

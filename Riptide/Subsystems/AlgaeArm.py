@@ -34,7 +34,7 @@ class algaeArm(commands2.Subsystem):
         #Arm Positions
         self.homePosition = 0
         self.algaeEjectPosition = 3.5
-        self.intakePosition = 9
+        self.intakePosition = 9.2
 
         super().__init__()
         
@@ -60,7 +60,7 @@ class algaeArm(commands2.Subsystem):
         self.armClosedLoop.setReference(self.algaeEjectPosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
 
     def intake(self):
-        self.intakeMotor.set(.3)
+        self.intakeMotor.set(.5)
         
     def stopIntakeMotor(self):
         self.intakeMotor.stopMotor()
