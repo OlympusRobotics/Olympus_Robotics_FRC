@@ -36,8 +36,8 @@ AutoBuilder.configure(
     drivetrain.getChassisSpeeds,
     lambda speeds, feedforwards: drivetrain.drive(speeds),
     PPHolonomicDriveController(
-        PIDConstants(9, 0.0, 0.0),
-        PIDConstants(11.2, 0.0, 0.0),
+        PIDConstants(1.5, 0.0, 0.0),
+        PIDConstants(7, 0.0, 0.0),
     ),
     RobotConfig.fromGUISettings(),
     drivetrain.shouldFlipPath,
@@ -87,7 +87,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         #Sends target data to the dashboard.
         wpilib.SmartDashboard.putBoolean("AprilTag Target", self.limelight.targetCheck())
-
         
         #Commands
         self.algaeArmHomePosition = commands2.InstantCommand(self.algaeArm.setHomePosition, self)
@@ -336,6 +335,10 @@ class MyRobot(commands2.TimedCommandRobot):
             self.ySpeed = speeds[1] * 4
             self.rot = speeds[2] * 4
 
+            wpilib.SmartDashboard.putNumber("xSpeed", self.xSpeed)
+            wpilib.SmartDashboard.putNumber("ySpeed", self.ySpeed)
+            wpilib.SmartDashboard.putNumber("rot", self.rot)
+
         else:
             self.xSpeed = self.applyDeadband(-self.driverController.getLeftY()) * 4
             self.ySpeed = self.applyDeadband(-self.driverController.getLeftX()) * 4
@@ -347,7 +350,7 @@ class MyRobot(commands2.TimedCommandRobot):
             self.manualDrive()
 
         if (self.driverController.getAButton()):
-            self.drivetrain.resetPose()
+            self.drivetrain.reset()
 
         #Operator Controls
 
