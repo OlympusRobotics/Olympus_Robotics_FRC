@@ -1,6 +1,9 @@
 import wpilib
+import wpimath
 import rev
 import commands2
+import wpimath.controller
+import wpimath.trajectory
 
 class algaeArm(commands2.Subsystem):
     def __init__(self):
@@ -9,6 +12,7 @@ class algaeArm(commands2.Subsystem):
         self.intakeMotor = rev.SparkMax(14, rev.SparkMax.MotorType.kBrushless)
 
         #Encoder Initialization
+        self.intakeEncoder = wpilib.DutyCycleEncoder(2)
         self.armRotationEncoder = self.armRotationMotor.getEncoder()
 
         #Algae intake/outtake arm motor Configuration
@@ -17,47 +21,52 @@ class algaeArm(commands2.Subsystem):
         armRotationConfig.smartCurrentLimit(30)
         armRotationConfig.inverted(False)
 
-        armPIDConfig = armRotationConfig.closedLoop
+        """ armPIDConfig = armRotationConfig.closedLoop
         armPIDConfig.pid(0.011, 0.000002, 0.0009, rev.ClosedLoopSlot.kSlot0)
         armPIDConfig.FeedbackSensor.kPrimaryEncoder
 
         MAXMotionConfig = armPIDConfig.maxMotion
         MAXMotionConfig.maxVelocity(6000)
         MAXMotionConfig.maxAcceleration(6000)
-        MAXMotionConfig.allowedClosedLoopError(0.5)
+        MAXMotionConfig.allowedClosedLoopError(0.5) """
 
         self.armRotationMotor.configure(armRotationConfig, self.armRotationMotor.ResetMode.kResetSafeParameters, self.armRotationMotor.PersistMode.kPersistParameters)
         
         #Closed Loop Configuration
-        self.armClosedLoop = self.armRotationMotor.getClosedLoopController()
-
+        #self.armClosedLoop = self.armRotationMotor.getClosedLoopController()
+        constraints = wpimath.trajectory.TrapezoidProfile.Constraints(4000, 4000)
+        self.controller = wpimath.controller.ProfiledPIDController(0.011, 0.0, 0.0, constraints)
+        
         #Arm Positions
         self.homePosition = 0
-        self.algaeEjectPosition = 3.5
-        self.intakePosition = 9.2
+        self.algaeEjectPosition = 0.3
+        self.intakePosition = 1
 
         super().__init__()
-        
-    def isIntakePos(self):
-        if (self.armRotationEncoder.getPosition() >= 19.0 and self.armRotationEncoder.getPosition() <= 22.0):
-            return True
-        else:
-            return False
         
     def isTooHot(self):
         if ((self.armRotationMotor.getMotorTemperature() > 90) or (self.intakeMotor.getMotorTemperature() > 90)):
             return True
         else:
             return False
+        
+    def getPosition(self):
+        return self.intakeEncoder.get()
 
     def setHomePosition(self):
-        self.armClosedLoop.setReference(self.homePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
+        position = self.controller.calculate(self.intakeEncoder.get(), self.homePosition)
+        self.armRotationMotor.set(position)
+        #print(position)
 
     def setIntakePosition(self):
-        self.armClosedLoop.setReference(self.intakePosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
+        position = self.controller.calculate(self.intakeEncoder.get(), self.intakePosition)
+        self.armRotationMotor.set(position)
+        #print(position)
 
     def setEjectPosition(self):
-        self.armClosedLoop.setReference(self.algaeEjectPosition, self.armRotationMotor.ControlType.kMAXMotionPositionControl)
+        position = self.controller.calculate(self.intakeEncoder.get(), self.algaeEjectPosition)
+        self.armRotationMotor.set(position)
+        #print(position)
 
     def intake(self):
         self.intakeMotor.set(.5)
@@ -66,7 +75,7 @@ class algaeArm(commands2.Subsystem):
         self.intakeMotor.stopMotor()
         
     def algaeEject(self):
-        self.intakeMotor.set(-.2)
+        self.intakeMotor.set(-.3)
 
     def algaeCheck(self):
         if self.intakeMotor.getOutputCurrent() > 30:

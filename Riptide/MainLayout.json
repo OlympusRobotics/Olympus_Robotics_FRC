@@ -1,6 +1,6 @@
 {
   "version": 1.0,
-  "grid_size": 128,
+  "grid_size": 64,
   "tabs": [
     {
       "name": "Robot",
@@ -22,7 +22,7 @@
           {
             "title": "Battery Voltage",
             "x": 1408.0,
-            "y": 768.0,
+            "y": 512.0,
             "width": 512.0,
             "height": 128.0,
             "type": "Voltage View",
@@ -51,26 +51,14 @@
             }
           },
           {
-            "title": "limelight-algae",
-            "x": 1408.0,
+            "title": "limelight",
+            "x": 1152.0,
             "y": 0.0,
-            "width": 1152.0,
-            "height": 768.0,
+            "width": 768.0,
+            "height": 512.0,
             "type": "Camera Stream",
             "properties": {
               "topic": "/CameraPublisher/limelight-algae",
-              "period": 0.06
-            }
-          },
-          {
-            "title": "limelight-tags",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 1408.0,
-            "height": 640.0,
-            "type": "Camera Stream",
-            "properties": {
-              "topic": "/CameraPublisher/limelight-tags",
               "period": 0.06
             }
           },
@@ -92,45 +80,11 @@
             }
           },
           {
-            "title": "AprilTag Target",
-            "x": 1408.0,
-            "y": 896.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/SmartDashboard/AprilTag Target",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
-            }
-          },
-          {
-            "title": "Algae Target",
-            "x": 1664.0,
-            "y": 896.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/SmartDashboard/Algae Target",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
-            }
-          },
-          {
             "title": "Field",
             "x": 0.0,
-            "y": 640.0,
-            "width": 1408.0,
-            "height": 640.0,
+            "y": 0.0,
+            "width": 1152.0,
+            "height": 512.0,
             "type": "Field",
             "properties": {
               "topic": "/SmartDashboard/Field",
@@ -143,6 +97,76 @@
               "field_rotation": 0.0,
               "robot_color": 4294198070,
               "trajectory_color": 4294967295
+            }
+          },
+          {
+            "title": "Coral loaded",
+            "x": 1152.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Coral loaded",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "FMSInfo",
+            "x": 768.0,
+            "y": 512.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "FMSInfo",
+            "properties": {
+              "topic": "/FMSInfo",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Auto Options",
+            "x": 448.0,
+            "y": 512.0,
+            "width": 320.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Options",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "Elevator Position",
+            "x": 1408.0,
+            "y": 640.0,
+            "width": 512.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Elevator Position",
+              "period": 0.06,
+              "data_type": "string",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Algae Remover Position",
+            "x": 896.0,
+            "y": 640.0,
+            "width": 512.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Algae Remover Position",
+              "period": 0.06,
+              "data_type": "string",
+              "show_submit_button": false
             }
           }
         ]

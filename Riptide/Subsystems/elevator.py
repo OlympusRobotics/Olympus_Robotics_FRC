@@ -18,6 +18,7 @@ class Elevator(Subsystem):
         self.elevatorMoveMotor1 = rev.SparkMax(10, rev.SparkMax.MotorType.kBrushless)
         self.elevatorMoveMotor2 = rev.SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.outtakeMotor = rev.SparkMax(12, rev.SparkMax.MotorType.kBrushless)
+        self.irSensor = wpilib.DigitalInput(1)
 
         self.elevatorEncoder1 = self.elevatorMoveMotor1.getEncoder()
         self.elevatorEncoder2 = self.elevatorMoveMotor2.getEncoder()
@@ -31,7 +32,7 @@ class Elevator(Subsystem):
         leaderConfig.closedLoop.pidf(0.057, 0.0, 0.006, 0.000001, rev.ClosedLoopSlot.kSlot0)
         leaderConfig.closedLoop.outputRange(-1,1)
         leaderConfig.closedLoop.FeedbackSensor(rev.SparkMaxConfig().closedLoop.FeedbackSensor.kPrimaryEncoder)
-        leaderConfig.closedLoop.maxMotion.maxAcceleration(6000).maxVelocity(5000).allowedClosedLoopError(0.4)
+        leaderConfig.closedLoop.maxMotion.maxAcceleration(6000).maxVelocity(5000).allowedClosedLoopError(0.05)
 
         
         self.elevatorMoveMotor1.configure(leaderConfig, self.elevatorMoveMotor1.ResetMode.kResetSafeParameters, self.elevatorMoveMotor1.PersistMode.kPersistParameters)     
@@ -62,7 +63,7 @@ class Elevator(Subsystem):
     def setHome(self):
         self.closedLoopController.setReference(0, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
-    def setintake(self):
+    def setIntake(self):
         self.closedLoopController.setReference(34, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL1(self):       
@@ -75,10 +76,12 @@ class Elevator(Subsystem):
         self.closedLoopController.setReference(75, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def coralCheck(self):
-        if (self.outtakeMotor.getOutputCurrent() > 21):
+        """ if (self.outtakeMotor.getOutputCurrent() > 21):
             return True
         else:
-            return False
+            return False """
+        
+        return not self.irSensor.get()
         
     def flyWheelSpin(self):
         self.outtakeMotor.set(-.5)

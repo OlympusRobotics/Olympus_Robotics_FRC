@@ -11,7 +11,6 @@ import pathplannerlib
 import util.elasticlib as elasticlib
 from Subsystems.drivetrain import Drivetrain
 from Subsystems.Limelight4 import limelight4
-from Subsystems.Limelight2 import limelight2
 from Subsystems.LED import led
 from wpimath.kinematics import SwerveModuleState, ChassisSpeeds
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
@@ -56,24 +55,31 @@ class MyRobot(commands2.TimedCommandRobot):
         self.limelight = limelight4
         self.algaeArm = algaeArm
         self.algaeRemover = algaeRemover
-        #self.climber = climber
+
+        #leds
         self.led = led()
+
         self.DS = wpilib.DriverStation
-        self.irSensor = wpilib.DigitalInput(0)
         
         #autos
-        self.test = "1 Meter Auto"
+        self.test = "2 Meter Auto"
         self.centerLineScore = "Center to H Score"
+        self.barge1ToPark = "Barge 1 to Park"
+        self.flower = "Algae Pull Out"
 
         self.chooser = wpilib.SendableChooser()
 
-        self.chooser.setDefaultOption("One Meter Auto", self.test)
-        self.chooser.addOption("CenterLineScoreAuto", self.centerLineScore)
-        """ self.chooser.addOption("Test3", None)
-        self.chooser.addOption("Test4", None)
-        self.chooser.addOption("Test5", None) """
+        self.chooser.setDefaultOption("Two Meter Auto", self.test)
+        self.chooser.addOption("Center to H Score", self.centerLineScore)
+        self.chooser.addOption("Barge 1 Park", self.barge1ToPark)
+        self.chooser.addOption("Algae Pull Out", self.flower)
 
         wpilib.SmartDashboard.putData("Auto Options", self.chooser)
+
+        #Subsystem Status
+        self.elevatorPosition = ""
+        self.algaeArmPosition = ""
+        self.algaeRemoverPosition = ""
         
         # get the default instance of NetworkTables
         nt = ntcore.NetworkTableInstance.getDefault()
@@ -94,7 +100,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.algaeEjectPosition = commands2.InstantCommand(self.algaeArm.setEjectPosition, self)
 
         self.elevatorReturnHome = commands2.InstantCommand(self.elevator.setHome, self)
-        self.elevatorIntakePosition = commands2.InstantCommand(self.elevator.setintake, self)
+        self.elevatorIntakePosition = commands2.InstantCommand(self.elevator.setIntake, self)
         self.elevatorL1 = commands2.InstantCommand(self.elevator.setL1, self)
         self.elevatorL2 = commands2.InstantCommand(self.elevator.setL2, self)
         self.elevatorL3 = commands2.InstantCommand(self.elevator.setL3, self)
@@ -152,10 +158,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.coralEject = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitCommand(2),
-            #commands2.WaitUntilCommand(condition=self.coralCheck),
             commands2.InstantCommand(self.elevator.flyWheelStop, self),
-            commands2.WaitCommand(.5)
-            #commands2.InstantCommand(self.elevator.setHome, self)
+            commands2.WaitCommand(.5),
+            commands2.InstantCommand(self.elevator.setIntake, self)
         ) 
 
         self.coralIntake = commands2.SequentialCommandGroup(
@@ -181,7 +186,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.elevatorResetPosition = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitCommand(.1),
-            #commands2.WaitUntilCommand(condition=self.coralCheck),
+            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
             commands2.InstantCommand(self.elevator.flyWheelStop, self),
             commands2.WaitCommand(0.2),
             commands2.InstantCommand(self.elevator.setHome, self),
@@ -238,6 +243,9 @@ class MyRobot(commands2.TimedCommandRobot):
 
         wpilib.SmartDashboard.putBoolean("AprilTag Target", self.limelight.targetCheck())
         wpilib.SmartDashboard.putBoolean("Coral loaded", self.elevator.coralCheck())
+        wpilib.SmartDashboard.putString("Elevator Position", self.elevatorPosition)
+        wpilib.SmartDashboard.putString("Algae Arm Position", self.algaeArmPosition)
+        wpilib.SmartDashboard.putString("Algae Remover Position", self.algaeRemoverPosition)
         
         self.getBatteryVoltage()
        
@@ -270,33 +278,23 @@ class MyRobot(commands2.TimedCommandRobot):
 
     
     def testInit(self) -> None:
-        #self.coralIntake.schedule()
-        #self.algaeIntake.schedule()
-        #self.elevatorIntakePosition.schedule()
-        #self.coralIntake.schedule()
-        #self.elevatorL1.schedule()
-        self.coralIntake.schedule()
-
         return super().testInit()
     
     def testPeriodic(self):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-            
-        """if (self.xSpeed == 0 and self.ySpeed == 0 and self.rot == 0):
-            self.drivetrain.stopDrivetrain()
-        else:
-            self.manualDrive()
-"""
-
-        
-
-        wpilib.SmartDashboard.getNumber("Elevator Position", self.elevator.elevatorEncoder1.getPosition())
-        wpilib.SmartDashboard.getNumber("Algae Arm Position", self.algaeArm.armRotationEncoder.getPosition())
-
-
+        wpilib.SmartDashboard.getNumber("Algae Arm Position", self.algaeArm.intakeEncoder.get())
         wpilib.SmartDashboard.putBoolean("Apriltag Target", self.limelight.targetCheck())
+
+        """ if (self.driverController.getAButton()):
+            self.algaeArm.setHomePosition()
+
+        if (self.driverController.getBButton()):
+            self.algaeArm.setEjectPosition()
+
+        if (self.driverController.getYButton()):
+            self.algaeArm.setIntakePosition() """
             
             
         return super().testPeriodic()
@@ -305,7 +303,6 @@ class MyRobot(commands2.TimedCommandRobot):
         """
         Manual control mode that runs every 20 ms. 
         """
-        self.led.rainbow()
         
         #Driver Controls
         if (self.driverController.getLeftBumperButton()):
@@ -317,18 +314,13 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.driverController.getLeftTriggerAxis() > 0.5):
 
             if (self.limelight.targetCheck()):
-                #self.led.green()
                 self.rot = self.limelight.aim()
-
-            else:
-                self.rot = self.applyDeadband(-self.driverController.getRightX()) * 4
 
         else:
             self.rot = self.applyDeadband(-self.driverController.getRightX()) * 4
             
 
         if (self.driverController.getXButton()): 
-            #self.led.redBlink()
             speeds = self.limelight.aimAndRange()
 
             self.xSpeed = speeds[0] * 4
@@ -365,45 +357,52 @@ class MyRobot(commands2.TimedCommandRobot):
 
         
 
-        """ if (self.operatorController.getYButton()):
+        if (self.operatorController.getYButton()):
             self.algaeArmIntakePosition.schedule()
+            self.algaeArmPosition = "Intake"
 
         if (self.operatorController.getAButton()):
-            self.algaeArm.setHomePosition() """
+            self.algaeArm.setHomePosition()
+            self.algaeArmPosition = "Home"
 
         if (self.operatorController.getXButton()):
             self.elevatorReturnHome.schedule()
+            self.elevatorPosition = "Home"
 
         if (self.operatorController.getBButton()):
             self.coralUnstuck.schedule()
 
         algaeSpeed = self.applyDeadband(self.operatorController.getRightY()) * .22
 
-        if (self.driverController.getRightStickButton()):
+        """ if (self.driverController.getRightStickButton()):
             self.algaeArm.armRotationMotor.set(algaeSpeed)
         else:
-            self.algaeArm.armRotationMotor.stopMotor()
+            self.algaeArm.armRotationMotor.stopMotor() """
 
         elevatorSpeed = -self.applyDeadband(self.operatorController.getLeftY()) * .5
         
-        if (elevatorSpeed < 0 and self.elevator.elevatorEncoder1.getPosition() <= self.elevator.homePos) or (elevatorSpeed > 0 and self.elevator.elevatorEncoder1.getPosition() >= self.elevator.L3Pos):
+        """ if (elevatorSpeed < 0 and self.elevator.elevatorEncoder1.getPosition() <= self.elevator.homePos) or (elevatorSpeed > 0 and self.elevator.elevatorEncoder1.getPosition() >= self.elevator.L3Pos):
             # If the elevator has passed one of the limits, stop the motor
             self.elevator.elevatorMoveMotor1.stopMotor()
         else:
             # Otherwise, continue moving the elevator
-            self.elevator.elevatorMoveMotor1.set(elevatorSpeed)
+            self.elevator.elevatorMoveMotor1.set(elevatorSpeed) """
 
-        """ if (self.operatorController.getPOV() == 0):
+        if (self.operatorController.getPOV() == 0):
             self.elevatorL3.schedule()
+            self.elevatorPosition = "L3"
 
         if (self.operatorController.getPOV() == 90):
             self.elevatorL2.schedule()
+            self.elevatorPosition = "L2"
 
         if (self.operatorController.getPOV() == 180):
             self.elevatorL1.schedule()
+            self.elevatorPosition = "L1"
         
         if (self.operatorController.getPOV() == 270):
-            self.elevator.setintake() """
+            self.elevator.setIntake()
+            self.elevatorPosition = "Intake"
 
         if (self.operatorController.getStartButton()):
             self.climbFinal.schedule()
@@ -413,13 +412,15 @@ class MyRobot(commands2.TimedCommandRobot):
             
         if (self.operatorController.getPOV() == 270):
             self.setAlgaeRemoverReadyPosition.schedule()
+            self.algaeRemoverPosition = "Ready"
         
         if (self.operatorController.getPOV() ==.5):
             self.setAlgaeRemoverPosition1.schedule()
+            self.algaeRemoverPosition = "Position 1"
                    
         if (self.operatorController.getPOV() == -.5):
             self.setAlgaeRemoverPosition2.schedule()
-        
+            self.algaeRemoverPosition = "Position 2"      
         
 
         """ if (self.operatorController.getLeftTriggerAxis() > 0.6):
@@ -432,16 +433,25 @@ class MyRobot(commands2.TimedCommandRobot):
         else:
             self.elevator.flyWheelStop()
 
-        
-    def coralCheck(self):
-        return not self.irSensor.get()
+        #led effects
+        if (self.driverController.getLeftTriggerAxis() > 0.7):
+            self.led.greenBreathing()
+
+        elif (self.driverController.getXButton() > 0.7):
+            self.led.redBlink()
+
+        elif (self.elevator.coralCheck() and self.driverController.getLeftTriggerAxis() > 0.7):
+            self.led.white()
+
+        else:
+            self.led.rainbow()
 
     def manualDrive(self) -> None:
         """ 
         passes the controller speeds to the drivetrain for movement.
         """
         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(self.xSpeed, self.ySpeed, self.rot, self.drivetrain.gyro.getRotation2d())
-        self.drivetrain.drive(speeds)
+        self.drivetrain.drive(speeds)               
 
         
     def robotIsTooHot(self):
@@ -470,4 +480,4 @@ class MyRobot(commands2.TimedCommandRobot):
         """
         wpilib.SmartDashboard.putNumber("Battery Voltage", wpilib.RobotController.getBatteryVoltage())
 
-            
+        

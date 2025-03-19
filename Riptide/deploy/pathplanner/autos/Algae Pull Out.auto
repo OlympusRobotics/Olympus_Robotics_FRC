@@ -7,19 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center to H"
+            "pathName": "Barge Location 1 to I"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "StopDrivetrain"
+            "pathName": "J-I to L-K"
           }
         },
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 2.0
+            "pathName": "L-K to A-B"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A-B to C-D"
           }
         }
       ]
