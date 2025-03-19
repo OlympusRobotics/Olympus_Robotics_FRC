@@ -291,14 +291,14 @@ class MyRobot(commands2.TimedCommandRobot):
 
 
 
-        if (self.driverController.getAButton()):
+        """ if (self.driverController.getAButton()):
             self.algaeArm.setHomePosition()
 
         if (self.driverController.getBButton()):
             self.algaeArm.setEjectPosition()
 
         if (self.driverController.getYButton()):
-            self.algaeArm.setIntakePosition()
+            self.algaeArm.setIntakePosition() """
             
             
         return super().testPeriodic()

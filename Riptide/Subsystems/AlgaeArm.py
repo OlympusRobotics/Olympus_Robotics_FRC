@@ -52,7 +52,7 @@ class algaeArm(commands2.Subsystem):
         
         #Arm Positions
         self.homePosition = 0
-        self.algaeEjectPosition = .1
+        self.algaeEjectPosition = .05
         self.intakePosition = .212
 
         super().__init__()
