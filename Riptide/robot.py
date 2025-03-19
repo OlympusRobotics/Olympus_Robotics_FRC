@@ -278,23 +278,27 @@ class MyRobot(commands2.TimedCommandRobot):
 
     
     def testInit(self) -> None:
+        #self.algaeArm.setHomePosition()
+        #self.algaeArm.setEjectPosition()
         return super().testInit()
     
     def testPeriodic(self):
         """ 
         A test routine that runs every 20 ms. Very useful for new methods.
         """
-        wpilib.SmartDashboard.getNumber("Algae Arm Position", self.algaeArm.intakeEncoder.get())
+        wpilib.SmartDashboard.putNumber("Algae Arm Actual Position", self.algaeArm.getPosition())
         wpilib.SmartDashboard.putBoolean("Apriltag Target", self.limelight.targetCheck())
 
-        """ if (self.driverController.getAButton()):
+
+
+        if (self.driverController.getAButton()):
             self.algaeArm.setHomePosition()
 
         if (self.driverController.getBButton()):
             self.algaeArm.setEjectPosition()
 
         if (self.driverController.getYButton()):
-            self.algaeArm.setIntakePosition() """
+            self.algaeArm.setIntakePosition()
             
             
         return super().testPeriodic()
@@ -388,7 +392,7 @@ class MyRobot(commands2.TimedCommandRobot):
             # Otherwise, continue moving the elevator
             self.elevator.elevatorMoveMotor1.set(elevatorSpeed) """
 
-        if (self.operatorController.getPOV() == 0):
+        """if (self.operatorController.getPOV() == 0):
             self.elevatorL3.schedule()
             self.elevatorPosition = "L3"
 
@@ -402,7 +406,7 @@ class MyRobot(commands2.TimedCommandRobot):
         
         if (self.operatorController.getPOV() == 270):
             self.elevator.setIntake()
-            self.elevatorPosition = "Intake"
+            self.elevatorPosition = "Intake"""
 
         if (self.operatorController.getStartButton()):
             self.climbFinal.schedule()
@@ -414,11 +418,11 @@ class MyRobot(commands2.TimedCommandRobot):
             self.setAlgaeRemoverReadyPosition.schedule()
             self.algaeRemoverPosition = "Ready"
         
-        if (self.operatorController.getPOV() ==.5):
+        if (self.operatorController.getPOV() == 180):
             self.setAlgaeRemoverPosition1.schedule()
             self.algaeRemoverPosition = "Position 1"
                    
-        if (self.operatorController.getPOV() == -.5):
+        if (self.operatorController.getPOV() == 0):
             self.setAlgaeRemoverPosition2.schedule()
             self.algaeRemoverPosition = "Position 2"      
         
@@ -442,7 +446,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         elif (self.elevator.coralCheck() and self.driverController.getLeftTriggerAxis() > 0.7):
             self.led.white()
-
         else:
             self.led.rainbow()
 

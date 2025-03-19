@@ -4,6 +4,14 @@ import rev
 import commands2
 import wpimath.controller
 import wpimath.trajectory
+import math
+import wpimath.units
+
+def enc2Rad(EncoderInput: float):
+    return EncoderInput * 2 * math.pi
+
+def rpm2RadPerSec(MotorVelocity: float):
+    return wpimath.units.rotationsPerMinuteToRadiansPerSecond(MotorVelocity)
 
 class algaeArm(commands2.Subsystem):
     def __init__(self):
@@ -12,8 +20,10 @@ class algaeArm(commands2.Subsystem):
         self.intakeMotor = rev.SparkMax(14, rev.SparkMax.MotorType.kBrushless)
 
         #Encoder Initialization
-        self.intakeEncoder = wpilib.DutyCycleEncoder(2)
+        self.intakeEncoder = wpilib.DutyCycleEncoder(2, 1, 0.223)
         self.armRotationEncoder = self.armRotationMotor.getEncoder()
+
+        self.intake
 
         #Algae intake/outtake arm motor Configuration
         armRotationConfig = rev.SparkMaxConfig()
@@ -34,13 +44,16 @@ class algaeArm(commands2.Subsystem):
         
         #Closed Loop Configuration
         #self.armClosedLoop = self.armRotationMotor.getClosedLoopController()
-        constraints = wpimath.trajectory.TrapezoidProfile.Constraints(4000, 4000)
-        self.controller = wpimath.controller.ProfiledPIDController(0.011, 0.0, 0.0, constraints)
+        constraints = wpimath.trajectory.TrapezoidProfile.Constraints(2000, 2000)
+        self.controller = wpimath.controller.PIDController(1, 0.0, 0.0)
+        self.controller.setSetpoint(0)
+        self.feedForward = wpimath.controller.ArmFeedforward(0.0, 0.0, 0.0)
+        self.controller.setTolerance(0.08)
         
         #Arm Positions
         self.homePosition = 0
-        self.algaeEjectPosition = 0.3
-        self.intakePosition = 1
+        self.algaeEjectPosition = .1
+        self.intakePosition = .212
 
         super().__init__()
         
@@ -52,20 +65,25 @@ class algaeArm(commands2.Subsystem):
         
     def getPosition(self):
         return self.intakeEncoder.get()
+    
+    def setPosition(self, NewPosition: float):
+        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), NewPosition))
+
 
     def setHomePosition(self):
-        position = self.controller.calculate(self.intakeEncoder.get(), self.homePosition)
-        self.armRotationMotor.set(position)
+        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.homePosition))
         #print(position)
 
     def setIntakePosition(self):
-        position = self.controller.calculate(self.intakeEncoder.get(), self.intakePosition)
-        self.armRotationMotor.set(position)
-        #print(position)
+        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.intakePosition))
+
+
+        print(self.controller.calculate(self.intakeEncoder.get(), self.intakePosition))
 
     def setEjectPosition(self):
-        position = self.controller.calculate(self.intakeEncoder.get(), self.algaeEjectPosition)
-        self.armRotationMotor.set(position)
+        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.algaeEjectPosition))
+        print(self.getPosition())
+        
         #print(position)
 
     def intake(self):
