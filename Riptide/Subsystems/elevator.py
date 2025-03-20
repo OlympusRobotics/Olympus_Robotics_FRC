@@ -18,7 +18,7 @@ class Elevator(Subsystem):
         self.elevatorMoveMotor1 = rev.SparkMax(10, rev.SparkMax.MotorType.kBrushless)
         self.elevatorMoveMotor2 = rev.SparkMax(11, rev.SparkMax.MotorType.kBrushless)
         self.outtakeMotor = rev.SparkMax(12, rev.SparkMax.MotorType.kBrushless)
-        self.irSensor = wpilib.DigitalInput(1)
+        
 
         self.elevatorEncoder1 = self.elevatorMoveMotor1.getEncoder()
         self.elevatorEncoder2 = self.elevatorMoveMotor2.getEncoder()
@@ -29,10 +29,10 @@ class Elevator(Subsystem):
         brake = leaderConfig.setIdleMode(idleMode=rev.SparkMaxConfig.IdleMode.kBrake)
         limit = leaderConfig.smartCurrentLimit(30)
 
-        leaderConfig.closedLoop.pidf(0.057, 0.0, 0.006, 0.000001, rev.ClosedLoopSlot.kSlot0)
+        leaderConfig.closedLoop.pidf(0.009, 0.0, 0, 0.000053, rev.ClosedLoopSlot.kSlot0)
         leaderConfig.closedLoop.outputRange(-1,1)
         leaderConfig.closedLoop.FeedbackSensor(rev.SparkMaxConfig().closedLoop.FeedbackSensor.kPrimaryEncoder)
-        leaderConfig.closedLoop.maxMotion.maxAcceleration(6000).maxVelocity(5000).allowedClosedLoopError(0.05)
+        leaderConfig.closedLoop.maxMotion.maxAcceleration(6000).maxVelocity(5000).allowedClosedLoopError(0.2)
 
         
         self.elevatorMoveMotor1.configure(leaderConfig, self.elevatorMoveMotor1.ResetMode.kResetSafeParameters, self.elevatorMoveMotor1.PersistMode.kPersistParameters)     
@@ -48,10 +48,10 @@ class Elevator(Subsystem):
         self.elevatorMoveMotor2.configure(followerConfig, self.elevatorMoveMotor2.ResetMode.kResetSafeParameters, self.elevatorMoveMotor2.PersistMode.kPersistParameters)
 
         self.homePos = 0
-        self.intakePos = 35
-        self.L1Pos = 47
-        self.L2Pos = 55
-        self.L3Pos = 75
+        self.intakePos = 30
+        self.L1Pos =37
+        self.L2Pos = 46
+        self.L3Pos = 70
         super().__init__()
         
     def isTooHot(self):
@@ -61,30 +61,25 @@ class Elevator(Subsystem):
             return False
 
     def setHome(self):
-        self.closedLoopController.setReference(0, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(self.homePos, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setIntake(self):
-        self.closedLoopController.setReference(34, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(self.intakePos, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL1(self):       
-        self.closedLoopController.setReference(47,self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(self.L1Pos,self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
         
     def setL2(self):
-        self.closedLoopController.setReference(55, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(self.L2Pos, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
     def setL3(self):
-        self.closedLoopController.setReference(75, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
+        self.closedLoopController.setReference(self.L3Pos, self.elevatorMoveMotor1.ControlType.kMAXMotionPositionControl, rev.ClosedLoopSlot.kSlot0)
 
-    def coralCheck(self):
-        """ if (self.outtakeMotor.getOutputCurrent() > 21):
-            return True
-        else:
-            return False """
-        
-        return not self.irSensor.get()
+    """ def coralCheck(self):         """
+    """     return not self.irSensor.get() """
         
     def flyWheelSpin(self):
-        self.outtakeMotor.set(-.5)
+        self.outtakeMotor.set(-.3)
     
     def flyWheelStop(self):
         self.outtakeMotor.stopMotor()

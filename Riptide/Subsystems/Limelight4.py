@@ -22,15 +22,14 @@ class limelight4(commands2.Subsystem):
         Auto aim method (Tracks both apriltags, Coral, and Algae)
         """
         tx = self.getTX()
-        kP = 0.15
+        kP = 0.18
 
         angularVel = tx * kP
-        print(angularVel)
-        return angularVel
+        return -angularVel
     
     def aimAndRange(self):
         tx = self.getTX()
-        kP = 0.15
+        kP = 0.13
 
         angularVel = tx * kP
 
@@ -41,7 +40,7 @@ class limelight4(commands2.Subsystem):
         forwardSpeeds = limelightSpeeds[2] * kP
         horizontalSpeeds = limelightSpeeds[0] * kP
 
-        return [-forwardSpeeds, horizontalSpeeds, angularVel]
+        return [forwardSpeeds, horizontalSpeeds, -angularVel]
         
     def aprilTagPipelineLeft(self):
         """ 
