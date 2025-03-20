@@ -17,7 +17,7 @@ from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from Subsystems.elevator import Elevator
-from Subsystems.AlgaeArm import algaeArm
+from Subsystems.AlgaeArm import algaeArm, MoveAndHoldArmPID
 from Subsystems.AlgaeRemover import algaeRemover
 #from Subsystems.Climber import climber
 
@@ -95,9 +95,9 @@ class MyRobot(commands2.TimedCommandRobot):
         wpilib.SmartDashboard.putBoolean("AprilTag Target", self.limelight.targetCheck())
         
         #Commands
-        self.algaeArmHomePosition = commands2.InstantCommand(self.algaeArm.setHomePosition, self)
-        self.algaeArmIntakePosition = commands2.InstantCommand(self.algaeArm.setIntakePosition, self)
-        self.algaeEjectPosition = commands2.InstantCommand(self.algaeArm.setEjectPosition, self)
+        """ self.algaeArmHomePosition = commands2.InstantCommand(lambda: self.algaeArm.setPosition(NewPosition=self.algaeArm.homePosition), self)
+        self.algaeArmIntakePosition = commands2.InstantCommand(lambda: self.algaeArm.setPosition(NewPosition=self.algaeArm.intakePosition), self)
+        self.algaeEjectPosition = commands2.InstantCommand(lambda: self.algaeArm.setPosition(NewPosition=self.algaeArm.algaeEjectPosition), self) """
 
         self.elevatorReturnHome = commands2.InstantCommand(self.elevator.setHome, self)
         self.elevatorIntakePosition = commands2.InstantCommand(self.elevator.setIntake, self)
@@ -111,21 +111,30 @@ class MyRobot(commands2.TimedCommandRobot):
         self.setAlgaeRemoverPosition2 = commands2.InstantCommand(self.algaeRemover.setPostion2, self)
 
         self.algaeEjectReturnHome = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.algaeArm.algaeEject, self),
-            commands2.WaitCommand(1),
-            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
-            commands2.InstantCommand(self.algaeArm.setHomePosition, self)
+            commands2.ParallelRaceGroup(
+                MoveAndHoldArmPID(self.algaeArm, self.algaeArm.algaeEjectPosition),
+                commands2.SequentialCommandGroup(
+                    commands2.InstantCommand(self.algaeArm.algaeEject, self),
+                    commands2.WaitCommand(1),
+                    commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)
+                ),
+            ),
+            MoveAndHoldArmPID(self.algaeArm, self.algaeArm.homePosition),            
         )
 
+
         self.algaeIntake = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.algaeArm.intake, self),
-            #commands2.InstantCommand(self.algaeArm.setIntakePosition, self),
-            commands2.WaitCommand(0.5),
-            commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
-            commands2.WaitCommand(.6),
-           # commands2.InstantCommand(self.algaeArm.setEjectPosition, self),
-            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)           
-            
+            commands2.ParallelRaceGroup(
+                MoveAndHoldArmPID(self.algaeArm, self.algaeArm.intakePosition),
+                commands2.SequentialCommandGroup(
+                    commands2.InstantCommand(self.algaeArm.intake, self),
+                    commands2.WaitCommand(0.3),
+                    commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
+                    commands2.WaitCommand(0.3),
+                    commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)
+                )
+            ),
+            MoveAndHoldArmPID(self.algaeArm, self.algaeArm.algaeEjectPosition)
         )
                 
         self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
@@ -195,13 +204,13 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.drivetrainStop = commands2.InstantCommand(self.drivetrain.stopDrivetrain, self)
 
-        self.climbFinal = commands2.InstantCommand(self.algaeArm.setHomePosition).alongWith(commands2.InstantCommand(self.elevator.setHome).alongWith(commands2.InstantCommand(self.algaeRemover.setHomePosition)))
+        #self.climbFinal = commands2.InstantCommand(self.algaeArm.setHomePosition).alongWith(commands2.InstantCommand(self.elevator.setHome).alongWith(commands2.InstantCommand(self.algaeRemover.setHomePosition)))
 
         #sending commands above to Pathplanner
-        NamedCommands.registerCommand("AlgaeEjectPosition", self.algaeEjectPosition)
+        """ NamedCommands.registerCommand("AlgaeEjectPosition", self.algaeEjectPosition)
         NamedCommands.registerCommand("AlgaeEjectReturnHome", self.algaeEjectReturnHome)
         NamedCommands.registerCommand("AlgaeArmIntakePosition", self.algaeArmIntakePosition)
-        NamedCommands.registerCommand("AlgaeArmHomePosition", self.algaeArmHomePosition)
+        NamedCommands.registerCommand("AlgaeArmHomePosition", self.algaeArmHomePosition) """
 
         NamedCommands.registerCommand("StopDrivetrain", self.drivetrainStop)
 
@@ -220,7 +229,7 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("IntakeCoralTransferL2", self.intakeCoralTransferL2)
         NamedCommands.registerCommand("IntakeCoralTransferL3", self.intakeCoralTransferL3)
         NamedCommands.registerCommand("CoralEject", self.coralEject)
-        NamedCommands.registerCommand("ClimbFinal", self.climbFinal)
+        #NamedCommands.registerCommand("ClimbFinal", self.climbFinal)
         NamedCommands.registerCommand("CoralUnstuck", self.coralUnstuck)
         NamedCommands.registerCommand("CoralIntake", self.coralIntake)
 
@@ -290,15 +299,11 @@ class MyRobot(commands2.TimedCommandRobot):
         wpilib.SmartDashboard.putBoolean("Apriltag Target", self.limelight.targetCheck())
 
 
-
-        """ if (self.driverController.getAButton()):
-            self.algaeArm.setHomePosition()
+        if (self.driverController.getAButton()):
+            self.algaeIntake.schedule()
 
         if (self.driverController.getBButton()):
-            self.algaeArm.setEjectPosition()
-
-        if (self.driverController.getYButton()):
-            self.algaeArm.setIntakePosition() """
+            self.algaeEjectReturnHome.schedule()
             
             
         return super().testPeriodic()
@@ -307,6 +312,8 @@ class MyRobot(commands2.TimedCommandRobot):
         """
         Manual control mode that runs every 20 ms. 
         """
+
+        self.algaeArmPosition = "Home"
         
         #Driver Controls
         if (self.driverController.getLeftBumperButton()):
@@ -359,15 +366,15 @@ class MyRobot(commands2.TimedCommandRobot):
         else:
             self.algaeArm.intakeMotor.stopMotor()
 
-        
 
         if (self.operatorController.getYButton()):
-            self.algaeArmIntakePosition.schedule()
             self.algaeArmPosition = "Intake"
+            self.algaeArm.setPosition(NewPosition=self.algaeArmPosition)
+            
 
         if (self.operatorController.getAButton()):
-            self.algaeArm.setHomePosition()
             self.algaeArmPosition = "Home"
+            self.algaeArm.setPosition(NewPosition=self.algaeArmPosition)
 
         if (self.operatorController.getXButton()):
             self.elevatorReturnHome.schedule()
@@ -408,8 +415,8 @@ class MyRobot(commands2.TimedCommandRobot):
             self.elevator.setIntake()
             self.elevatorPosition = "Intake"""
 
-        if (self.operatorController.getStartButton()):
-            self.climbFinal.schedule()
+        """ if (self.operatorController.getStartButton()):
+            self.climbFinal.schedule() """
 
         if (self.operatorController.getBackButton()):
             self.elevatorResetPosition.schedule()

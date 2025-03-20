@@ -1,33 +1,14 @@
 {
   "HALProvider": {
-    "Addressable LEDs": {
-      "0": {
-        "columns": 1,
-        "serpentine": true
-      },
-      "window": {
-        "visible": true
-      }
-    },
     "Other Devices": {
       "Pigeon 2 (v6)[8]": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "SPARK MAX [0]": {
         "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [10]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [12]": {
-        "header": {
-          "open": true
+          "open": false
         }
       },
       "SPARK MAX [13]": {
@@ -40,55 +21,35 @@
           "open": true
         }
       },
-      "SPARK MAX [15]": {
-        "header": {
-          "open": true
-        }
-      },
       "SPARK MAX [1]": {
         "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [2]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [8] RELATIVE ENCODER": {
-        "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX (v6)[0]": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX (v6)[0]/Fwd Limit": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX (v6)[0]/Rev Limit": {
         "header": {
-          "open": true
+          "open": false
         }
       },
       "Talon FX (v6)[0]/Rotor Sensor": {
         "header": {
-          "open": true
-        }
-      },
-      "Talon FX (v6)[1]": {
-        "header": {
-          "open": true
+          "open": false
         }
       }
     },
     "RoboRIO": {
       "6V Rail": {
-        "open": true
+        "open": false
       }
     }
   },
@@ -97,20 +58,6 @@
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Auto Options": "String Chooser",
       "/SmartDashboard/Field": "Field2d"
-    },
-    "windows": {
-      "/SmartDashboard/Field": {
-        "bottom": 1638,
-        "builtin": "2025 Reefscape",
-        "height": 8.051901817321777,
-        "left": 534,
-        "right": 3466,
-        "top": 291,
-        "width": 17.54825210571289,
-        "window": {
-          "visible": true
-        }
-      }
     }
   },
   "NetworkTables": {
@@ -118,30 +65,17 @@
       "SmartDashboard": {
         "Field": {
           "double[]##v_/SmartDashboard/Field/Robot": {
-            "open": true
+            "open": false
           },
-          "open": true
+          "open": false
         },
         "double[]##v_/SmartDashboard/drive temps": {
-          "open": true
-        },
-        "open": true
+          "open": false
+        }
       }
     }
   },
   "NetworkTables Info": {
-    "Connections": {
-      "open": true
-    },
-    "Server": {
-      "Publishers": {
-        "open": true
-      },
-      "open": true
-    },
     "visible": true
-  },
-  "NetworkTables View": {
-    "visible": false
   }
 }

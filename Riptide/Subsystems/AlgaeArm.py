@@ -6,6 +6,7 @@ import wpimath.controller
 import wpimath.trajectory
 import math
 import wpimath.units
+from commands2 import PIDCommand
 
 def enc2Rad(EncoderInput: float):
     return EncoderInput * 2 * math.pi
@@ -66,23 +67,16 @@ class algaeArm(commands2.Subsystem):
     def getPosition(self):
         return self.intakeEncoder.get()
     
-    def setPosition(self, NewPosition: float):
-        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), NewPosition))
+    """ def setPosition(self, NewPosition: str):
+        if (NewPosition == "Intake"):
+            self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.intakePosition))
+        elif (NewPosition == "Home"):
+            self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.homePosition))
+        elif (NewPosition == "Eject"):
+            self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.algaeEjectPosition)) """
 
-
-    def setHomePosition(self):
-        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.homePosition))
-        #print(position)
-
-    def setIntakePosition(self):
-        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.intakePosition))
-
-
-        print(self.controller.calculate(self.intakeEncoder.get(), self.intakePosition))
-
-    def setEjectPosition(self):
-        self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.algaeEjectPosition))
-        print(self.getPosition())
+    def setMotorOutput(self, output: float):
+        self.armRotationMotor.set(output)
         
         #print(position)
 
@@ -103,5 +97,18 @@ class algaeArm(commands2.Subsystem):
 
     def manualControl(self, input):
         self.armRotationMotor.setVoltage(input)
+
+class MoveAndHoldArmPID(PIDCommand):
+    def __init__(self, arm: algaeArm, target_position: float):
+        super().__init__(
+            controller=arm.controller,
+            measurementSource=arm.getPosition,
+            setpoint=target_position,
+            useOutput=arm.setMotorOutput
+        )
+
+    def isFinished(self):
+        """ This command runs indefinitely until interrupted """
+        return False
 
         
