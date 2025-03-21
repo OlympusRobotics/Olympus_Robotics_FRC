@@ -31,20 +31,9 @@ class algaeArm(commands2.Subsystem):
         armRotationConfig.smartCurrentLimit(30)
         armRotationConfig.inverted(False)
 
-        """ armPIDConfig = armRotationConfig.closedLoop
-        armPIDConfig.pid(0.011, 0.000002, 0.0009, rev.ClosedLoopSlot.kSlot0)
-        armPIDConfig.FeedbackSensor.kPrimaryEncoder
-
-        MAXMotionConfig = armPIDConfig.maxMotion
-        MAXMotionConfig.maxVelocity(6000)
-        MAXMotionConfig.maxAcceleration(6000)
-        MAXMotionConfig.allowedClosedLoopError(0.5) """
-
         self.armRotationMotor.configure(armRotationConfig, self.armRotationMotor.ResetMode.kResetSafeParameters, self.armRotationMotor.PersistMode.kPersistParameters)
         
         #Closed Loop Configuration
-        #self.armClosedLoop = self.armRotationMotor.getClosedLoopController()
-        constraints = wpimath.trajectory.TrapezoidProfile.Constraints(0.2, 0.2)
         self.controller = wpimath.controller.PIDController(0.6, 0.0, 0.0)
         self.controller.setTolerance(0.05)
         
@@ -65,13 +54,7 @@ class algaeArm(commands2.Subsystem):
         
     def getPosition(self):
         return round(self.intakeEncoder.get(), 3)
-    
-    def getFilteredPosition(self):
-        pos = self.intakeEncoder.get()
-        self.encoderHistory.append(pos)
-        return sum(self.encoderHistory) / len(self.encoderHistory)
-
-    
+        
     def setPosition(self, NewPosition: str):
         if (NewPosition == "Intake"):
             self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.intakePosition))
