@@ -119,16 +119,18 @@ class MyRobot(commands2.TimedCommandRobot):
         self.algaeEject = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.algaeArm.algaeEject, self),
             commands2.WaitCommand(1),
-            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)
+            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
+            commands2.InstantCommand(self.setAlgaeIntakeHomePosition, self)
         )
 
-
         self.algaeIntake = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.setAlgaeIntakeFeedPosition, self),
             commands2.InstantCommand(self.algaeArm.intake, self),
             commands2.WaitCommand(0.3),
             commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
             commands2.WaitCommand(0.3),
-            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self)
+            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
+            commands2.InstantCommand(self.setAlgaeIntakeEjectPosition, self)
         )
                 
         self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
@@ -169,8 +171,8 @@ class MyRobot(commands2.TimedCommandRobot):
         self.coralIntake = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitCommand(1),
-            commands2.WaitUntilCommand(self.coralCheck),
-            commands2.WaitCommand(0.06),
+            #commands2.WaitUntilCommand(self.coralCheck),
+            commands2.WaitCommand(1.06),
             commands2.InstantCommand(self.elevator.flyWheelStop, self)
         )
 
@@ -286,6 +288,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def testInit(self) -> None:
         #self.algaeArm.setHomePosition()
         #self.algaeArm.setEjectPosition()
+        self.algaeIntake.schedule()
         return super().testInit()
     
     def testPeriodic(self):
@@ -293,18 +296,7 @@ class MyRobot(commands2.TimedCommandRobot):
         A test routine that runs every 20 ms. Very useful for new methods.
         """
         wpilib.SmartDashboard.putNumber("Algae Arm Actual Position", self.algaeArm.getPosition())
-        wpilib.SmartDashboard.putBoolean("Apriltag Target", self.limelight.targetCheck())
-
-
-        if (self.driverController.getAButton()):
-            self.algaeArmPosition = "Intake"
-
-        if (self.driverController.getBButton()):
-            self.algaeArmPosition = "Eject"
-
-        if (self.driverController.getYButton()):
-            self.algaeArmPosition = "Home"
-            
+        wpilib.SmartDashboard.putBoolean("Apriltag Target", self.limelight.targetCheck())           
             
         return super().testPeriodic()
     
@@ -381,12 +373,6 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.operatorController.getRightTriggerAxis() > 0.7):
             self.coralIntake.schedule()
 
-        """ if (self.operatorController.getLeftTriggerAxis() > 0.6):
-            self.elevator.flyWheelSpin()
-        
-        else:
-            self.elevator.flyWheelStop()
- """
         if (self.operatorController.getBackButton()):
             self.elevator.setHome()
             
@@ -402,19 +388,19 @@ class MyRobot(commands2.TimedCommandRobot):
             self.setAlgaeRemoverPosition2.schedule()
             self.algaeRemoverPosition = "Position 2" 
 
-        if (self.operatorController.getAButton()):
-            self.algaeArmPosition = "Intake"
+        """ if (self.operatorController.getAButton()):
+            self.setAlgaeIntakeFeedPosition()
 
         if (self.operatorController.getBButton()):
-            self.algaeArmPosition = "Eject"
+            self.setAlgaeIntakeEjectPosition()
 
         if (self.operatorController.getYButton()):
-            self.algaeArmPosition = "Home"
+            self.setAlgaeIntakeHomePosition() """
 
         if (self.operatorController.getLeftBumper()):
             self.algaeIntake.schedule()
 
-        if not (self.algaeIntake.isScheduled()):
+        if not (self.coralIntake.isScheduled()):
             if (self.operatorController.getLeftTriggerAxis() == 1):
                 self.elevator.flyWheelSpin()
                 
@@ -428,14 +414,15 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.operatorController.getStartButton()):
             self.setAlgaeRemoverHomePosition.schedule()
         
-
-
         #led effects
         if (self.driverController.getLeftTriggerAxis() > 0.7):
             self.led.greenBreathing()
 
         elif (self.driverController.getXButton() > 0.7):
             self.led.redBlink()
+            
+        elif (self.coralCheck()):
+            self.led.white()
 
         else:
             self.led.rainbow()
@@ -473,6 +460,15 @@ class MyRobot(commands2.TimedCommandRobot):
         Gets the battery voltage and sends it to the dashboard.
         """
         wpilib.SmartDashboard.putNumber("Battery Voltage", wpilib.RobotController.getBatteryVoltage())
+        
+    def setAlgaeIntakeHomePosition(self):
+        self.algaeArmPosition = "Home"
+        
+    def setAlgaeIntakeEjectPosition(self):
+        self.algaeArmPosition = "Eject"
+        
+    def setAlgaeIntakeFeedPosition(self):
+        self.algaeArmPosition = "Intake"
 
     def coralCheck(self):
         return not self.irSensor.get()
