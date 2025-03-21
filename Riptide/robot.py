@@ -17,7 +17,7 @@ from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, NamedCommands
 from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.config import RobotConfig, PIDConstants
 from Subsystems.elevator import Elevator
-from Subsystems.AlgaeArm import algaeArm, MoveAndHoldArmPID
+from Subsystems.AlgaeArm import algaeArm
 from Subsystems.AlgaeRemover import algaeRemover
 #from Subsystems.Climber import climber
 
