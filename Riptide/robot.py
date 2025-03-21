@@ -70,15 +70,16 @@ class MyRobot(commands2.TimedCommandRobot):
         self.flower = "Algae Pull Out"
         self.curve = "Curve"
         self.halfField = "Half Field Test"
+        self.threeCoral = "Rm Alg +~ 2 cr"
+        self.Groundprocess = "Ground process"
 
         self.chooser = wpilib.SendableChooser()
 
-        self.chooser.setDefaultOption("Two Meter Auto", self.test)
+        self.chooser.setDefaultOption("Rm Alg +~ 2 cr", self.threeCoral)
         self.chooser.addOption("Center to H Score", self.centerLineScore)
         self.chooser.addOption("Barge 1 Park", self.barge1ToPark)
         self.chooser.addOption("Algae Pull Out", self.flower)
-        self.chooser.addOption("Curve", self.curve)
-        self.chooser.addOption("Half Field", self.halfField)
+        self.chooser.addOption("Ground process", self.Groundprocess)
 
         wpilib.SmartDashboard.putData("Auto Options", self.chooser)
 

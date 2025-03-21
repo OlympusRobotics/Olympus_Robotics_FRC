@@ -11,41 +11,28 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Barge Location 1 to I"
+                  "pathName": "Process"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "setAlgaeRemoverReadyPosition"
+                  "name": "algaeIntake"
                 }
               }
             ]
           }
         },
         {
-          "type": "sequential",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "setAlgaeRemoverPosition2"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "J-I to L-K"
-                }
-              }
-            ]
+            "pathName": "Processing"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "setAlgaeRemoverPosition1"
+            "name": "algaeEject"
           }
         },
         {
@@ -55,40 +42,34 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "L-K to A-B"
+                  "pathName": "Processoring"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "setAlgaeRemoverReadyPosition"
+                  "name": "algaeIntake"
                 }
               }
             ]
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "setAlgaeRemoverPosition2"
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "A-B to C-D"
+            "pathName": "Processed"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "setAlgaeRemoverPosition1"
+            "name": "algaeEject"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Final"
+            "name": "StopDrivetrain"
           }
         }
       ]
