@@ -29,7 +29,7 @@ class Elevator(Subsystem):
         brake = leaderConfig.setIdleMode(idleMode=rev.SparkMaxConfig.IdleMode.kBrake)
         limit = leaderConfig.smartCurrentLimit(30)
 
-        leaderConfig.closedLoop.pidf(0.009, 0.0, 0, 0.000053, rev.ClosedLoopSlot.kSlot0)
+        leaderConfig.closedLoop.pidf(0.043, 0.0, 0.017, 0.000053, rev.ClosedLoopSlot.kSlot0)
         leaderConfig.closedLoop.outputRange(-1,1)
         leaderConfig.closedLoop.FeedbackSensor(rev.SparkMaxConfig().closedLoop.FeedbackSensor.kPrimaryEncoder)
         leaderConfig.closedLoop.maxMotion.maxAcceleration(6000).maxVelocity(5000).allowedClosedLoopError(0.2)
@@ -48,10 +48,10 @@ class Elevator(Subsystem):
         self.elevatorMoveMotor2.configure(followerConfig, self.elevatorMoveMotor2.ResetMode.kResetSafeParameters, self.elevatorMoveMotor2.PersistMode.kPersistParameters)
 
         self.homePos = 0
-        self.intakePos = 30
-        self.L1Pos =37
-        self.L2Pos = 46
-        self.L3Pos = 70
+        self.intakePos = 31
+        self.L1Pos =38
+        self.L2Pos = 47
+        self.L3Pos = 71
         super().__init__()
         
     def isTooHot(self):

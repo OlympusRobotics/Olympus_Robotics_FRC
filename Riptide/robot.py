@@ -171,8 +171,8 @@ class MyRobot(commands2.TimedCommandRobot):
         self.coralIntake = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.elevator.flyWheelSpin, self),
             commands2.WaitCommand(1),
-            #commands2.WaitUntilCommand(self.coralCheck),
-            commands2.WaitCommand(1.06),
+            commands2.WaitUntilCommand(self.coralCheck),
+            commands2.WaitCommand(.06),
             commands2.InstantCommand(self.elevator.flyWheelStop, self)
         )
 
@@ -373,6 +373,9 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.operatorController.getRightTriggerAxis() > 0.7):
             self.coralIntake.schedule()
 
+        if (self.operatorController.getStartButton()):
+            self.setAlgaeRemoverHomePosition.schedule()
+            
         if (self.operatorController.getBackButton()):
             self.elevator.setHome()
             
