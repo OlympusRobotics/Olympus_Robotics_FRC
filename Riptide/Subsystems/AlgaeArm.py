@@ -6,7 +6,6 @@ import wpimath.controller
 import wpimath.trajectory
 import math
 import wpimath.units
-import collections
 from commands2 import PIDCommand
 
 def enc2Rad(EncoderInput: float):
@@ -42,20 +41,27 @@ class algaeArm(commands2.Subsystem):
         self.algaeEjectPosition = .05
         self.intakePosition = .212
 
-        self.encoderHistory = collections.deque(maxlen=3)
-
         super().__init__()
         
     def isTooHot(self):
+        """ 
+        Checks if the algae intake arm motors are getting too hot. This is useful to notify either the drive team or any other operator if the motors are becoming too hot.
+        """
         if ((self.armRotationMotor.getMotorTemperature() > 90) or (self.intakeMotor.getMotorTemperature() > 90)):
             return True
         else:
             return False
         
     def getPosition(self):
+        """ 
+        Gets the position of the encoder. Calling this method rounds the encoder value to three decimal places for less encoder noise.
+        """
         return round(self.intakeEncoder.get(), 3)
         
     def setPosition(self, NewPosition: str):
+        """ 
+        This function continously runs to keep the algae arm in a fixed position. The PID controller always needs to be run for the arm to maintain the position.
+        """
         if (NewPosition == "Intake"):
             self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.intakePosition))
         elif (NewPosition == "Home"):
@@ -63,25 +69,36 @@ class algaeArm(commands2.Subsystem):
         elif (NewPosition == "Eject"):
             self.armRotationMotor.set(self.controller.calculate(self.intakeEncoder.get(), self.algaeEjectPosition))
 
-    def setMotorOutput(self, output: float):
-        self.armRotationMotor.set(output)
-        
-        #print(position)
-
     def intake(self):
+        """ 
+        This runs the motor at 35% full speed to intake the algae.
+        """
         self.intakeMotor.set(.35)
         
     def stopIntakeMotor(self):
+        """ 
+        Stops the intake motor from running.
+        """
         self.intakeMotor.stopMotor()
         
     def algaeEject(self):
+        """ 
+        Spins the intake motor in reverse at 30% speed to spit out the algae.
+        """
         self.intakeMotor.set(-.3)
 
     def algaeCheck(self):
+        """ 
+        This method pulls current from the motor. If it detects a change in current that is greater than 30 amps, it will return true.
+        When the algae gets pulled in by the intake motor, there is a current spike. We use this to gauge whether or not an algae ball has been pulled in.
+        """
         if self.intakeMotor.getOutputCurrent() > 30:
             return True
         else:
             return False
 
     def manualControl(self, input):
+        """ 
+        This method manually controls the position of the arm. It should never be used unless the automations somehow fail.
+        """
         self.armRotationMotor.setVoltage(input)
