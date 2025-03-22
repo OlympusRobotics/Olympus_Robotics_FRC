@@ -11,6 +11,11 @@
           "open": false
         }
       },
+      "SPARK MAX [10]": {
+        "header": {
+          "open": true
+        }
+      },
       "SPARK MAX [12]": {
         "header": {
           "open": true

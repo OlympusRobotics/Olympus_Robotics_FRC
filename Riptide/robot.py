@@ -72,6 +72,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.halfField = "Half Field Test"
         self.threeCoral = "Rm Alg +~ 2 cr"
         self.Groundprocess = "Ground process"
+        self.L3oneCoral = "1CoralL3"
 
         self.chooser = wpilib.SendableChooser()
 
@@ -80,6 +81,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.chooser.addOption("Barge 1 Park", self.barge1ToPark)
         self.chooser.addOption("Algae Pull Out", self.flower)
         self.chooser.addOption("Ground process", self.Groundprocess)
+        self.chooser.addOption("One coral on L3", self.L3oneCoral)
 
         wpilib.SmartDashboard.putData("Auto Options", self.chooser)
 
@@ -204,11 +206,6 @@ class MyRobot(commands2.TimedCommandRobot):
         #self.climbFinal = commands2.InstantCommand(self.algaeArm.setHomePosition).alongWith(commands2.InstantCommand(self.elevator.setHome).alongWith(commands2.InstantCommand(self.algaeRemover.setHomePosition)))
 
         #sending commands above to Pathplanner
-        """ NamedCommands.registerCommand("AlgaeEjectPosition", self.algaeEjectPosition)
-        NamedCommands.registerCommand("AlgaeEjectReturnHome", self.algaeEjectReturnHome)
-        NamedCommands.registerCommand("AlgaeArmIntakePosition", self.algaeArmIntakePosition)
-        NamedCommands.registerCommand("AlgaeArmHomePosition", self.algaeArmHomePosition) """
-
         NamedCommands.registerCommand("StopDrivetrain", self.drivetrainStop)
 
         NamedCommands.registerCommand("setAlgaeRemoverHomePosition", self.setAlgaeRemoverHomePosition)
@@ -217,7 +214,7 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("setAlgaeRemoverPosition2", self.setAlgaeRemoverPosition2)
         
         NamedCommands.registerCommand("elevatorReturnHome", self.elevatorReturnHome)
-        NamedCommands.registerCommand("ElevatorIntake", self.elevatorIntakePosition)
+        NamedCommands.registerCommand("elevatorIntakePosition", self.elevatorIntakePosition)
         NamedCommands.registerCommand("elevatorL1", self.elevatorL1)
         NamedCommands.registerCommand("elevatorL2", self.elevatorL2)
         NamedCommands.registerCommand("elevatorL3", self.elevatorL3)
@@ -225,10 +222,10 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("IntakeCoralTransferL1", self.intakeCoralTransferL1)
         NamedCommands.registerCommand("IntakeCoralTransferL2", self.intakeCoralTransferL2)
         NamedCommands.registerCommand("IntakeCoralTransferL3", self.intakeCoralTransferL3)
-        NamedCommands.registerCommand("CoralEject", self.coralEject)
+        NamedCommands.registerCommand("coralEject", self.coralEject)
         #NamedCommands.registerCommand("ClimbFinal", self.climbFinal)
         #NamedCommands.registerCommand("CoralUnstuck", self.coralUnstuck)
-        #NamedCommands.registerCommand("CoralIntake", self.coralIntake)
+        NamedCommands.registerCommand("coralIntake", self.coralIntake)
         self.algaeArmPosition = "Home"
         
 
@@ -289,7 +286,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def testInit(self) -> None:
         #self.algaeArm.setHomePosition()
         #self.algaeArm.setEjectPosition()
-        self.algaeEject.schedule()
+        self.algaeIntake.schedule()
         return super().testInit()
     
     def testPeriodic(self):
