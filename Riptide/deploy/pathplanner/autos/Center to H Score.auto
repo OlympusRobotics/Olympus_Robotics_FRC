@@ -5,28 +5,75 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Center to H"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "elevatorL3"
-                }
-              }
-            ]
+            "name": "setAlgaeRemoverReadyPosition"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevatorL3"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Center to H"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevatorL3"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "coralEject"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "setAlgaeRemoverPosition1"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "H back"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "setAlgaeRemoverHomePosition"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevatorReturnHome"
           }
         },
         {

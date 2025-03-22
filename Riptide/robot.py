@@ -19,6 +19,7 @@ from pathplannerlib.config import RobotConfig, PIDConstants
 from Subsystems.elevator import Elevator
 from Subsystems.AlgaeArm import algaeArm
 from Subsystems.AlgaeRemover import algaeRemover
+from cscore import CameraServer as CS
 #from Subsystems.Climber import climber
 
 #initalizes the subsystems outside of the class to avoid multiple instances of the subsystems being created while using the test command.
@@ -57,6 +58,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.algaeRemover = algaeRemover
 
         self.irSensor = wpilib.DigitalInput(1)
+        CS.startAutomaticCapture()
 
         #leds
         self.led = led()
@@ -131,7 +133,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.algaeArm.intake),
             commands2.WaitCommand(1),
             commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
-            commands2.WaitCommand(0.3),
+            commands2.WaitCommand(0.4),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor),
             commands2.InstantCommand(self.setAlgaeIntakeEjectPosition)
         )
@@ -149,6 +151,12 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.WaitCommand(1),
             commands2.WaitUntilCommand(self.coralCheck),
             commands2.WaitCommand(.06),
+            commands2.InstantCommand(self.elevator.flyWheelStop)
+        )
+
+        self.coralUnstuck = commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.elevator.coralUnstuck),
+            commands2.WaitCommand(0.5),
             commands2.InstantCommand(self.elevator.flyWheelStop)
         )
 
@@ -233,7 +241,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def testInit(self) -> None:
         #self.algaeArm.setHomePosition()
         #self.algaeArm.setEjectPosition()
-        self.algaeIntake.schedule()
+        self.setAlgaeRemoverPosition1.schedule()
         return super().testInit()
     
     def testPeriodic(self):
@@ -329,12 +337,10 @@ class MyRobot(commands2.TimedCommandRobot):
             self.algaeRemoverPosition = "Ready"
         
         if (self.operatorController.getRightY() < -0.75):
-            self.setAlgaeRemoverPosition1.schedule()
-            self.algaeRemoverPosition = "Position 1"
+            self.setAlgaeRemoverPosition2.schedule()
                    
         if (self.operatorController.getRightY() > 0.75):
-            self.setAlgaeRemoverPosition2.schedule()
-            self.algaeRemoverPosition = "Position 2" 
+            self.setAlgaeRemoverPosition1.schedule()
 
         """ if (self.operatorController.getAButton()):
             self.setAlgaeIntakeFeedPosition()
@@ -348,11 +354,18 @@ class MyRobot(commands2.TimedCommandRobot):
         if (self.operatorController.getLeftBumper()):
             self.algaeIntake.schedule()
 
-        if not (self.algaeIntake.isScheduled()):
+        """if (self.operatorController.getBButton()):
+            self.coralUnstuck.schedule()"""
+
+        """ if not (self.algaeIntake.isScheduled()):
             if (self.operatorController.getLeftStickButton()):
                 self.algaeArm.intake()
 
-        if not (self.coralIntake.isScheduled()):
+            else:
+                self.algaeArm.intakeMotor.stopMotor() """
+                
+
+        if not (self.coralIntake.isScheduled() or self.coralUnstuck.isScheduled()):
             if (self.operatorController.getLeftTriggerAxis() == 1):
                 self.elevator.flyWheelSpin()
                 

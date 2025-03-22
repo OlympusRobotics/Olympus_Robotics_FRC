@@ -22,6 +22,7 @@ class algaeArm(commands2.Subsystem):
 
         #Encoder Initialization
         self.intakeEncoder = wpilib.DutyCycleEncoder(2, 1, 0.216)
+        self.intakeRotationEncoder = self.intakeMotor.getEncoder()
         self.armRotationEncoder = self.armRotationMotor.getEncoder()
 
         #Algae intake/outtake arm motor Configuration
@@ -33,13 +34,13 @@ class algaeArm(commands2.Subsystem):
         self.armRotationMotor.configure(armRotationConfig, self.armRotationMotor.ResetMode.kResetSafeParameters, self.armRotationMotor.PersistMode.kPersistParameters)
         
         #Closed Loop Configuration
-        self.controller = wpimath.controller.PIDController(0.6, 0.0, 0.0)
+        self.controller = wpimath.controller.PIDController(1.2, 0.0, 0.0)
         self.controller.setTolerance(0.05)
         
         #Arm Positions
         self.homePosition = 0
         self.algaeEjectPosition = .05
-        self.intakePosition = .212
+        self.intakePosition = .202
 
         super().__init__()
         
@@ -73,7 +74,7 @@ class algaeArm(commands2.Subsystem):
         """ 
         This runs the motor at 35% full speed to intake the algae.
         """
-        self.intakeMotor.set(.4)
+        self.intakeMotor.set(.55)
         
     def stopIntakeMotor(self):
         """ 
@@ -92,7 +93,7 @@ class algaeArm(commands2.Subsystem):
         This method pulls current from the motor. If it detects a change in current that is greater than 30 amps, it will return true.
         When the algae gets pulled in by the intake motor, there is a current spike. We use this to gauge whether or not an algae ball has been pulled in.
         """
-        if self.intakeMotor.getOutputCurrent() > 30:
+        if (self.intakeMotor.getOutputCurrent() > 30) and (self.intakeRotationEncoder.getVelocity() < 2500):
             return True
         else:
             return False

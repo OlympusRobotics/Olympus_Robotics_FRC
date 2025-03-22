@@ -32,7 +32,7 @@ class algaeRemover(commands2.Subsystem):
         #Arm Positions
         self.homePosition = 0
         self.readyPosition = -8
-        self.Position1 = -6.5
+        self.Position1 = -6
         self.Position2 = -9.5
 
         super().__init__()

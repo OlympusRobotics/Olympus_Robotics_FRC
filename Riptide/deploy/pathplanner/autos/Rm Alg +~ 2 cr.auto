@@ -42,25 +42,6 @@
           }
         },
         {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Remove Algae + Coral"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "setAlgaeRemoverHomePosition"
-                }
-              }
-            ]
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "coralEject"
@@ -70,6 +51,12 @@
           "type": "parallel",
           "data": {
             "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "setAlgaeRemoverPosition1"
+                }
+              },
               {
                 "type": "path",
                 "data": {
@@ -83,6 +70,12 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "setAlgaeRemoverHomePosition"
           }
         },
         {
