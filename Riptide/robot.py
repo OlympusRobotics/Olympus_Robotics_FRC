@@ -129,38 +129,11 @@ class MyRobot(commands2.TimedCommandRobot):
         self.algaeIntake = commands2.SequentialCommandGroup(
             commands2.InstantCommand(self.setAlgaeIntakeFeedPosition),
             commands2.InstantCommand(self.algaeArm.intake),
-            commands2.WaitCommand(0.3),
+            commands2.WaitCommand(1),
             commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
             commands2.WaitCommand(0.3),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor),
             commands2.InstantCommand(self.setAlgaeIntakeEjectPosition)
-        )
-                
-        self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin),
-            commands2.WaitCommand(0.3),
-            #commands2.WaitUntilCommand(condition=self.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop),
-            commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL1)
-        )
-        
-        self.intakeCoralTransferL2 = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin),
-            commands2.WaitCommand(0.3),
-            #commands2.WaitUntilCommand(condition=self.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop),
-            commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL2)
-        )
-        
-        self.intakeCoralTransferL3 = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin),
-            commands2.WaitCommand(0.3),
-            #commands2.WaitUntilCommand(condition=self.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop),
-            commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL3)
         )
         
         self.coralEject = commands2.SequentialCommandGroup(
@@ -179,27 +152,6 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.elevator.flyWheelStop)
         )
 
-        """ self.coralUnstuck = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.coralUnstuck, self),
-            commands2.WaitCommand(0.3),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self),
-            commands2.WaitCommand(0.5),
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
-            commands2.WaitCommand(1),
-            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
-            commands2.WaitCommand(0.1),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self)
-        ) """
-
-        """ self.elevatorResetPosition = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
-            commands2.WaitCommand(.1),
-            commands2.WaitUntilCommand(condition=self.elevator.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self),
-            commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setHome, self),
-            commands2.InstantCommand(self.algaeRemover.setHomePosition, self)
-        ) """
 
         self.drivetrainStop = commands2.InstantCommand(self.drivetrain.stopDrivetrain)
 
@@ -219,12 +171,7 @@ class MyRobot(commands2.TimedCommandRobot):
         NamedCommands.registerCommand("elevatorL2", self.elevatorL2)
         NamedCommands.registerCommand("elevatorL3", self.elevatorL3)
         
-        NamedCommands.registerCommand("IntakeCoralTransferL1", self.intakeCoralTransferL1)
-        NamedCommands.registerCommand("IntakeCoralTransferL2", self.intakeCoralTransferL2)
-        NamedCommands.registerCommand("IntakeCoralTransferL3", self.intakeCoralTransferL3)
         NamedCommands.registerCommand("coralEject", self.coralEject)
-        #NamedCommands.registerCommand("ClimbFinal", self.climbFinal)
-        #NamedCommands.registerCommand("CoralUnstuck", self.coralUnstuck)
         NamedCommands.registerCommand("coralIntake", self.coralIntake)
         self.algaeArmPosition = "Home"
         
@@ -400,6 +347,10 @@ class MyRobot(commands2.TimedCommandRobot):
 
         if (self.operatorController.getLeftBumper()):
             self.algaeIntake.schedule()
+
+        if not (self.algaeIntake.isScheduled()):
+            if (self.operatorController.getLeftStickButton()):
+                self.algaeArm.intake()
 
         if not (self.coralIntake.isScheduled()):
             if (self.operatorController.getLeftTriggerAxis() == 1):
