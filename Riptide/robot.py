@@ -106,75 +106,75 @@ class MyRobot(commands2.TimedCommandRobot):
         self.algaeArmIntakePosition = commands2.InstantCommand(lambda: self.algaeArm.setPosition(NewPosition=self.algaeArm.intakePosition), self)
         self.algaeEjectPosition = commands2.InstantCommand(lambda: self.algaeArm.setPosition(NewPosition=self.algaeArm.algaeEjectPosition), self) """
 
-        self.elevatorReturnHome = commands2.InstantCommand(self.elevator.setHome, self)
-        self.elevatorIntakePosition = commands2.InstantCommand(self.elevator.setIntake, self)
-        self.elevatorL1 = commands2.InstantCommand(self.elevator.setL1, self)
-        self.elevatorL2 = commands2.InstantCommand(self.elevator.setL2, self)
-        self.elevatorL3 = commands2.InstantCommand(self.elevator.setL3, self)
+        self.elevatorReturnHome = commands2.InstantCommand(self.elevator.setHome)
+        self.elevatorIntakePosition = commands2.InstantCommand(self.elevator.setIntake)
+        self.elevatorL1 = commands2.InstantCommand(self.elevator.setL1)
+        self.elevatorL2 = commands2.InstantCommand(self.elevator.setL2)
+        self.elevatorL3 = commands2.InstantCommand(self.elevator.setL3)
 
-        self.setAlgaeRemoverHomePosition = commands2.InstantCommand(self.algaeRemover.setHomePosition, self)
-        self.setAlgaeRemoverReadyPosition = commands2.InstantCommand(self.algaeRemover.setReadyPosition, self)
-        self.setAlgaeRemoverPosition1 = commands2.InstantCommand(self.algaeRemover.setPostion1, self)
-        self.setAlgaeRemoverPosition2 = commands2.InstantCommand(self.algaeRemover.setPostion2, self)
+        self.setAlgaeRemoverHomePosition = commands2.InstantCommand(self.algaeRemover.setHomePosition)
+        self.setAlgaeRemoverReadyPosition = commands2.InstantCommand(self.algaeRemover.setReadyPosition)
+        self.setAlgaeRemoverPosition1 = commands2.InstantCommand(self.algaeRemover.setPostion1)
+        self.setAlgaeRemoverPosition2 = commands2.InstantCommand(self.algaeRemover.setPostion2)
 
         self.algaeEject = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.algaeArm.algaeEject, self),
+            commands2.InstantCommand(self.algaeArm.algaeEject),
             commands2.WaitCommand(1),
-            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
-            commands2.InstantCommand(self.setAlgaeIntakeHomePosition, self)
+            commands2.InstantCommand(self.algaeArm.stopIntakeMotor),
+            commands2.InstantCommand(self.setAlgaeIntakeHomePosition)
         )
 
         self.algaeIntake = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.setAlgaeIntakeFeedPosition, self),
-            commands2.InstantCommand(self.algaeArm.intake, self),
+            commands2.InstantCommand(self.setAlgaeIntakeFeedPosition),
+            commands2.InstantCommand(self.algaeArm.intake),
             commands2.WaitCommand(0.3),
             commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
             commands2.WaitCommand(0.3),
-            commands2.InstantCommand(self.algaeArm.stopIntakeMotor, self),
-            commands2.InstantCommand(self.setAlgaeIntakeEjectPosition, self)
+            commands2.InstantCommand(self.algaeArm.stopIntakeMotor),
+            commands2.InstantCommand(self.setAlgaeIntakeEjectPosition)
         )
                 
         self.intakeCoralTransferL1 = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.InstantCommand(self.elevator.flyWheelSpin),
             commands2.WaitCommand(0.3),
             #commands2.WaitUntilCommand(condition=self.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self),
+            commands2.InstantCommand(self.elevator.flyWheelStop),
             commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL1, self)
+            commands2.InstantCommand(self.elevator.setL1)
         )
         
         self.intakeCoralTransferL2 = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.InstantCommand(self.elevator.flyWheelSpin),
             commands2.WaitCommand(0.3),
             #commands2.WaitUntilCommand(condition=self.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self),
+            commands2.InstantCommand(self.elevator.flyWheelStop),
             commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL2, self)
+            commands2.InstantCommand(self.elevator.setL2)
         )
         
         self.intakeCoralTransferL3 = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.InstantCommand(self.elevator.flyWheelSpin),
             commands2.WaitCommand(0.3),
             #commands2.WaitUntilCommand(condition=self.coralCheck),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self),
+            commands2.InstantCommand(self.elevator.flyWheelStop),
             commands2.WaitCommand(0.2),
-            commands2.InstantCommand(self.elevator.setL3, self)
+            commands2.InstantCommand(self.elevator.setL3)
         )
         
         self.coralEject = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.InstantCommand(self.elevator.flyWheelSpin),
             commands2.WaitCommand(2),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self),
+            commands2.InstantCommand(self.elevator.flyWheelStop),
             commands2.WaitCommand(.5),
-            commands2.InstantCommand(self.elevator.setIntake, self)
+            commands2.InstantCommand(self.elevator.setIntake)
         ) 
 
         self.coralIntake = commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.elevator.flyWheelSpin, self),
+            commands2.InstantCommand(self.elevator.flyWheelSpin),
             commands2.WaitCommand(1),
             commands2.WaitUntilCommand(self.coralCheck),
             commands2.WaitCommand(.06),
-            commands2.InstantCommand(self.elevator.flyWheelStop, self)
+            commands2.InstantCommand(self.elevator.flyWheelStop)
         )
 
         """ self.coralUnstuck = commands2.SequentialCommandGroup(
@@ -199,7 +199,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.algaeRemover.setHomePosition, self)
         ) """
 
-        self.drivetrainStop = commands2.InstantCommand(self.drivetrain.stopDrivetrain, self)
+        self.drivetrainStop = commands2.InstantCommand(self.drivetrain.stopDrivetrain)
 
         #self.climbFinal = commands2.InstantCommand(self.algaeArm.setHomePosition).alongWith(commands2.InstantCommand(self.elevator.setHome).alongWith(commands2.InstantCommand(self.algaeRemover.setHomePosition)))
 
@@ -289,7 +289,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def testInit(self) -> None:
         #self.algaeArm.setHomePosition()
         #self.algaeArm.setEjectPosition()
-        self.algaeIntake.schedule()
+        self.algaeEject.schedule()
         return super().testInit()
     
     def testPeriodic(self):
