@@ -64,4 +64,8 @@ public class RobotContainer {
     return value;
   }
 
+  public Drivetrain getDrivetrain() {
+    return m_drivetrain;
+  }
+
 }

@@ -22,14 +22,25 @@ import edu.wpi.first.math.controller.PIDController;
 import frc.robot.Constants.RobotConstants;
 
 public class SwerveModule extends SubsystemBase {
+    /* 
+     * Drive Motor: TalonFX (Kraken X60)
+     * Rotation Motor: SparkMax (Rev NEO)
+     * Rotation Encoder: Analog Encoder (ThrifyBot Absolute Magnetic Encoder)
+     */
+    
     private final TalonFX m_driveMotor;
     private final SparkMax m_rotationMotor;
     private final AnalogEncoder m_rotationEncoder;
 
+    /* 
+     * PID Controller for the rotation motor
+     * The PID controller is used to control the rotation of the module
+     */
     private final PIDController m_rotationPIDController = new PIDController(0, 0, 0);
 
+    /// Conversion equations
     private double enc2Distance(double EncoderPosition){
-        return ((EncoderPosition / RobotConstants.kGearRatio) * (2 * Math.PI * RobotConstants.kGearRatio));
+        return ((EncoderPosition / RobotConstants.kGearRatio) * (2 * Math.PI * RobotConstants.kWheelRadius));
     }
 
     private double rps2mps(double EncoderRotations){
@@ -40,6 +51,7 @@ public class SwerveModule extends SubsystemBase {
         return ((EncoderPosition - 0.5) * 2 * Math.PI);
     }
     
+    //Constructor
     public SwerveModule(
         int DriveMotorID,
         int RotationMotorID,
@@ -49,6 +61,10 @@ public class SwerveModule extends SubsystemBase {
         m_rotationMotor = new SparkMax(RotationMotorID, MotorType.kBrushless);
         m_rotationEncoder = new AnalogEncoder(RotationEncoderID, 0, RotationEncoderOffset);
 
+        /* 
+         * Drive Motor Configuration
+         * Rotation Motor Configuration
+         */
         TalonFXConfiguration driveConfig = new TalonFXConfiguration();
 
         driveConfig.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
@@ -70,10 +86,23 @@ public class SwerveModule extends SubsystemBase {
         m_rotationPIDController.enableContinuousInput(-Math.PI, Math.PI);        
     }
 
+    /* 
+     * Set the PID values for the rotation motor
+     * kP: Proportional gain
+     * kI: Integral gain
+     * kD: Derivative gain
+     */
     public void setPIDValues(double kP, double kI, double kD) { 
         m_rotationPIDController.setPID(kP, kI, kD);
     }
 
+    /* 
+     * Get the current state of the module
+     * The state includes the speed and angle of the module
+     * The speed is in meters per second and the angle is in radians
+     * The speed is calculated using the encoder velocity, gear ratio, and wheel radius.
+     * The angle is calculated using the encoder position and the gear ratio
+     */
     public SwerveModuleState getState(){
         return new SwerveModuleState(
             rps2mps(m_driveMotor.getVelocity().getValueAsDouble()),
@@ -81,6 +110,13 @@ public class SwerveModule extends SubsystemBase {
         );
     }
 
+    /* 
+     * Get the current position of the module
+     * The position includes the distance and angle of the module
+     * The distance is in meters and the angle is in radians
+     * The distance is calculated using the encoder position, gear ratio, and wheel radius.
+     * The angle is calculated using the encoder position and the gear ratio
+     */
     public SwerveModulePosition getPosition(){
         return new SwerveModulePosition(
             enc2Distance(m_driveMotor.getPosition().getValueAsDouble()),
@@ -88,6 +124,7 @@ public class SwerveModule extends SubsystemBase {
         );
     }
 
+    // Set the state of the module
     public void setState(SwerveModuleState newState){
         newState.optimize(new Rotation2d(enc2Rad(m_rotationEncoder.get())));
         newState.cosineScale(new Rotation2d(enc2Rad(m_rotationEncoder.get())));
@@ -99,6 +136,8 @@ public class SwerveModule extends SubsystemBase {
 
     }
 
+    // stops the drive and rotation motors
+    // This is used when the robot is not moving
     public void stopDrive(){
         m_driveMotor.stopMotor();
         m_rotationMotor.stopMotor();

@@ -14,8 +14,13 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 
 import frc.robot.Constants.RobotConstants;
 
+/* 
+ * Initializes a new robot Drivetrain conplete with 4 Swerve Modules and a Pigeon2 Gyro.
+ * The Drivetrain class is responsible for controlling the robot's movement and orientation.
+ */
+
 public class Drivetrain extends SubsystemBase{
-    //SwerveModule Initialization
+    //SwerveModule Initialization (creates a new swerve module object for each corner of the robot)
     private final SwerveModule m_flSM = new SwerveModule(
         RobotConstants.kFrontLeftDriveID, 
         RobotConstants.kFrontLeftRotationID, 
@@ -62,9 +67,11 @@ public class Drivetrain extends SubsystemBase{
         m_backRightLocation
     );
 
+    //Chassis Speeds Initialization
     ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0, 0, 0);
 
-
+    //Odometry Initialization
+    //The odometry object is used to track the robot's position on the field
     SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
         m_kinematics, 
         m_gyro.getRotation2d(), 
@@ -75,8 +82,10 @@ public class Drivetrain extends SubsystemBase{
             m_brSM.getPosition()
         }
     );
-
+    
+    //Constructor
     public Drivetrain(){
+        //This constructor initializes the swerve module PID values and the gyro.
         m_gyro.setYaw(0.0);
     
         m_flSM.setPIDValues(RobotConstants.kFrontLeftP, 0, RobotConstants.kFrontLeftD);
@@ -85,6 +94,7 @@ public class Drivetrain extends SubsystemBase{
         m_brSM.setPIDValues(RobotConstants.kBackRightP, 0, RobotConstants.kBackRightD);
     }
 
+    //resets the robot pose. It's handy for if the driver needs to reorientate the robot.
     public void resetPose(){
         m_gyro.setYaw(0.0);
         m_odometry = new SwerveDriveOdometry(m_kinematics,
@@ -98,18 +108,34 @@ public class Drivetrain extends SubsystemBase{
         );
     }
 
+    /* 
+     * getPose() returns the current pose of the robot in meters.
+     * The pose is a combination of the robot's position and orientation on the field.
+     */
     public Pose2d getPose(){
         return m_odometry.getPoseMeters();
     }
 
+    /* 
+     * getChassisSpeeds() returns the current chassis speeds of the robot.
+     * The chassis speeds are the robot's velocity in the x, y, and rotational directions.
+     */
     public ChassisSpeeds getChassisSpeeds(){
         return m_chassisSpeeds;
     }
 
+    /* 
+     * getRobotRotation() returns the current rotation of the robot.
+     * The rotation is represented as a Rotation2d object.
+     */
     public Rotation2d getRobotRotation(){
         return m_gyro.getRotation2d();
     }
 
+    /* 
+     * updateOdometry() updates the robot's odometry based on the current gyro rotation and swerve module positions.
+     * This method is called periodically to keep the odometry up to date.
+     */
     public void updateOdometry(){
         m_odometry.update(
             m_gyro.getRotation2d(),
@@ -122,6 +148,10 @@ public class Drivetrain extends SubsystemBase{
         );
     }
 
+    /* 
+     * stopDrive() stops all swerve modules from moving.
+     * This method is called when the robot needs to stop.
+     */
     public void stopDrive(){
         m_flSM.stopDrive();
         m_frSM.stopDrive();
@@ -129,6 +159,10 @@ public class Drivetrain extends SubsystemBase{
         m_brSM.stopDrive();
     }
 
+    /* 
+     * drive() takes in a ChassisSpeeds object and converts it to swerve module states.
+     * The swerve module states are then set to the respective swerve modules.
+     */
     public void drive(ChassisSpeeds speeds){
         speeds = new ChassisSpeeds(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
         SwerveModuleState[] swerveModuleStates = m_kinematics.toSwerveModuleStates(speeds);
