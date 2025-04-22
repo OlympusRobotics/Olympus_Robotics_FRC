@@ -77,7 +77,8 @@ public class SwerveModule extends SubsystemBase {
         
         rotationConfig
             .smartCurrentLimit(40)
-            .idleMode(IdleMode.kBrake);
+            .idleMode(IdleMode.kBrake)
+            .inverted(true);
 
         m_driveMotor.getConfigurator().apply(driveConfig);
         m_rotationMotor.configure(rotationConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

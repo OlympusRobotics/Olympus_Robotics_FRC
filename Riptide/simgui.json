@@ -11,32 +11,12 @@
           "open": false
         }
       },
-      "SPARK MAX [10]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [12]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [13]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [14]": {
-        "header": {
-          "open": true
-        }
-      },
       "SPARK MAX [1]": {
         "header": {
           "open": false
         }
       },
-      "SPARK MAX [2]": {
+      "SPARK MAX [4]": {
         "header": {
           "open": true
         }
@@ -61,7 +41,7 @@
           "open": false
         }
       },
-      "Talon FX (v6)[1]": {
+      "Talon FX (v6)[3]": {
         "header": {
           "open": true
         }
@@ -94,8 +74,5 @@
         }
       }
     }
-  },
-  "NetworkTables Info": {
-    "visible": true
   }
 }
