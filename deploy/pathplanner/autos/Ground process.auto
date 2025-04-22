@@ -1,0 +1,81 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Process"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "algaeIntake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Processing"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "algaeEject"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Processoring"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "algaeIntake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Processed"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "algaeEject"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopDrivetrain"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

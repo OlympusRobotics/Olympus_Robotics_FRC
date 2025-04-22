@@ -1,0 +1,100 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Barge Location 1 to I"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "setAlgaeRemoverReadyPosition"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "sequential",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "setAlgaeRemoverPosition2"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "J-I to L-K"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "setAlgaeRemoverPosition1"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "L-K to A-B"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "setAlgaeRemoverReadyPosition"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "setAlgaeRemoverPosition2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "A-B to C-D"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "setAlgaeRemoverPosition1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Final"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
