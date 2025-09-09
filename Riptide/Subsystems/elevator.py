@@ -6,7 +6,6 @@ import wpimath.controller
 from commands2 import Subsystem
 import wpimath.trajectory
 from wpimath.trajectory import TrapezoidProfile
-
 def rpm2rps(rpm):
     return rpm / 60
 
@@ -29,10 +28,10 @@ class Elevator(Subsystem):
         brake = leaderConfig.setIdleMode(idleMode=rev.SparkMaxConfig.IdleMode.kBrake)
         limit = leaderConfig.smartCurrentLimit(30)
 
-        leaderConfig.closedLoop.pidf(0.043, 0.0, 0.022, 0.000053, rev.ClosedLoopSlot.kSlot0)
+        leaderConfig.closedLoop.pid(0.012, 0.0, 0.004, rev.ClosedLoopSlot.kSlot0)
         leaderConfig.closedLoop.outputRange(-1,1)
         leaderConfig.closedLoop.FeedbackSensor(rev.SparkMaxConfig().closedLoop.FeedbackSensor.kPrimaryEncoder)
-        leaderConfig.closedLoop.maxMotion.maxAcceleration(6000).maxVelocity(5000).allowedClosedLoopError(0.2)
+        leaderConfig.closedLoop.maxMotion.maxAcceleration(18000).maxVelocity(7000).allowedClosedLoopError(0.2)
 
         
         self.elevatorMoveMotor1.configure(leaderConfig, self.elevatorMoveMotor1.ResetMode.kResetSafeParameters, self.elevatorMoveMotor1.PersistMode.kPersistParameters)     
@@ -47,11 +46,11 @@ class Elevator(Subsystem):
 
         self.elevatorMoveMotor2.configure(followerConfig, self.elevatorMoveMotor2.ResetMode.kResetSafeParameters, self.elevatorMoveMotor2.PersistMode.kPersistParameters)
 
-        self.homePos = 0
-        self.intakePos = 33
-        self.L1Pos = 39
-        self.L2Pos = 55
-        self.L3Pos = 81
+        self.homePos = -41
+        self.intakePos = -10
+        self.L1Pos = 0
+        self.L2Pos = 20
+        self.L3Pos = 30
         super().__init__()
         
     def isTooHot(self):
@@ -89,3 +88,7 @@ class Elevator(Subsystem):
 
     def manualControl(self, input):        
         self.elevatorMoveMotor1.setVoltage(input)
+
+    def checkL1(self):
+        self.elevatorEncoder1.setPosition(0)
+        self.elevatorEncoder2.setPosition(0)

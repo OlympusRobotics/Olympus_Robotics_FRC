@@ -58,6 +58,7 @@ class MyRobot(commands2.TimedCommandRobot):
         self.algaeRemover = algaeRemover
 
         self.irSensor = wpilib.DigitalInput(1)
+        self.irSensor2 = wpilib.DigitalInput(3)
         CS.startAutomaticCapture()
 
         #leds
@@ -132,7 +133,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.setAlgaeIntakeFeedPosition),
             commands2.InstantCommand(self.algaeArm.intake),
             commands2.WaitCommand(1),
-            commands2.WaitUntilCommand(condition=self.algaeArm.algaeCheck),
+            commands2.WaitUntilCommand(condition=self.operatorController.getLeftBumperButtonReleased),
             commands2.WaitCommand(0.4),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor),
             commands2.InstantCommand(self.setAlgaeIntakeEjectPosition)
@@ -159,7 +160,8 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.WaitCommand(0.5),
             commands2.InstantCommand(self.elevator.flyWheelStop)
         )
-
+        self.elevator.elevatorEncoder1.setPosition(-41)
+        self.elevator.elevatorEncoder2.setPosition(-41)
 
         self.drivetrainStop = commands2.InstantCommand(self.drivetrain.stopDrivetrain)
 
@@ -203,7 +205,8 @@ class MyRobot(commands2.TimedCommandRobot):
         self.field.setRobotPose(self.drivetrain.odometry.getPose())
 
         wpilib.SmartDashboard.putBoolean("AprilTag Target", self.limelight.targetCheck())
-        wpilib.SmartDashboard.putBoolean("Coral loaded", self.coralCheck())
+        wpilib.SmartDashboard.putNumber("Elv Encoder", self.elevator.elevatorEncoder1.getPosition())
+        wpilib.SmartDashboard.putBoolean("ElevatorL1", self.ElevatorL1())
         wpilib.SmartDashboard.putString("Elevator Position", self.elevatorPosition)
         wpilib.SmartDashboard.putString("Algae Arm Position", self.algaeArmPosition)
         wpilib.SmartDashboard.putString("Algae Remover Position", self.algaeRemoverPosition)
@@ -241,7 +244,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def testInit(self) -> None:
         #self.algaeArm.setHomePosition()
         #self.algaeArm.setEjectPosition()
-        self.setAlgaeRemoverPosition1.schedule()
+        #self.setAlgaeRemoverPosition1.schedule()
         return super().testInit()
     
     def testPeriodic(self):
@@ -255,6 +258,7 @@ class MyRobot(commands2.TimedCommandRobot):
     
     def teleopInit(self):
         self.algaeArmPosition = "Home"
+        self.elevator.setL1()
         return super().teleopInit()
 
     def teleopPeriodic(self) -> None:        
@@ -263,6 +267,24 @@ class MyRobot(commands2.TimedCommandRobot):
         """
 
         #Driver Controls
+        if (self.operatorController.getPOV() == 0):
+            self.elevatorL3.schedule()
+            self.elevatorPosition = "L3"
+
+        if (self.operatorController.getPOV() == 90):
+            self.elevatorL2.schedule()
+            self.elevatorPosition = "L2"
+
+        if (self.operatorController.getPOV() == 180):
+            self.elevatorL1.schedule()
+            self.elevatorPosition = "L1"
+        
+        if (self.operatorController.getPOV() == 270):
+            self.elevator.setIntake()
+            self.elevatorPosition = "Intake"
+
+        
+
         if (self.driverController.getLeftBumperButton()):
             self.limelight.aprilTagPipelineLeft()
 
@@ -306,28 +328,17 @@ class MyRobot(commands2.TimedCommandRobot):
             self.drivetrain.reset()
 
         #Operator Controls
-
-        if (self.operatorController.getPOV() == 0):
-            self.elevatorL3.schedule()
-            self.elevatorPosition = "L3"
-
-        if (self.operatorController.getPOV() == 90):
-            self.elevatorL2.schedule()
-            self.elevatorPosition = "L2"
-
-        if (self.operatorController.getPOV() == 180):
-            self.elevatorL1.schedule()
-            self.elevatorPosition = "L1"
-        
-        if (self.operatorController.getPOV() == 270):
-            self.elevator.setIntake()
-            self.elevatorPosition = "Intake"
+        if (self.irSensor2.get()):
+            if (-1> self.elevator.elevatorEncoder1.getPosition() or self.elevator.elevatorEncoder1.getPosition() > 1):
+                self.elevator.elevatorEncoder1.setPosition(0)
+            return
 
         if (self.operatorController.getRightTriggerAxis() > 0.7):
             self.coralIntake.schedule()
 
         if (self.operatorController.getStartButton()):
             self.setAlgaeRemoverHomePosition.schedule()
+            self.elevatorPosition = "Home"
             
         if (self.operatorController.getBackButton()):
             self.elevator.setHome()
@@ -437,5 +448,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def coralCheck(self):
         return not self.irSensor.get()
+    def ElevatorL1(self):
+        return self.irSensor2.get()
 
         
