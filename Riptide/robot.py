@@ -210,6 +210,7 @@ class MyRobot(commands2.TimedCommandRobot):
         wpilib.SmartDashboard.putString("Elevator Position", self.elevatorPosition)
         wpilib.SmartDashboard.putString("Algae Arm Position", self.algaeArmPosition)
         wpilib.SmartDashboard.putString("Algae Remover Position", self.algaeRemoverPosition)
+
         
         self.getBatteryVoltage()
        
