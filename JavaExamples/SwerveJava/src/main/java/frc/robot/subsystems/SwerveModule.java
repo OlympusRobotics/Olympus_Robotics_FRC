@@ -59,7 +59,7 @@ public class SwerveModule extends SubsystemBase {
         double RotationEncoderOffset) {
         m_driveMotor = new TalonFX(DriveMotorID);
         m_rotationMotor = new SparkMax(RotationMotorID, MotorType.kBrushless);
-        m_rotationEncoder = new AnalogEncoder(RotationEncoderID, 0, RotationEncoderOffset);
+        m_rotationEncoder = new AnalogEncoder(RotationEncoderID, 1, RotationEncoderOffset);
 
         /* 
          * Drive Motor Configuration
@@ -132,7 +132,7 @@ public class SwerveModule extends SubsystemBase {
 
         double rotationOutput = m_rotationPIDController.calculate(enc2Rad(m_rotationEncoder.get()), newState.angle.getRadians());
 
-        m_driveMotor.setVoltage((newState.speedMetersPerSecond / RobotConstants.kMaxModuleSpeed) / RobotConstants.kMaxVoltage);
+        m_driveMotor.setVoltage((newState.speedMetersPerSecond / RobotConstants.kMaxModuleSpeed) * RobotConstants.kMaxVoltage);
         m_rotationMotor.set(rotationOutput);
 
     }

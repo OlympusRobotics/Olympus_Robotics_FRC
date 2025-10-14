@@ -97,7 +97,8 @@ public class Drivetrain extends SubsystemBase{
     //resets the robot pose. It's handy for if the driver needs to reorientate the robot.
     public void resetPose(){
         m_gyro.setYaw(0.0);
-        m_odometry = new SwerveDriveOdometry(m_kinematics,
+        m_odometry.resetPose(getPose());
+       /*  m_odometry = new SwerveDriveOdometry(m_kinematics,
         new Rotation2d(),
         new SwerveModulePosition[] {
             m_flSM.getPosition(),
@@ -105,7 +106,7 @@ public class Drivetrain extends SubsystemBase{
             m_blSM.getPosition(),
             m_brSM.getPosition()
         }
-        );
+        ); */
     }
 
     /* 
