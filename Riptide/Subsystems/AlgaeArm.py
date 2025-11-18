@@ -74,7 +74,7 @@ class algaeArm(commands2.Subsystem):
         """ 
         This runs the motor at 35% full speed to intake the algae.
         """
-        self.intakeMotor.set(.45)
+        self.intakeMotor.set(.6)
         
     def stopIntakeMotor(self):
         """ 

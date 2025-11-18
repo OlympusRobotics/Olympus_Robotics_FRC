@@ -134,7 +134,7 @@ class MyRobot(commands2.TimedCommandRobot):
             commands2.InstantCommand(self.algaeArm.intake),
             commands2.WaitCommand(1),
             commands2.WaitUntilCommand(condition=self.operatorController.getLeftBumperButtonReleased),
-            commands2.WaitCommand(0.4),
+            #commands2.WaitCommand(0.4),
             commands2.InstantCommand(self.algaeArm.stopIntakeMotor),
             commands2.InstantCommand(self.setAlgaeIntakeEjectPosition)
         )
@@ -330,7 +330,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
         #Operator Controls
         if (self.irSensor2.get()):
-            if (-1> self.elevator.elevatorEncoder1.getPosition() or self.elevator.elevatorEncoder1.getPosition() > 1):
+            if (-.1> self.elevator.elevatorEncoder1.getPosition() or self.elevator.elevatorEncoder1.getPosition() > .1):
                 self.elevator.elevatorEncoder1.setPosition(0)
             return
 
@@ -353,6 +353,9 @@ class MyRobot(commands2.TimedCommandRobot):
                    
         if (self.operatorController.getRightY() > 0.75):
             self.setAlgaeRemoverPosition1.schedule()
+
+        if (self.operatorController.getXButton()):
+            self.setAlgaeRemoverHomePosition.schedule()
 
         """ if (self.operatorController.getAButton()):
             self.setAlgaeIntakeFeedPosition()
