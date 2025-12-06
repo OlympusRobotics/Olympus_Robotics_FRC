@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.RobotConstants;
 import frc.robot.subsystems.Drivetrain;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -31,12 +32,12 @@ public class RobotContainer {
     m_drivetrain.setDefaultCommand(
       new RunCommand(() -> {
         double forwardVal = applyDeadband(-m_driverController.getLeftY()); // Negate to match joystick direction
-        double strafeVal = applyDeadband(m_driverController.getLeftX());
+        double strafeVal = applyDeadband(-m_driverController.getLeftX());
         double rotationVal = applyDeadband(m_driverController.getRightX());
 
         if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0) {
           ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            forwardVal, strafeVal, rotationVal,
+            forwardVal*4.1, strafeVal*4.1, rotationVal*4.1,
             m_drivetrain.getRobotRotation()
           );
           m_drivetrain.drive(speeds);
@@ -58,7 +59,7 @@ public class RobotContainer {
    * joysticks}.
    */
   private double applyDeadband(double value) {
-    if (Math.abs(value) < 0.08) {
+    if (Math.abs(value) < 0.1) {
       return 0;
     }
     return value;

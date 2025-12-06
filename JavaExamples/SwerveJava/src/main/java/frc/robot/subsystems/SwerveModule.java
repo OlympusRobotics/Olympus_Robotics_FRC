@@ -78,13 +78,12 @@ public class SwerveModule extends SubsystemBase {
         rotationConfig
             .smartCurrentLimit(40)
             .idleMode(IdleMode.kBrake)
-            .inverted(true);
+            .inverted(false);
 
         m_driveMotor.getConfigurator().apply(driveConfig);
         m_rotationMotor.configure(rotationConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         
 
-        m_rotationPIDController.enableContinuousInput(-Math.PI, Math.PI);        
     }
 
     /* 
@@ -95,6 +94,8 @@ public class SwerveModule extends SubsystemBase {
      */
     public void setPIDValues(double kP, double kI, double kD) { 
         m_rotationPIDController.setPID(kP, kI, kD);
+        m_rotationPIDController.enableContinuousInput(-Math.PI, Math.PI);        
+        m_rotationPIDController.setSetpoint(0.0);
     }
 
     /* 
