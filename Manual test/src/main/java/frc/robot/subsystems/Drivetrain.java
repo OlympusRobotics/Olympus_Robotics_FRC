@@ -52,7 +52,7 @@ public class Drivetrain extends SubsystemBase{
         RobotConstants.kBackRightEncoderOffset
         );
 
-    public final Pigeon2 Gyro = new Pigeon2(RobotConstants.kGyroID);
+    static public final Pigeon2 Gyro = new Pigeon2(RobotConstants.kGyroID);
     private final SwerveDriveOdometry m_odometry;
 
     Translation2d m_frontLeftLocation = new Translation2d(0.5334, 0.5334);
@@ -138,7 +138,7 @@ public class Drivetrain extends SubsystemBase{
         drive(xSpeed, ySpeed, rot, false);
     }
 
-    public Rotation2d getRobotRotation(){
+    static public Rotation2d getRobotRotation(){
         return Gyro.getRotation2d();
     }
 

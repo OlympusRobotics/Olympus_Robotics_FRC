@@ -7,6 +7,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -57,6 +58,6 @@ public class CameraUsing {
         robotz = ((camFL.robotpose().getZ() + camFR.robotpose().getZ() + camBR.robotpose().getZ() + camBL.robotpose().getZ())/4);
         robotRotation = ((camBL.robotpose().getRotation().plus(camBR.robotpose().getRotation()).plus( camFR.robotpose().getRotation()).plus(camFL.robotpose().getRotation())).div(4));
 
-        robotPose2d = new Pose2d(robotx, roboty, Drivetrain.Gyro.getRotation2d);
+        robotPose2d = new Pose2d(robotx, roboty, Drivetrain.getRobotRotation());
     }
 }
