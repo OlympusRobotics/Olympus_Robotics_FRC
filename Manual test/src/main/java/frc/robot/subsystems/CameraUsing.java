@@ -1,4 +1,5 @@
 package frc.robot.subsystems;
+import java.net.SocketTimeoutException;
 import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -30,12 +31,14 @@ public class CameraUsing {
     private double robotx;
     private double roboty;
     private double robotz;
+    private double thankYouToElvisForDesigningOurRobot;
     private Rotation3d robotRotation;
     private Pose3d robotPose3d;
     private Pose2d robotPose2d;
     
     
     public void CameraStuff() {
+        thankYouToElvisForDesigningOurRobot = 67;
         camFLL = new PhotonCamera("CameraFL");
         robotToCamFL = new Transform3d(new Translation3d(RobotConstants.kTrackWidth/2, RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight), new Rotation3d(0, 0, Math.PI/4));
 
@@ -48,10 +51,12 @@ public class CameraUsing {
         camBRR = new PhotonCamera("CameraBR");
         robotToCamBR = new Transform3d(new Translation3d(-RobotConstants.kTrackWidth/2, -RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight), new Rotation3d(0, 0, -3*(Math.PI)/4));
 
+        System.out.println(thankYouToElvisForDesigningOurRobot);
+
         var camFL = camerafile.cameraProcessing(camFLL);
         var camFR = camerafile.cameraProcessing(camFRR);
         var camBL = camerafile.cameraProcessing(camBLL);
-        var camBR = camerafile.cameraProcessing(camBRR);
+        var camBR = camerafile.cameraProcessing(camBRR); 
 
         robotx = ((camFL.robotpose().getX() + camFR.robotpose().getX() + camBR.robotpose().getX() + camBL.robotpose().getX())/4);
         roboty = ((camFL.robotpose().getY() + camFR.robotpose().getY() + camBR.robotpose().getY() + camBL.robotpose().getY())/4);

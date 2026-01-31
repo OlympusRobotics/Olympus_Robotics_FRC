@@ -29,16 +29,16 @@ public final class Constants {
 
     //Swerve Drive Rotation Encoder ports and offsets
     public static final int kFrontLeftEncoderID = 0;
-    public static final double kFrontLeftEncoderOffset = 0.092;
+    public static final double kFrontLeftEncoderOffset = 0.542;
 
     public static final int kFrontRightEncoderID = 1;
-    public static final double kFrontRightEncoderOffset = 0.371;
+    public static final double kFrontRightEncoderOffset = 0.206;
 
     public static final int kBackLeftEncoderID = 2;
-    public static final double kBackLeftEncoderOffset = 0.013;
+    public static final double kBackLeftEncoderOffset = 0.443;
 
     public static final int kBackRightEncoderID = 3;
-    public static final double kBackRightEncoderOffset = 0.813;
+    public static final double kBackRightEncoderOffset = 0.565;
 
     //Gyro ID
     public static final int kGyroID = 9;
