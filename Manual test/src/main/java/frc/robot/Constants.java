@@ -1,11 +1,5 @@
 package frc.robot;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-
 public final class Constants {
   public static class OperatorConstants {
     //Controller Ports

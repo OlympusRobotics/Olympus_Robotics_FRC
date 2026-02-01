@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-//import java.util.Optional;
-
 import com.ctre.phoenix6.hardware.Pigeon2;
 //import com.ctre.phoenix6.swerve.utility.WheelForceCalculator.Feedforwards;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -16,10 +14,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
-//import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
-//import frc.robot.RobotContainer;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 public class Drivetrain extends SubsystemBase{
@@ -138,7 +134,7 @@ public class Drivetrain extends SubsystemBase{
         drive(xSpeed, ySpeed, rot, false);
     }
 
-    static public Rotation2d getRobotRotation(){
+    public Rotation2d getRobotRotation(){
         return Gyro.getRotation2d();
     }
 

@@ -1,18 +1,12 @@
 package frc.robot.subsystems;
 
 import java.util.List;
-import java.util.Optional;
-
-import javax.imageio.stream.FileCacheImageInputStream;
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
-
-import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -23,7 +17,6 @@ import frc.robot.Constants;
 
 public class Camera {
     private PhotonPipelineResult result;
-    private boolean hasTargets;
     private List<PhotonTrackedTarget> targets;
     private PhotonTrackedTarget rightmostTarget;
     private double targetYaw;
@@ -47,10 +40,10 @@ public class Camera {
     private PhotonPoseEstimator estimatorerorer;
 
     public record datatatatata(Transform3d pose, AprilTagFieldLayout aprilTagFieldLayout, double targetYaw, double targetPitch, double targetArea,
-    Transform3d alternatePose, double dumbdistance, Pose3d robotpose, Translation2d translation2d, PhotonPoseEstimator estimatorerorer) {}
+    Transform3d alternatePose, double dumbdistance, Pose3d robotpose, Translation2d translation2d, PhotonPoseEstimator estimatorerorer, PhotonPipelineResult result) {}
     
     public datatatatata datata(double dumbdistance2) {
-            return new datatatatata(pose, aprilTagFieldLayout, dumbdistance2, dumbdistance2, dumbdistance2, alternatePose, dumbdistance2, robotpose, translation2d, estimatorerorer);
+            return new datatatatata(pose, aprilTagFieldLayout, dumbdistance2, dumbdistance2, dumbdistance2, alternatePose, dumbdistance2, robotpose, translation2d, estimatorerorer, result);
         }
 
     public datatatatata cameraProcessing(PhotonCamera camera) {
@@ -61,7 +54,7 @@ public class Camera {
         //get information about currently detected targets
 
         //returns data if there are targets
-        if (hasTargets){
+        if (result.hasTargets()){
             //obtains a list of tracked targets from the result
             targets = result.getTargets();
             rightmostTarget = result.getBestTarget();
@@ -98,12 +91,12 @@ public class Camera {
 
         //This gets the distance and rotation from the target
         translation2d = PhotonUtils.estimateCameraToTargetTranslation(dumbdistance, rotation2d);
-        return new datatatatata(pose, aprilTagFieldLayout, targetYaw, targetPitch, targetArea, alternatePose, dumbdistance, robotpose, translation2d, estimatorerorer);
+        return new datatatatata(pose, aprilTagFieldLayout, targetYaw, targetPitch, targetArea, alternatePose, dumbdistance, robotpose, translation2d, estimatorerorer, result);
         }
     
 
     //supposedly returns null maybe probably
-    return new datatatatata(pose, aprilTagFieldLayout, targetYaw, targetPitch, targetArea, alternatePose, dumbdistance, robotpose, translation2d, estimatorerorer);      
+    return new datatatatata(pose, aprilTagFieldLayout, targetYaw, targetPitch, targetArea, alternatePose, dumbdistance, robotpose, translation2d, estimatorerorer, result);      
 }
 
 

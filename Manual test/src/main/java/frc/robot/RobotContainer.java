@@ -27,14 +27,13 @@ public class RobotContainer {
         double strafeVal = applyDeadband(-m_driverController.getLeftX());
         double rotationVal = applyDeadband(m_driverController.getRightX());
 
-        boolean targetvisible = false;
 
         if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0) {
           ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             forwardVal*4.1, strafeVal*4.1, rotationVal*4.1,
             m_drivetrain.getRobotRotation()
           );
-          m_drivetrain.drive(forwardVal, strafeVal, rotationVal, true);
+          m_drivetrain.drive(forwardVal*4.1, strafeVal*4.1, rotationVal*4.1, true);
         } else {
           m_drivetrain.stopmotors();
         }
