@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -68,9 +69,9 @@ public class Drivetrain extends SubsystemBase{
         RobotConfig config;
     try{
       config = RobotConfig.fromGUISettings();
-    } catch (Exception e) {
+    } catch (Exception except) {
       // Handle exception as needed
-      e.printStackTrace();
+      except.printStackTrace();
     }
 
         flSM.RotPID(RobotConstants.kFrontLeftP, RobotConstants.kFrontLeftI, RobotConstants.kFrontLeftD);
@@ -143,7 +144,7 @@ public class Drivetrain extends SubsystemBase{
     }
 
     public void updateOdometry(){
-        m_odometry.update(
+        Pose2d updated_odometry = m_odometry.update(
             Gyro.getRotation2d(),
             new SwerveModulePosition[] {
                 flSM.getPosition(),
@@ -152,6 +153,9 @@ public class Drivetrain extends SubsystemBase{
                 brSM.getPosition()
             }
         );
+        if (updated_odometry != CameraUsing.robotPose2d && CameraUsing.robotPose2d != new Pose2d()) {
+            m_odometry.resetPose(CameraUsing.robotPose2d);
+        }
     }
 
     public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {

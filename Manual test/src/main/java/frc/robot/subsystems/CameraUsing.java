@@ -25,9 +25,9 @@ public class CameraUsing {
     private double robotz;
     private double thankYouToElvisForDesigningOurRobotChassis;
     private Rotation3d robotRotation3d;
-    private Rotation2d robotRotation2d;
+    public static Rotation2d robotRotation2d;
     private Pose3d robotPose3d;
-    private Pose2d robotPose2d;
+    public static Pose2d robotPose2d;
     
     
     public void CameraStuff() {
@@ -52,17 +52,19 @@ public class CameraUsing {
         var camBR = camerafile.cameraProcessing(camBRR); 
 
         //averages values, should exclude a value if it is null
-        robotx = ((camFL.robotpose().getX() + camFR.robotpose().getX() + camBR.robotpose().getX() + camBL.robotpose().getX())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
-        roboty = ((camFL.robotpose().getY() + camFR.robotpose().getY() + camBR.robotpose().getY() + camBL.robotpose().getY())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
-        robotz = ((camFL.robotpose().getZ() + camFR.robotpose().getZ() + camBR.robotpose().getZ() + camBL.robotpose().getZ())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+        if (hastargets(camBL) + hastargets(camBR) + hastargets(camFL) + hastargets(camFR) != 0) {
+            robotx = ((camFL.robotpose().getX() + camFR.robotpose().getX() + camBR.robotpose().getX() + camBL.robotpose().getX())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+            roboty = ((camFL.robotpose().getY() + camFR.robotpose().getY() + camBR.robotpose().getY() + camBL.robotpose().getY())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+            robotz = ((camFL.robotpose().getZ() + camFR.robotpose().getZ() + camBR.robotpose().getZ() + camBL.robotpose().getZ())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
 
-        //same thing as above without converting to doubles
-        robotRotation3d = ((camBL.robotpose().getRotation().plus(camBR.robotpose().getRotation()).plus( camFR.robotpose().getRotation()).plus(camFL.robotpose().getRotation())).div(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
-        robotRotation2d = robotRotation3d.toRotation2d();
+            //same thing as above without converting to doubles
+            robotRotation3d = ((camBL.robotpose().getRotation().plus(camBR.robotpose().getRotation()).plus( camFR.robotpose().getRotation()).plus(camFL.robotpose().getRotation())).div(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+            robotRotation2d = robotRotation3d.toRotation2d();
 
-        //made both in case we need both or somebody takes insporation but wants the one we aren't using
-        robotPose2d = new Pose2d(robotx, roboty, robotRotation2d);
-        robotPose3d = new Pose3d(robotx, roboty, robotz, robotRotation3d);
+            //made both in case we need both or somebody takes insporation but wants the one we aren't using
+            robotPose2d = new Pose2d(robotx, roboty, robotRotation2d);
+            robotPose3d = new Pose3d(robotx, roboty, robotz, robotRotation3d);
+        }
     }
     public int hastargets(datatatatata camera) {
         if (camera.result().hasTargets()) {
