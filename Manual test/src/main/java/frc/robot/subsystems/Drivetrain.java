@@ -115,6 +115,16 @@ public class Drivetrain extends SubsystemBase{
     // );
   }
 
+    public static boolean getAlliance() {
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red;
+        }
+        else {
+            //assume blue
+            return false;
+        }
+    }
 
     public void resetPose(Pose2d newpose){
         m_odometry.resetPosition(Gyro.getRotation2d(), new SwerveModulePosition[] {
