@@ -4,16 +4,13 @@
 
 package frc.robot.subsystems;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Climber extends SubsystemBase {
 
-  final TalonFX m_Climber;
-  RelativeEncoder lClimberRotEnc;
-  RelativeEncoder rClimberRotEnc;
+  final TalonFX m_Climber; // One climber motor for now
   private final PIDController m_ClimberController = new PIDController(0.7, 0, 0);
 
   // Neo PID constants
