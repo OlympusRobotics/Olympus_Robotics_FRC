@@ -84,7 +84,14 @@ public final class Constants {
     public static final double kRobotlength = 0.6604;
     public static final double kCameraHeight = .2;
 
+    //Turret aiming pid
+    public static final double kTurretRotationP = 0;
+    public static final double kTurretRotationI = 0;
+    public static final double kTurretRotationD = 0;
 
+    public static final double kTurretHeightP = 0;
+    public static final double kTurretHeightI = 0;
+    public static final double kTurretHeightD = 0;
       
 
   }

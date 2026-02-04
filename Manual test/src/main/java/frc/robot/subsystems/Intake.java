@@ -16,16 +16,18 @@ public class Intake extends SubsystemBase {
 
   private final TalonFX m_inkMot, m_indexer;
 
+  // setting positions
   final double notActivatedPos = 0.0;
   final double ActivatedPos = 6.9;
 
+  // setting speed
   final double gearRatio = 6.7;
   final double wheelCircumference = 67;
   final double speed = (gearRatio * 4.5) / wheelCircumference;
 
   public Intake() {
 
-
+    // defining + configuring motors
     m_inkMot = new TalonFX(11);
     m_indexer = new TalonFX(12);
     TalonFXConfiguration intakeOneConf = new TalonFXConfiguration();
@@ -48,14 +50,18 @@ public class Intake extends SubsystemBase {
 
     
   }
-
-  public void startIntake(Double speed, Double ActivatedPos) {
+  // turns indexer on and sends intake out
+  public void startIntake() {
     m_inkMot.setPosition(ActivatedPos);
     m_indexer.set(speed);
   }
-  public void endIntake(Double speed, Double notActivatedPos) {
+  
+  // stops indexer and returns intake to original position
+  public void endIntake() {
     m_indexer.stopMotor();
     m_inkMot.setPosition(notActivatedPos);
   }
+
+  // gets the motor bc idk
   public TalonFX getTalon() {return m_inkMot;}
 }

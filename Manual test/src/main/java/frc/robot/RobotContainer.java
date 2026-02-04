@@ -29,7 +29,7 @@ public class RobotContainer {
 
 
         if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0) {
-          ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+          Drivetrain.chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             forwardVal*4.1, strafeVal*4.1, rotationVal*4.1,
             m_drivetrain.getRobotRotation()
           );

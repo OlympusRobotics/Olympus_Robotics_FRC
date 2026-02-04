@@ -26,7 +26,7 @@ public class CameraUsing {
     private double thankYouToElvisForDesigningOurRobotChassis;
     private Rotation3d robotRotation3d;
     public static Rotation2d robotRotation2d;
-    private Pose3d robotPose3d;
+    public static Pose3d robotPose3d;
     public static Pose2d robotPose2d;
     
     
