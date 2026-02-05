@@ -93,6 +93,10 @@ public final class Constants {
     public static final double kTurretHeightI = 0;
     public static final double kTurretHeightD = 0;
       
+    //Intake PID
+    public static final double kIntakeP = 0;
+    public static final double kIntakeI = 0;
+    public static final double kIntakeD = 0;
 
   }
 }

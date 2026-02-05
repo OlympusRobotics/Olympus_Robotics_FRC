@@ -51,14 +51,21 @@ public class CameraUsing {
         var camBL = camerafile.cameraProcessing(camBLL);
         var camBR = camerafile.cameraProcessing(camBRR); 
 
-        //averages values, should exclude a value if it is null
+        //averages values, should exclude a value if it is null.
+        //If this does not work well, add above unused translation3d variables to center the position
+        //instead of assuming the average is the center
         if (hastargets(camBL) + hastargets(camBR) + hastargets(camFL) + hastargets(camFR) != 0) {
-            robotx = ((camFL.robotpose().getX() + camFR.robotpose().getX() + camBR.robotpose().getX() + camBL.robotpose().getX())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
-            roboty = ((camFL.robotpose().getY() + camFR.robotpose().getY() + camBR.robotpose().getY() + camBL.robotpose().getY())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
-            robotz = ((camFL.robotpose().getZ() + camFR.robotpose().getZ() + camBR.robotpose().getZ() + camBL.robotpose().getZ())/(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+            robotx = ((camFL.robotpose().getX() + camFR.robotpose().getX() + camBR.robotpose().getX() + camBL.robotpose().getX())
+            / (hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+            roboty = ((camFL.robotpose().getY() + camFR.robotpose().getY() + camBR.robotpose().getY() + camBL.robotpose().getY())
+            / (hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+            robotz = ((camFL.robotpose().getZ() + camFR.robotpose().getZ() + camBR.robotpose().getZ() + camBL.robotpose().getZ())
+            / (hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
 
             //same thing as above without converting to doubles
-            robotRotation3d = ((camBL.robotpose().getRotation().plus(camBR.robotpose().getRotation()).plus( camFR.robotpose().getRotation()).plus(camFL.robotpose().getRotation())).div(hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+            robotRotation3d = ((camBL.robotpose().getRotation().plus(camBR.robotpose().getRotation()).plus
+            (camFR.robotpose().getRotation()).plus(camFL.robotpose().getRotation())).div(hastargets(camFL) + hastargets(camFR)
+            + hastargets(camBL) + hastargets(camBR)));
             robotRotation2d = robotRotation3d.toRotation2d();
 
             //made both in case we need both or somebody takes insporation but wants the one we aren't using

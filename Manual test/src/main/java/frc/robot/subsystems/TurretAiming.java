@@ -134,4 +134,7 @@ public class TurretAiming {
         ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * Math.pow(kmaxVelocity, 4)))))) / 
         (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2))));
     }
+    public void shoot(){
+        flywheelMotor.set(kmaxVelocity);
+    }
 }
