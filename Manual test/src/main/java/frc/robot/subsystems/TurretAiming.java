@@ -14,25 +14,44 @@ public class TurretAiming {
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity;
     private TalonFX rotationMotor, heightMotor, flywheelMotor;
     private PIDController controller, controller2;
+    private TalonFXConfiguration rotationConfigs, heightConfigs;
 
     public void turretingIt() {
         roboticPose = CameraUsing.robotPose2d;
         rotationMotor = new TalonFX(69);
         heightMotor = new TalonFX(41);
         flywheelMotor = new TalonFX(420);
-        TalonFXConfiguration turretConfigs = new TalonFXConfiguration();
+        rotationConfigs = new TalonFXConfiguration();
+        heightConfigs = new TalonFXConfiguration();
         turretHeight = .508; 
         kmaxVelocity = 4.71;
 
-        turretConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        turretConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
-        turretConfigs.CurrentLimits.withStatorCurrentLimit(40);
-        turretConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
-        turretConfigs.serialize();
-        rotationMotor.getConfigurator().apply(turretConfigs);
-        heightMotor.getConfigurator().apply(turretConfigs);
-        flywheelMotor.getConfigurator().apply(turretConfigs);
+        //basic motor configurations
+        rotationConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+        rotationConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        //current limits
+        rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
+        rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
+        //motor limits
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2000/2 - 10;
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 2000/2 - 10;
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        //save
+        rotationConfigs.serialize();
+        //apply
+        rotationMotor.getConfigurator().apply(rotationConfigs);
 
+        heightConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
+        heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
+        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2000/360 * 90;
+        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 2000/360 * 90;
+        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        heightMotor.getConfigurator().apply(heightConfigs);
+        
         targetx = (targetpose().getX() - roboticPose.getX()); 
         targety = (targetpose().getY() - roboticPose.getY());
         targetAngle = (Math.atan(targety/targetx));
