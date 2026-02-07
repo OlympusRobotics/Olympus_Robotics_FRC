@@ -37,7 +37,7 @@ public class Swerve extends SubsystemBase{
     rotConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     rotConfig.CurrentLimits.StatorCurrentLimit = RobotConstants.kRotCurrentStatorLimit;
     RotMotor.getConfigurator().apply(rotConfig);
-
+    
     driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;

@@ -16,13 +16,15 @@ public class Robot extends TimedRobot {
   private Field2d field;
   public Robot() {
     field = new Field2d();
+    final RobotContainer faa = new RobotContainer();
+    faa.configureBindings();
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
     SmartDashboard.putData("field", field);
-    field.setRobotPose(CameraUsing.robotPose2d);
+    //field.setRobotPose(CameraUsing.robotPose2d);
   }
 
   @Override

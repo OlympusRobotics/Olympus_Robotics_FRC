@@ -135,7 +135,10 @@ public class Drivetrain extends SubsystemBase{
                 brSM.getPosition()
             }, newpose);
         }
-    
+        public void resetYaw(){
+            Gyro.setYaw(0);
+        }
+
         public Pose2d getPose(){
             return m_odometry.getPoseMeters();
         }
