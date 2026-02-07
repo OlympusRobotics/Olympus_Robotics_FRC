@@ -1,6 +1,6 @@
 # Olympus Robotics 4982
 
-![Olympus Logo](./funnyLogo.png)
+<img src="./funnyLogo.png" width="500" alt="Olympus Logo"/>
 
 ## Purpose
 Github repo for code and documentation for FRC team 4982.
