@@ -2,13 +2,16 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.robot.Constants.RobotConstants;;
 
-public class TurretAiming {
+public class TurretAiming extends SubsystemBase{
     private Pose2d roboticPose;
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity;
@@ -18,13 +21,16 @@ public class TurretAiming {
 
     public void turretingIt() {
         roboticPose = CameraUsing.robotPose2d;
-        rotationMotor = new TalonFX(69);
-        heightMotor = new TalonFX(41);
-        flywheelMotor = new TalonFX(420);
+        rotationMotor = new TalonFX(13);
+        heightMotor = new TalonFX(14);
+        flywheelMotor = new TalonFX(15);
         rotationConfigs = new TalonFXConfiguration();
         heightConfigs = new TalonFXConfiguration();
         turretHeight = .508; 
         kmaxVelocity = 4.71;
+
+        controller = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+        controller2 = new PIDController(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
 
         //basic motor configurations
         rotationConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
@@ -122,8 +128,8 @@ public class TurretAiming {
 
     //moves the turret to the wanted spots
     public void targetAim(){
-        controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
-        controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
+        //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+        //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
         rotationMotor.set(controller.calculate(rotationMotor.get(), (2000/360) * vectorCalculations()));
         heightMotor.set(controller2.calculate(heightMotor.get(), (2000/360) * maxFormula()));
     }
@@ -136,5 +142,15 @@ public class TurretAiming {
     }
     public void shoot(){
         flywheelMotor.set(kmaxVelocity);
+    }
+    public void lockTurret(){
+        //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+        //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
+        rotationMotor.set(controller.calculate(rotationMotor.get(), 0));
+        heightMotor.set(controller2.calculate(heightMotor.get(), 25));
+    }
+    public void stopMotors(){
+        rotationMotor.set(0);
+        heightMotor.set(0);
     }
 }

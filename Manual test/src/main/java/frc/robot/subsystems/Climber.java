@@ -23,7 +23,7 @@ public class Climber extends SubsystemBase {
   /** Wow its the climber */
   public Climber() {
 
-    m_Climber = new TalonFX(20);
+    m_Climber = new TalonFX(10);
 
     // set PID constants
     m_ClimberController.setPID(kP, kI, kD);
