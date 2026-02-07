@@ -18,3 +18,5 @@ Github repo for code and documentation for FRC team 4982.
  Perry - 2024 season
 
  Riptide - 2025 season
+
+ Manual Test - 2026 season
