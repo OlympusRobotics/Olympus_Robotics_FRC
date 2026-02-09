@@ -1,6 +1,9 @@
 package frc.robot.subsystems;
+
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -33,16 +36,20 @@ public class CameraUsing {
     public void CameraStuff() {
         thankYouToElvisForDesigningOurRobotChassis = 67;
         camFLL = new PhotonCamera("CameraFL");
-        robotToCamFL = new Transform3d(new Translation3d(RobotConstants.kTrackWidth/2, RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight), new Rotation3d(0, 0, Math.PI/4));
+        robotToCamFL = new Transform3d(new Translation3d(RobotConstants.kTrackWidth/2, RobotConstants.kRobotlength/2, 
+        RobotConstants.kCameraHeight), new Rotation3d(0, 0, Math.PI/4));
 
         camFRR = new PhotonCamera("CameraFR");
-        robotToCamFR = new Transform3d(new Translation3d(-RobotConstants.kTrackWidth/2, RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight), new Rotation3d(0, 0, -Math.PI/4));
+        robotToCamFR = new Transform3d(new Translation3d(-RobotConstants.kTrackWidth/2, RobotConstants.kRobotlength/2, 
+        RobotConstants.kCameraHeight), new Rotation3d(0, 0, -Math.PI/4));
 
         camBLL = new PhotonCamera("CameraBL");
-        robotToCamBL = new Transform3d(new Translation3d(RobotConstants.kTrackWidth/2, -RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight), new Rotation3d(0, 0, 3*(Math.PI)/4));
+        robotToCamBL = new Transform3d(new Translation3d(RobotConstants.kTrackWidth/2, -RobotConstants.kRobotlength/2, 
+        RobotConstants.kCameraHeight), new Rotation3d(0, 0, 3*(Math.PI)/4));
 
         camBRR = new PhotonCamera("CameraBR");
-        robotToCamBR = new Transform3d(new Translation3d(-RobotConstants.kTrackWidth/2, -RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight), new Rotation3d(0, 0, -3*(Math.PI)/4));
+        robotToCamBR = new Transform3d(new Translation3d(-RobotConstants.kTrackWidth/2, -RobotConstants.kRobotlength/2, 
+        RobotConstants.kCameraHeight), new Rotation3d(0, 0, -3*(Math.PI)/4));
 
         //System.out.println(thankYouToElvisForDesigningOurRobotChassis);
 
@@ -55,18 +62,47 @@ public class CameraUsing {
         //If this does not work well, add above unused translation3d variables to center the position
         //instead of assuming the average is the center
         if (hastargets(camBL) + hastargets(camBR) + hastargets(camFL) + hastargets(camFR) != 0) {
-            robotx = ((camFL.robotpose().getX() + camFR.robotpose().getX() + camBR.robotpose().getX() + camBL.robotpose().getX())
-            / (hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
-            roboty = ((camFL.robotpose().getY() + camFR.robotpose().getY() + camBR.robotpose().getY() + camBL.robotpose().getY())
-            / (hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
-            robotz = ((camFL.robotpose().getZ() + camFR.robotpose().getZ() + camBR.robotpose().getZ() + camBL.robotpose().getZ())
+
+            //map a to b, 2d array
+            final Map<Camera.datatatatata, Transform3d> stuff = Map.of(
+                camBL, robotToCamBL,
+                camBR, robotToCamBR,
+                camFL, robotToCamFL,
+                camFR, robotToCamFR
+            );
+
+            //lists of each x and y
+            //Back Left, Back Right, Front Left, Front Right respectively
+            List<Double> exs = new ArrayList<>();
+            List<Double> ys = new ArrayList<>();
+
+            //for each camera within all of the values            
+            for (Map.Entry<Camera.datatatatata, Transform3d> entry : stuff.entrySet()) {
+                Camera.datatatatata cam = entry.getKey();
+                Transform3d trans = entry.getValue();
+
+                exs.add(cam.robotpose().getX() - (hastargets(cam) == 1
+                ? trans.getX()
+                : 0));
+                ys.add(cam.robotpose().getY() - (hastargets(cam) == 1
+                ? trans.getY()
+                : 0));
+            }
+
+            //the actual averaging code
+            robotx = ((exs.get(0) + exs.get(1) + exs.get(2) +exs.get(3)) 
             / (hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
 
-            //same thing as above without converting to doubles
+            roboty = ((ys.get(0) + ys.get(1) + ys.get(2) + ys.get(3)) 
+            / (hastargets(camFL) + hastargets(camFR) + hastargets(camBL) + hastargets(camBR)));
+
             robotRotation3d = ((camBL.robotpose().getRotation().plus(camBR.robotpose().getRotation()).plus
             (camFR.robotpose().getRotation()).plus(camFL.robotpose().getRotation())).div(hastargets(camFL) + hastargets(camFR)
             + hastargets(camBL) + hastargets(camBR)));
+
             robotRotation2d = robotRotation3d.toRotation2d();
+
+
 
             //made both in case we need both or somebody takes insporation but wants the one we aren't using
             robotPose2d = new Pose2d(robotx, roboty, robotRotation2d);
@@ -81,5 +117,14 @@ public class CameraUsing {
             return 0;
         }
         
+    }
+}
+
+final class CamLoadOfCrap {
+    public Camera camera;
+    public Transform3d trans;
+    public CamLoadOfCrap(Camera camera, Transform3d trans) {
+        this.camera = camera;
+        this.trans = trans;
     }
 }

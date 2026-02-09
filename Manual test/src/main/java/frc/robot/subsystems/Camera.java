@@ -35,7 +35,6 @@ public class Camera {
     private Transform3d cameraToRobot;
     private Translation2d translation2d;
     private Rotation2d rotation2d;
-    private Constants robotConstants;
     private double dumbdistance;
     private PhotonPoseEstimator estimatorerorer;
 
@@ -47,7 +46,6 @@ public class Camera {
         }
 
     public datatatatata cameraProcessing(PhotonCamera camera) {
-        robotConstants = new Constants();
         result = camera.getLatestResult();
 
         aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
@@ -80,7 +78,8 @@ public class Camera {
         
         //This is super long
         if (aprilTagFieldLayout.getTagPose(rightmostTarget.getFiducialId()).isPresent()) {
-            robotpose = PhotonUtils.estimateFieldToRobotAprilTag(rightmostTarget.getBestCameraToTarget(), aprilTagFieldLayout.getTagPose(rightmostTarget.getFiducialId()).get(), cameraToRobot);
+            robotpose = PhotonUtils.estimateFieldToRobotAprilTag(rightmostTarget.getBestCameraToTarget(), 
+            aprilTagFieldLayout.getTagPose(rightmostTarget.getFiducialId()).get(), cameraToRobot);
         }
 
         //pythagorean formula for translation2d
