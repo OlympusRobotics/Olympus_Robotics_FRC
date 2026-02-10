@@ -11,13 +11,16 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class Intake extends SubsystemBase {
 
-  private final TalonFX m_inkMot, intFWMot;
+  private final TalonFX m_inkMot, intFWMot, m_inkMotFollower;
   private final double notActivatedPos, ActivatedPos, gearRatio;
   private final PIDController controller;
 
@@ -25,6 +28,7 @@ public class Intake extends SubsystemBase {
 
     // defining + configuring motors
     m_inkMot = new TalonFX(11);
+    m_inkMotFollower = new TalonFX(13);
     intFWMot = new TalonFX(12);
     TalonFXConfiguration intakeOneConf = new TalonFXConfiguration();
     controller = new PIDController(0, 0, 0);
@@ -38,6 +42,7 @@ public class Intake extends SubsystemBase {
     intakeOneConf.CurrentLimits.withStatorCurrentLimitEnable(true);
     intakeOneConf.serialize();
     m_inkMot.getConfigurator().apply(intakeOneConf);
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Aligned));
   }
 
   // turns indexer on and sends intake out
