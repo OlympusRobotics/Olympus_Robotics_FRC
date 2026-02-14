@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -19,8 +18,7 @@ public class TurretAiming extends SubsystemBase{
     private PIDController controller, controller2;
     private TalonFXConfiguration rotationConfigs, heightConfigs;
 
-    public void turretingIt() {
-        roboticPose = CameraUsing.robotPose2d;
+    public TurretAiming() {
         rotationMotor = new TalonFX(13);
         heightMotor = new TalonFX(14);
         flywheelMotor = new TalonFX(15);
@@ -40,7 +38,7 @@ public class TurretAiming extends SubsystemBase{
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         //motor limits
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2000/2 - 10;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 2000/2 - 10;
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -2000/2 + 10;
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         //save
@@ -53,15 +51,10 @@ public class TurretAiming extends SubsystemBase{
         heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2000/360 * 90;
-        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 2000/360 * 90;
+        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -2000/360 * 90;
         heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         heightMotor.getConfigurator().apply(heightConfigs);
-        
-        targetx = (targetpose().getX() - roboticPose.getX()); 
-        targety = (targetpose().getY() - roboticPose.getY());
-        targetAngle = (Math.atan(targety/targetx));
-        targetDistance = (Math.sqrt(Math.pow(targetx, 2)+Math.pow(targety, 2)));
     }
     public Translation2d targetpose() {
         targetPose = new Translation2d(0, 0);
@@ -118,27 +111,38 @@ public class TurretAiming extends SubsystemBase{
     public double vectorCalculations() {
         double chassisSpeeded = Math.pow((Math.pow(Drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) + 
         Math.pow(Drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)), .5);
-        double chassisAngle = Math.atan(Drivetrain.getChassisSpeeds().vyMetersPerSecond/Drivetrain.getChassisSpeeds().vyMetersPerSecond);
+        double chassisAngle = Math.atan2(Drivetrain.getChassisSpeeds().vyMetersPerSecond, Drivetrain.getChassisSpeeds().vxMetersPerSecond);
         double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
         double actualX = (shootingXSpeed * Math.sin(targetAngle)) - (chassisSpeeded * Math.sin(chassisAngle));
         double actualY = (shootingXSpeed * Math.cos(targetAngle)) - (chassisSpeeded * Math.cos(chassisAngle));
-        targetAngle = Math.atan(actualY/actualX);
-        return 0;
+        return targetAngle = Math.atan2(actualY, actualX);
     }
 
     //moves the turret to the wanted spots
     public void targetAim(){
-        //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
-        //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
-        rotationMotor.set(controller.calculate(rotationMotor.get(), (2000/360) * vectorCalculations()));
-        heightMotor.set(controller2.calculate(heightMotor.get(), (2000/360) * maxFormula()));
+        if (roboticPose == null) return;
+        targetpose();
+        getTargetHeight();
+        rotationMotor.set(controller.calculate(rotationMotor.getPosition().getValueAsDouble(), (2000/360) * vectorCalculations()));
+        heightMotor.set(controller2.calculate(heightMotor.getPosition().getValueAsDouble(), (2000/360) * maxFormula()));
     }
 
     //kinematics used to figure out the angle
     public double maxFormula(){
-        return Math.atan((targetDistance + Math.sqrt(Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
-        ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * Math.pow(kmaxVelocity, 4)))))) / 
-        (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2))));
+        targetx = (targetpose().getX() - roboticPose.getX()); 
+        targety = (targetpose().getY() - roboticPose.getY());
+        targetAngle = (Math.atan2(targety, targetx));
+        targetDistance = (Math.sqrt(Math.pow(targetx, 2)+Math.pow(targety, 2)));
+        if ((Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
+        ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
+        Math.pow(kmaxVelocity, 4))))) >= 0) {
+            return Math.atan2((targetDistance + Math.sqrt(Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
+            ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
+            Math.pow(kmaxVelocity, 4)))))), (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2))));
+        }
+        else {
+            return 0;
+        }
     }
     public void shoot(){
         flywheelMotor.set(kmaxVelocity);
@@ -146,11 +150,16 @@ public class TurretAiming extends SubsystemBase{
     public void lockTurret(){
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
-        rotationMotor.set(controller.calculate(rotationMotor.get(), 0));
-        heightMotor.set(controller2.calculate(heightMotor.get(), 25));
+        rotationMotor.set(controller.calculate(rotationMotor.getPosition().getValueAsDouble(), 0));
+        heightMotor.set(controller2.calculate(heightMotor.getPosition().getValueAsDouble(), 25));
     }
     public void stopMotors(){
         rotationMotor.set(0);
         heightMotor.set(0);
+    }
+    @Override
+    public void periodic() {
+        if (CameraUsing.robotPose2d == null) {return;}
+        roboticPose = CameraUsing.robotPose2d;
     }
 }

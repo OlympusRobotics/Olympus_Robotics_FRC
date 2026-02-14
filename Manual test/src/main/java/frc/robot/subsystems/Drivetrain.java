@@ -6,22 +6,28 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.Robot;
+
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 
 public class Drivetrain extends SubsystemBase{
     RobotConstants Constants = new RobotConstants();
     public static ChassisSpeeds chassisSpeeds = new ChassisSpeeds();
+    
         private final Swerve flSM = new Swerve(
             RobotConstants.kFrontLeftDriveID, 
             RobotConstants.kFrontLeftRotationID, 
@@ -51,7 +57,6 @@ public class Drivetrain extends SubsystemBase{
             );
     
         static public final Pigeon2 Gyro = new Pigeon2(RobotConstants.kGyroID);
-        private final SwerveDriveOdometry m_odometry;
     
         Translation2d m_frontLeftLocation = new Translation2d(0.5334, 0.5334);
         Translation2d m_frontRightLocation = new Translation2d(0.5334, -0.5334);
@@ -63,6 +68,13 @@ public class Drivetrain extends SubsystemBase{
         );
     
         ChassisSpeeds speeds = new ChassisSpeeds(0, 0, 0);
+
+        SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(m_kinematics, Gyro.getRotation2d(), new SwerveModulePosition[] {
+                flSM.getPosition(),
+                frSM.getPosition(),
+                blSM.getPosition(),
+                brSM.getPosition()
+            }, new Pose2d(0, 0, new Rotation2d()));
     
         public Drivetrain() {
             Gyro.setYaw(0);
@@ -79,16 +91,6 @@ public class Drivetrain extends SubsystemBase{
             frSM.RotPID(RobotConstants.kFrontRightP, RobotConstants.kFrontRightI, RobotConstants.kFrontRightD);
             blSM.RotPID(RobotConstants.kBackLeftP, RobotConstants.kBackLeftI, RobotConstants.kBackLeftD);
             brSM.RotPID(RobotConstants.kBackRightP, RobotConstants.kBackRightI, RobotConstants.kBackRightD);
-    
-            m_odometry = new SwerveDriveOdometry(
-            m_kinematics, Gyro.getRotation2d(),
-            new SwerveModulePosition[] {
-                flSM.getPosition(),
-                frSM.getPosition(),
-                blSM.getPosition(),
-                brSM.getPosition()
-            }, new Pose2d(0, 0, new Rotation2d())
-            );
             
     
         //     AutoBuilder.configure(
@@ -128,7 +130,7 @@ public class Drivetrain extends SubsystemBase{
         }
     
         public void resetPose(Pose2d newpose){
-            m_odometry.resetPosition(Gyro.getRotation2d(), new SwerveModulePosition[] {
+            poseEstimator.resetPosition(Gyro.getRotation2d(), new SwerveModulePosition[] {
                 flSM.getPosition(),
                 frSM.getPosition(),
                 blSM.getPosition(),
@@ -140,7 +142,7 @@ public class Drivetrain extends SubsystemBase{
         }
 
         public Pose2d getPose(){
-            return m_odometry.getPoseMeters();
+            return poseEstimator.getEstimatedPosition();
         }
         public void fieldOrientedDrive(double xSpeed, double ySpeed, double rot) {
             drive(xSpeed, ySpeed, rot, true);
@@ -153,8 +155,8 @@ public class Drivetrain extends SubsystemBase{
             return Gyro.getRotation2d();
         }
     
-        public void updateOdometry(){
-            Pose2d updated_odometry = m_odometry.update(
+        public Pose2d updatePose(){
+            Pose2d updated_pose = poseEstimator.update(
                 Gyro.getRotation2d(),
                 new SwerveModulePosition[] {
                     flSM.getPosition(),
@@ -163,9 +165,7 @@ public class Drivetrain extends SubsystemBase{
                     brSM.getPosition()
                 }
             );
-            if (updated_odometry != CameraUsing.robotPose2d && CameraUsing.robotPose2d != new Pose2d()) {
-                m_odometry.resetPose(CameraUsing.robotPose2d);
-            }
+            return updated_pose;
         }
     
         public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
@@ -182,11 +182,22 @@ public class Drivetrain extends SubsystemBase{
         public static ChassisSpeeds getChassisSpeeds(){
             return chassisSpeeds;
     }
+    public void addVisionMeasurement(Pose2d visionPose, double timestamp) {
+    poseEstimator.addVisionMeasurement(visionPose, timestamp);
+    }
 
     public void stopmotors(){
         flSM.stopmotors();
         frSM.stopmotors();
         blSM.stopmotors();
         brSM.stopmotors();
+    }
+    @Override
+    public void periodic() {
+        CameraUsing.robotPose2d = getPose();
+        CameraUsing.robotRotation2d = CameraUsing.robotPose2d.getRotation();
+
+        // Update Field2d with robot pose
+        Robot.field.setRobotPose(updatePose());
     }
 }
