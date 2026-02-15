@@ -88,10 +88,14 @@ public final class Constants {
     public static final double kTurretRotationP = 0;
     public static final double kTurretRotationI = 0;
     public static final double kTurretRotationD = 0;
+    public static final double kTurretRotationVelocity = 0;
+    public static final double kTurretRotationAcceleration = 0;
 
     public static final double kTurretHeightP = 0;
     public static final double kTurretHeightI = 0;
     public static final double kTurretHeightD = 0;
+    public static final double kTurretHeightVelocity = 0;
+    public static final double kTurretHeightAcceleration = 0;
       
     //Intake PID
     public static final double kIntakeP = 0;

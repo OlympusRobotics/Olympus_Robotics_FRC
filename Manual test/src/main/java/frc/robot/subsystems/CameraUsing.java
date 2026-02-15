@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.photonvision.PhotonCamera;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -26,7 +25,6 @@ public class CameraUsing extends SubsystemBase {
             this.drivetrain = drivetrain;
             camerafile = new Camera();
             //thankYouToElvisForDesigningOurRobotChassis = 67;
-            camerafile = new Camera();
             camFL = new PhotonCamera("CameraFL");
             camFR = new PhotonCamera("CameraFR");
             camBL = new PhotonCamera("CameraBL");
@@ -50,7 +48,7 @@ public class CameraUsing extends SubsystemBase {
         }
         //System.out.println(thankYouToElvisForDesigningOurRobotChassis);
     private void processCamera() {
-        double lowestAmbiguity = .3;
+        double highestAmbiguity = .3;
 
         for (var camPair : List.of(
                 Map.entry(camBL, robotToCamBL), Map.entry(camBR, robotToCamBR),
@@ -63,10 +61,9 @@ public class CameraUsing extends SubsystemBase {
             var camData = camerafile.cameraProcessing(cam);
 
             if (camData.robotpose() != null && camData.result().hasTargets()) {
-                drivetrain.addVisionMeasurement(camData.robotpose().toPose2d(), camData.result().getTimestampSeconds());
 
                 double ambiguity = camData.result().getBestTarget().getPoseAmbiguity();
-                if (ambiguity < lowestAmbiguity) {
+                if (ambiguity < highestAmbiguity) {
                     drivetrain.addVisionMeasurement(
                         camData.robotpose().toPose2d(),
                         camData.result().getTimestampSeconds()

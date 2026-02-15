@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.LimelightHelpers;
 
 public class LLVision extends SubsystemBase {
 
@@ -26,6 +25,9 @@ public class LLVision extends SubsystemBase {
    * Gets the X and Y position of the apriltag being tracked, applies kP and Offsets, and returns a double array for use with swerve drive 
   */
   public double[] aimAndRange(){
+    if (!LimelightHelpers.getTV("limelight-stinky")) {
+      return new double[]{0,0};
+    }
     double kP = 0.035;
 
     double angularVel = LimelightHelpers.getTX("limelight-stinky") * kP;
@@ -42,12 +44,5 @@ public class LLVision extends SubsystemBase {
       forwardSpeeds,
       angularVel
     };
-
-
-  }
-
-  //@Override
-  public void periodic() {
-    aimAndRange();
   }
 }

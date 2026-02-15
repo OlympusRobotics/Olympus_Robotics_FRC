@@ -194,10 +194,11 @@ public class Drivetrain extends SubsystemBase{
     }
     @Override
     public void periodic() {
+        updatePose();
         CameraUsing.robotPose2d = getPose();
         CameraUsing.robotRotation2d = CameraUsing.robotPose2d.getRotation();
 
         // Update Field2d with robot pose
-        Robot.field.setRobotPose(updatePose());
+        Robot.field.setRobotPose(getPose());
     }
 }

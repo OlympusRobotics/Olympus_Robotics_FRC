@@ -1,10 +1,10 @@
 package frc.robot.subsystems;
-import edu.wpi.first.math.controller.PIDController;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -13,10 +13,11 @@ import frc.robot.Constants.RobotConstants;;
 public class TurretAiming extends SubsystemBase{
     private Pose2d roboticPose;
     private Translation2d targetPose;
-    private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity;
+    private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, heightRatio, rotationRatio, 
+    smoothRotation, smoothHeight, rotationTao, heightTao;
     private TalonFX rotationMotor, heightMotor, flywheelMotor;
-    private PIDController controller, controller2;
     private TalonFXConfiguration rotationConfigs, heightConfigs;
+    private MotionMagicVoltage rotationoutput, heightoutput;
 
     public TurretAiming() {
         rotationMotor = new TalonFX(13);
@@ -26,9 +27,14 @@ public class TurretAiming extends SubsystemBase{
         heightConfigs = new TalonFXConfiguration();
         turretHeight = .508; 
         kmaxVelocity = 4.71;
-
-        controller = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
-        controller2 = new PIDController(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
+        rotationoutput = new MotionMagicVoltage(0);
+        heightoutput = new MotionMagicVoltage(0);
+        heightRatio = 5;
+        rotationRatio = 100;
+        smoothRotation = 0;
+        smoothHeight = 0;
+        rotationTao = .05;
+        heightTao = .1;
 
         //basic motor configurations
         rotationConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
@@ -37,10 +43,16 @@ public class TurretAiming extends SubsystemBase{
         rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         //motor limits
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2000/2 - 10;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -2000/2 + 10;
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 130/360;
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -220/360;
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        rotationConfigs.Feedback.SensorToMechanismRatio = rotationRatio;
+        rotationConfigs.Slot0.kP = RobotConstants.kTurretRotationP;
+        rotationConfigs.Slot0.kI = RobotConstants.kTurretRotationI;
+        rotationConfigs.Slot0.kD = RobotConstants.kTurretRotationD;
+        rotationConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
+        rotationConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretRotationAcceleration;
         //save
         rotationConfigs.serialize();
         //apply
@@ -50,10 +62,16 @@ public class TurretAiming extends SubsystemBase{
         heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
         heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
-        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 2000/360 * 90;
-        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -2000/360 * 90;
+        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 45/360;
+        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
         heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        heightConfigs.Feedback.SensorToMechanismRatio = heightRatio;
+        heightConfigs.Slot0.kP = RobotConstants.kTurretRotationP;
+        heightConfigs.Slot0.kI = RobotConstants.kTurretRotationI;
+        heightConfigs.Slot0.kD = RobotConstants.kTurretRotationD;
+        heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
+        heightConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretHeightAcceleration;
         heightMotor.getConfigurator().apply(heightConfigs);
     }
     public Translation2d targetpose() {
@@ -115,7 +133,10 @@ public class TurretAiming extends SubsystemBase{
         double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
         double actualX = (shootingXSpeed * Math.sin(targetAngle)) - (chassisSpeeded * Math.sin(chassisAngle));
         double actualY = (shootingXSpeed * Math.cos(targetAngle)) - (chassisSpeeded * Math.cos(chassisAngle));
-        return targetAngle = Math.atan2(actualY, actualX);
+        targetAngle = Math.atan2(actualY, actualX);
+        if (targetAngle > Math.toRadians(135)) {targetAngle -= Math.toRadians(360);}
+        if (targetAngle < Math.toRadians(-225)) {targetAngle += Math.toRadians(360);}
+        return targetAngle / (2 * Math.PI);
     }
 
     //moves the turret to the wanted spots
@@ -123,8 +144,18 @@ public class TurretAiming extends SubsystemBase{
         if (roboticPose == null) return;
         targetpose();
         getTargetHeight();
-        rotationMotor.set(controller.calculate(rotationMotor.getPosition().getValueAsDouble(), (2000/360) * vectorCalculations()));
-        heightMotor.set(controller2.calculate(heightMotor.getPosition().getValueAsDouble(), (2000/360) * maxFormula()));
+        double desiredAngle  = vectorCalculations();
+        double desiredHeight = maxFormula();
+        double rotError = desiredAngle - smoothRotation;
+        if (Math.abs(rotError) > .02) {
+            smoothRotation += rotationTao * rotError;
+        }
+        double heightError = desiredHeight - smoothHeight;
+        if (Math.abs(heightError) > .01) {
+            smoothHeight += heightTao * heightError;
+        }
+        rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
+        heightMotor.setControl(heightoutput.withPosition(smoothHeight));
     }
 
     //kinematics used to figure out the angle
@@ -138,20 +169,20 @@ public class TurretAiming extends SubsystemBase{
         Math.pow(kmaxVelocity, 4))))) >= 0) {
             return Math.atan2((targetDistance + Math.sqrt(Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
             ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
-            Math.pow(kmaxVelocity, 4)))))), (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2))));
+            Math.pow(kmaxVelocity, 4)))))), (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2)))) / (2 * Math.PI);
         }
         else {
             return 0;
         }
     }
     public void shoot(){
-        flywheelMotor.set(kmaxVelocity);
+        flywheelMotor.set(1);
     }
     public void lockTurret(){
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
-        rotationMotor.set(controller.calculate(rotationMotor.getPosition().getValueAsDouble(), 0));
-        heightMotor.set(controller2.calculate(heightMotor.getPosition().getValueAsDouble(), 25));
+        rotationMotor.setControl(rotationoutput.withPosition(0));
+        heightMotor.setControl(heightoutput.withPosition(5));
     }
     public void stopMotors(){
         rotationMotor.set(0);

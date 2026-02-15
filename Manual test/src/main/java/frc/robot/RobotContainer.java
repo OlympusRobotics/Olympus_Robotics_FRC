@@ -53,11 +53,7 @@ public class RobotContainer {
 
 
         if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0) {
-          Drivetrain.chassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-            forwardVal*4.1, strafeVal*4.1, rotationVal*4.1,
-            m_drivetrain.getRobotRotation()
-          );
-          m_drivetrain.drive(forwardVal*4.1, strafeVal*4.1, rotationVal*4.1, true);
+          m_drivetrain.drive(forwardVal*4.1, strafeVal*4.1, rotationVal*4.1, false);
         } else {
           m_drivetrain.stopmotors();
         }
@@ -79,10 +75,6 @@ public class RobotContainer {
       //double rotationVal = applyDeadband(m_driverController.getRightX());
 
       if (strafeVal != 0) {
-        ChassisSpeeds speedes = ChassisSpeeds.fromFieldRelativeSpeeds(
-          xSpeed, strafeVal, rot,
-          m_drivetrain.getRobotRotation()
-        );
         m_drivetrain.drive(xSpeed, strafeVal, rot, false);
       } else {
         m_drivetrain.stopmotors();
@@ -112,10 +104,6 @@ public class RobotContainer {
 
 
         if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0) {
-          Drivetrain.chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            forwardVal*4.1, strafeVal*4.1, rotationVal*4.1,
-            m_drivetrain.getRobotRotation()
-          );
           m_drivetrain.drive(forwardVal*4.1, strafeVal*4.1, rotationVal*4.1, true);
         } else {
           m_drivetrain.stopmotors();
