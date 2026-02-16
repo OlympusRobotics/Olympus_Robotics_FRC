@@ -18,8 +18,10 @@ public class TurretAiming extends SubsystemBase{
     private TalonFX rotationMotor, heightMotor, flywheelMotor;
     private TalonFXConfiguration rotationConfigs, heightConfigs;
     private MotionMagicVoltage rotationoutput, heightoutput;
+    private Drivetrain drivetrain;
 
-    public TurretAiming() {
+    public TurretAiming(Drivetrain drivetrain) {
+        this.drivetrain = drivetrain;
         rotationMotor = new TalonFX(13);
         heightMotor = new TalonFX(14);
         flywheelMotor = new TalonFX(15);
@@ -127,9 +129,9 @@ public class TurretAiming extends SubsystemBase{
 
     //calculating the actual angle while the robot is moving
     public double vectorCalculations() {
-        double chassisSpeeded = Math.pow((Math.pow(Drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) + 
-        Math.pow(Drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)), .5);
-        double chassisAngle = Math.atan2(Drivetrain.getChassisSpeeds().vyMetersPerSecond, Drivetrain.getChassisSpeeds().vxMetersPerSecond);
+        double chassisSpeeded = Math.pow((Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) + 
+        Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)), .5);
+        double chassisAngle = Math.atan2(drivetrain.getChassisSpeeds().vyMetersPerSecond, drivetrain.getChassisSpeeds().vxMetersPerSecond);
         double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
         double actualX = (shootingXSpeed * Math.sin(targetAngle)) - (chassisSpeeded * Math.sin(chassisAngle));
         double actualY = (shootingXSpeed * Math.cos(targetAngle)) - (chassisSpeeded * Math.cos(chassisAngle));

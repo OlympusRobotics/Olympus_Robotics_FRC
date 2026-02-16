@@ -82,6 +82,30 @@ public class Drivetrain extends SubsystemBase{
             RobotConfig config;
         try{
           config = RobotConfig.fromGUISettings();
+          
+          // Configure AutoBuilder for PathPlanner
+          AutoBuilder.configure(
+              this::getPose, // Pose supplier
+              this::resetPose, // Pose consumer, sets the robot's pose
+              this::getChassisSpeeds, // Chassis speeds supplier
+              (speeds, feedforwards) -> this.drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, true), // Method that will drive the robot given DESIRED chassis speeds
+              new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                  new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                  new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+              ),
+              config, // The robot configuration
+              () -> {
+                  // Boolean supplier that controls when the path will be mirrored for the red alliance
+                  // This will flip the path being followed to the red side of the field.
+                  // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+                  var alliance = DriverStation.getAlliance();
+                  if (alliance.isPresent()) {
+                      return alliance.get() == DriverStation.Alliance.Red;
+                  }
+                  return false;
+              },
+              this // Reference to this subsystem to set requirements
+          );
         } catch (Exception except) {
           // Handle exception as needed
           except.printStackTrace();
@@ -103,10 +127,6 @@ public class Drivetrain extends SubsystemBase{
                 //assume blue
                 return false;
             }
-        }
-        
-        public void driveRobotRelative(ChassisSpeeds speeds) {
-            this.drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, false);
         }
         
         public void resetPose(Pose2d newpose){
@@ -159,7 +179,7 @@ public class Drivetrain extends SubsystemBase{
             blSM.setDesiredState(moduleStates[2]);
             brSM.setDesiredState(moduleStates[3]);
         }
-        public static ChassisSpeeds getChassisSpeeds(){
+        public ChassisSpeeds getChassisSpeeds(){
             return chassisSpeeds;
     }
     public SwerveModuleState[] getModuleStates() {

@@ -9,6 +9,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
@@ -22,18 +24,20 @@ import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LLVision;
 import frc.robot.subsystems.TurretAiming;
+import com.pathplanner.lib.auto.AutoBuilder;
 
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final Drivetrain m_drivetrain = new Drivetrain();
   private final LLVision limes = new LLVision();
+  private final SendableChooser<Command> m_autoChooser = new SendableChooser<>();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
   private final CameraUsing vision = new CameraUsing(m_drivetrain);
   private final Intake intake = new Intake();
-  private final TurretAiming turret = new TurretAiming();
+  private final TurretAiming turret = new TurretAiming(m_drivetrain);
   private final Climber climber = new Climber();
   private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake())
     .until(() -> m_driverController.getLeftTriggerAxis() <= .5);
@@ -93,6 +97,19 @@ public class RobotContainer {
   }
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    // Build autonomous routines with SendableChooser
+    m_autoChooser.setDefaultOption("None", Commands.none());
+    
+    // Try to add available PathPlanner paths
+    try {
+      m_autoChooser.addOption("Example Path", AutoBuilder.buildAuto("Example Path"));
+    } catch (Exception e) {
+      System.out.println("Could not load 'Example Path'");
+    }
+    
+    // Add the chooser to SmartDashboard so it can be changed during match
+    SmartDashboard.putData("Auto Chooser", m_autoChooser);
+    
     // Set the default command to drive based on joystick input
 
     m_drivetrain.setDefaultCommand(
@@ -134,6 +151,14 @@ public class RobotContainer {
 
   public Drivetrain getDrivetrain() {
     return m_drivetrain;
+  }
+
+  /**
+   * Use this method to get the autonomous command.
+   * Returns the command selected in the SendableChooser on SmartDashboard.
+   */
+  public Command getAutonomousCommand() {
+    return m_autoChooser.getSelected();
   }
 
 }
