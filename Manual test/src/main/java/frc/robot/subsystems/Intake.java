@@ -1,61 +1,83 @@
 package frc.robot.subsystems;
-
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.RobotConstants;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class Intake extends SubsystemBase {
 
-  private final TalonFX m_inkMot, m_indexer;
-
-  final double notActivatedPos = 0.0;
-  final double ActivatedPos = 6.9;
-
-  final double gearRatio = 6.7;
-  final double wheelCircumference = 67;
-  final double speed = (gearRatio * 4.5) / wheelCircumference;
+  private final TalonFX m_inkMot, intFWMot, m_inkMotFollower;
+  private final double notActivatedPos, ActivatedPos;
+  private double target;
+  private final TalonFXConfiguration intakeOneConf, intakeFWConf;
 
   public Intake() {
 
-
+    // defining + configuring motors
     m_inkMot = new TalonFX(11);
-    m_indexer = new TalonFX(12);
-    TalonFXConfiguration intakeOneConf = new TalonFXConfiguration();
-    TalonFXConfiguration indexerConf = new TalonFXConfiguration();
-
+    m_inkMotFollower = new TalonFX(13);
+    intFWMot = new TalonFX(12);
+    intakeOneConf = new TalonFXConfiguration();
+    intakeFWConf = new TalonFXConfiguration();
+    ActivatedPos = 6.7;
+    notActivatedPos = 0;
+    target = 0;
+    m_inkMot.setPosition(0);
 
     intakeOneConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
     intakeOneConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
     intakeOneConf.CurrentLimits.withStatorCurrentLimit(40);
     intakeOneConf.CurrentLimits.withStatorCurrentLimitEnable(true);
+    intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
+    intakeOneConf.Slot0.kP = RobotConstants.kIntakeP;
+    intakeOneConf.Slot0.kI = RobotConstants.kIntakeI;
+    intakeOneConf.Slot0.kD = RobotConstants.kIntakeD;
+    intakeOneConf.Slot0.kG = 0.3;
+    intakeOneConf.MotionMagic.MotionMagicCruiseVelocity = 0;
+    intakeOneConf.MotionMagic.MotionMagicAcceleration = 0;
+    intakeOneConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
     intakeOneConf.serialize();
     m_inkMot.getConfigurator().apply(intakeOneConf);
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
 
-    indexerConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-    indexerConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
-    indexerConf.CurrentLimits.withStatorCurrentLimit(40);
-    indexerConf.CurrentLimits.withStatorCurrentLimitEnable(true);
-    indexerConf.serialize();
-    m_indexer.getConfigurator().apply(indexerConf);
-
-    
+    intakeFWConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+    intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+    intakeFWConf.CurrentLimits.withStatorCurrentLimit(40);
+    intakeFWConf.CurrentLimits.withStatorCurrentLimitEnable(true);
+    intakeFWConf.serialize();
+    intFWMot.getConfigurator().apply(intakeFWConf);
   }
 
-  public void startIntake(Double speed, Double ActivatedPos) {
-    m_inkMot.setPosition(ActivatedPos);
-    m_indexer.set(speed);
+  // turns indexer on and sends intake out
+  public void startIntake() {
+    target = ActivatedPos;
+    intFWMot.set(1);
   }
-  public void endIntake(Double speed, Double notActivatedPos) {
-    m_indexer.stopMotor();
-    m_inkMot.setPosition(notActivatedPos);
+  
+  // stops indexer and returns intake to original position
+  public void endIntake() {
+    target = notActivatedPos;
+    intFWMot.set(0);
   }
-  public TalonFX getTalon() {return m_inkMot;}
+  public void outakeIntake() {
+    target = ActivatedPos;
+    intFWMot.set(-1);
+  }
+  @Override
+  public void periodic() {
+    m_inkMot.setControl(new MotionMagicVoltage(target));
+  }
 }

@@ -4,7 +4,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -13,7 +12,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
-
 
 public class Swerve extends SubsystemBase{
   private final double EncOffset;
@@ -37,7 +35,8 @@ public class Swerve extends SubsystemBase{
     rotConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     rotConfig.CurrentLimits.StatorCurrentLimit = RobotConstants.kRotCurrentStatorLimit;
     RotMotor.getConfigurator().apply(rotConfig);
-
+    rotPID.enableContinuousInput(-Math.PI, Math.PI);
+    
     driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
