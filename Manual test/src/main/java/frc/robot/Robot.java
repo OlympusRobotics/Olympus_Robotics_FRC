@@ -66,10 +66,6 @@ public class Robot extends TimedRobot {
     }
   }
 
-  /*public Command getAutonomousCommand() {
-    return AutoBuilder.buildAuto("TwoPieceAuto");
-  }*/
-
   @Override
   public void autonomousPeriodic() {}
 
