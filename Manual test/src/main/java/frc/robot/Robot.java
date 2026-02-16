@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -41,6 +43,10 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.schedule();
     }
   }
+
+  /*public Command getAutonomousCommand() {
+    return AutoBuilder.buildAuto("TwoPieceAuto");
+  }*/
 
   @Override
   public void autonomousPeriodic() {}
