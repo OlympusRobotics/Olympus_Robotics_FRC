@@ -16,7 +16,7 @@ public class TurretAiming extends SubsystemBase{
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, heightRatio, rotationRatio, 
     smoothRotation, smoothHeight, rotationTao, heightTao;
     private TalonFX rotationMotor, heightMotor, flywheelMotor;
-    private TalonFXConfiguration rotationConfigs, heightConfigs;
+    private TalonFXConfiguration rotationConfigs, heightConfigs, flyConfigs;
     private MotionMagicVoltage rotationoutput, heightoutput;
     private Drivetrain drivetrain;
 
@@ -27,6 +27,7 @@ public class TurretAiming extends SubsystemBase{
         flywheelMotor = new TalonFX(15);
         rotationConfigs = new TalonFXConfiguration();
         heightConfigs = new TalonFXConfiguration();
+        flyConfigs = new TalonFXConfiguration();
         turretHeight = .508; 
         kmaxVelocity = 4.71;
         rotationoutput = new MotionMagicVoltage(0);
@@ -60,6 +61,7 @@ public class TurretAiming extends SubsystemBase{
         //apply
         rotationMotor.getConfigurator().apply(rotationConfigs);
 
+        //height motors stuff
         heightConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
         heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
@@ -74,7 +76,15 @@ public class TurretAiming extends SubsystemBase{
         heightConfigs.Slot0.kD = RobotConstants.kTurretRotationD;
         heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
         heightConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretHeightAcceleration;
-        heightMotor.getConfigurator().apply(heightConfigs);
+        heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
+
+        //flywheel stuff
+        flyConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+        flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        flyConfigs.CurrentLimits.withStatorCurrentLimit(40);
+        flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
+        flyConfigs.serialize(); //save
+        flywheelMotor.getConfigurator().apply(flyConfigs); //apply
     }
     public Translation2d targetpose() {
         targetPose = new Translation2d(0, 0);
