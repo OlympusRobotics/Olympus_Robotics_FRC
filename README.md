@@ -21,3 +21,7 @@ Github repo for code and documentation for FRC team 4982.
  Riptide - 2025 season
 
  Manual Test (Lebot) - 2026 season
+
+ John Prok - 2027 season
+
+ Lebotomy - 2028 season

@@ -39,53 +39,39 @@ public class RobotContainer {
   private final Intake intake = new Intake();
   private final TurretAiming turret = new TurretAiming(m_drivetrain);
   private final Climber climber = new Climber();
-  private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake())
-    .until(() -> m_driverController.getLeftTriggerAxis() <= .5);
-  private final Command climberer = climber.startEnd(() -> climber.extend(), () -> climber.retract())
-    .until(() -> m_driverController.leftBumper().getAsBoolean() == false);
-  private final Command intakeOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake())
-    .until(() -> m_driverController.rightBumper().getAsBoolean() == false);
-  private final Command locksTurret = turret.startEnd(() -> turret.lockTurret(), () -> turret.stopMotors())
-    .until(() -> m_driverController.x().getAsBoolean() == false);
-  private final Command unlocksTurret = turret.startEnd(() -> turret.targetAim(), () -> turret.targetAim())
-    .until(() -> m_driverController.b().getAsBoolean() == false);
-  private final Command llAutoAim = new RunCommand(() -> {
 
-        double forwardVal = applyDeadband(limes.aimAndRange()[0]); // Negate to match joystick direction
-        double strafeVal = applyDeadband((-m_driverController.getLeftX()));
+  private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
+    .until(() -> m_driverController.getLeftTriggerAxis() <= .5); //pressing the LT button
+
+  private final Command climberer = climber.startEnd(() -> climber.extend(), () -> climber.retract()) //extends and retracts the climber
+    .until(() -> m_driverController.leftBumper().getAsBoolean() == false); //LB button
+
+  private final Command intakeOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake()) //toggles the intake
+    .until(() -> m_driverController.rightBumper().getAsBoolean() == false); //RB button
+
+  private final Command locksTurret = turret.startEnd(() -> turret.lockTurret(), () -> turret.stopMotors()) //locks the turret 🤯
+    .until(() -> m_driverController.x().getAsBoolean() == false); //X button
+
+  private final Command unlocksTurret = turret.startEnd(() -> turret.targetAim(), () -> turret.targetAim()) //when pressed will activate aimbot :3
+    .until(() -> m_driverController.b().getAsBoolean() == false); //B button
+
+  private final Command llAutoAim = new RunCommand(() -> { //limelight aimbot :3
+
+        double forwardVal = applyDeadband(limes.aimAndRange()[0]);
+        double strafeVal = applyDeadband((-m_driverController.getLeftX())); // Negate to match joystick direction
         double rotationVal = applyDeadband(limes.aimAndRange()[1]);
 
-
-        if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0) {
+        if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0)
           m_drivetrain.drive(forwardVal*4.1, strafeVal*4.1, rotationVal*4.1, false);
-        } else {
-          m_drivetrain.stopmotors();
-        }
+        else m_drivetrain.stopmotors();
       }, m_drivetrain)
-    .until(() -> m_driverController.y().getAsBoolean() == false);
-  private final Command resetYaw = m_drivetrain.startEnd(() -> m_drivetrain.resetYaw(), () -> m_drivetrain.resetYaw())
-    .until(() -> m_driverController.start().getAsBoolean() == false);
-  
-  private Command aimAndDrive() {
-    return Commands.run(()->{
+    .until(() -> m_driverController.y().getAsBoolean() == false); //on the y button
 
-      double[] speeds = limes.aimAndRange();
-      double xSpeed = speeds[0] * 4;
-      //double ySpeed = speeds[1] * 4;
-      double rot = speeds[1] * 4;
-  
-      //double forwardVal = applyDeadband(-m_driverController.getLeftY()); // Negate to match joystick direction
-      double strafeVal = applyDeadband(m_driverController.getLeftX());
-      //double rotationVal = applyDeadband(m_driverController.getRightX());
+  private final Command resetYaw = m_drivetrain.startEnd(() -> m_drivetrain.resetYaw(), () -> m_drivetrain.resetYaw()) //resets the yaw
+    .until(() -> m_driverController.start().getAsBoolean() == false); //start button
 
-      if (strafeVal != 0) {
-        m_drivetrain.drive(xSpeed, strafeVal, rot, false);
-      } else {
-        m_drivetrain.stopmotors();
-      }
-    });
-  }
 
+  /**configures the controller button bindings*/
   public void configureBindings() {
     m_driverController.leftBumper().whileTrue(climberer);
     new Trigger(() -> Math.abs(m_driverController.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);
@@ -112,7 +98,7 @@ public class RobotContainer {
     
     // Set the default command to drive based on joystick input
 
-    m_drivetrain.setDefaultCommand(
+    m_drivetrain.setDefaultCommand( //joystick control
       new RunCommand(() -> {
 
         double forwardVal = applyDeadband(-m_driverController.getLeftY()); // Negate to match joystick direction
