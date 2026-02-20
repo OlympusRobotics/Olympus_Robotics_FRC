@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -38,6 +39,7 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController whimseystick = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final CameraUsing visioningit = new CameraUsing(drivetrain);
@@ -118,6 +120,15 @@ public class RobotContainer {
         joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+
+        whimseystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
+        whimseystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop()));
+
+        whimseystick.y().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        whimseystick.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        whimseystick.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        whimseystick.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        
 
         // Reset the field-centric heading on left bumper press.
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
