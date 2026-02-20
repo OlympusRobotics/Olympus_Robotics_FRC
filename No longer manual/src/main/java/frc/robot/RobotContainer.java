@@ -12,13 +12,16 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
-import frc.robot.generated.TunerConstants;
+import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.CameraUsing;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.TurretAiming;
 
 public class RobotContainer {
@@ -39,6 +42,39 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final CameraUsing visioningit = new CameraUsing(drivetrain);
     public final TurretAiming aiming = new TurretAiming(drivetrain);
+
+    private final Intake intake = new Intake();
+    private final Climber climber = new Climber();
+
+    private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
+      .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
+
+    private final Command climberer = climber.startEnd(() -> climber.extend(), () -> climber.retract()) //extends and retracts the climber
+      .until(() -> joystick.leftBumper().getAsBoolean() == false); //LB button
+
+    private final Command intakeOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake()) //toggles the intake
+      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RB button
+
+    private final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the aiming 🤯
+      .until(() -> joystick.x().getAsBoolean() == false); //X button
+
+    private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim()) //when pressed will activate aimbot :3
+      .until(() -> joystick.a().getAsBoolean() == false); //Start button
+
+    /*private final Command llAutoAim = new RunCommand(() -> { //limelight aimbot :3
+
+        double forwardVal = applyDeadband(limes.aimAndRange()[0]);
+        double strafeVal = applyDeadband((-joystick.getLeftX())); // Negate to match joystick direction
+        double rotationVal = applyDeadband(limes.aimAndRange()[1]);
+
+        if (forwardVal != 0 || strafeVal != 0 || rotationVal != 0)
+          m_drivetrain.drive(forwardVal*4.1, strafeVal*4.1, rotationVal*4.1, false);
+        else m_drivetrain.stopmotors();
+      }, drivetrain)
+    .until(() -> joystick.y().getAsBoolean() == false); //on the y button*/
+
+    private final Command resetYaw = drivetrain.startEnd(() -> drivetrain.seedFieldCentric(), () -> drivetrain.seedFieldCentric()) //resets the yaw
+      .until(() -> joystick.back().getAsBoolean() == false); //start button
 
     public RobotContainer() {
         configureBindings();
@@ -62,6 +98,14 @@ public class RobotContainer {
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
+        
+
+        joystick.leftBumper().whileTrue(climberer);
+        new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);
+        joystick.rightBumper().whileTrue(intakeOut);
+        joystick.x().whileTrue(locksTurret);
+        joystick.start().whileTrue(unlocksTurret);
+        joystick.back().whileTrue(resetYaw);
 
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
