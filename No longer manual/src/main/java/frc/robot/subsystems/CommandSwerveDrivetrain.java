@@ -241,6 +241,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
         
     }
+    
+    public static boolean getAlliance() {
+            var alliance = DriverStation.getAlliance();
+            if (alliance.isPresent()) {
+                return alliance.get() == DriverStation.Alliance.Red;
+            }
+            else {
+                //assume blue
+                return false;
+            }
+        }
 
     private void startSimThread() {
         m_lastSimTime = Utils.getCurrentTimeSeconds();

@@ -51,7 +51,8 @@ public class RobotContainer {
     private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
       .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
 
-    private final Command climberer = climber.startEnd(() -> climber.extend(), () -> climber.retract()) //extends and retracts the climber
+      //TEMPORARILY configured to the shoot instead of climb
+    private final Command climberer = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot()) //extends and retracts the climber
       .until(() -> joystick.leftBumper().getAsBoolean() == false); //LB button
 
     private final Command intakeOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake()) //toggles the intake

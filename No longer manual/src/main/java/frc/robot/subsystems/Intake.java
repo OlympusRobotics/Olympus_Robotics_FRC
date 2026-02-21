@@ -1,7 +1,4 @@
 package frc.robot.subsystems;
-
-import edu.wpi.first.math.controller.PIDController;
-
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -12,16 +9,19 @@ import frc.robot.Constants.RobotConstants;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class Intake extends SubsystemBase {
 
   private final TalonFX m_inkMot, intFWMot, m_inkMotFollower;
-  private final double notActivatedPos, ActivatedPos, gearRatio;
-  private final PIDController controller;
+  private final double notActivatedPos, ActivatedPos;
+  private double target;
+  private final TalonFXConfiguration intakeOneConf, intakeFWConf;
 
   public Intake() {
 
@@ -29,37 +29,55 @@ public class Intake extends SubsystemBase {
     m_inkMot = new TalonFX(11);
     m_inkMotFollower = new TalonFX(13);
     intFWMot = new TalonFX(12);
-    TalonFXConfiguration intakeOneConf = new TalonFXConfiguration();
-    controller = new PIDController(0, 0, 0);
+    intakeOneConf = new TalonFXConfiguration();
+    intakeFWConf = new TalonFXConfiguration();
     ActivatedPos = 6.7;
-    gearRatio = 6.7;
     notActivatedPos = 0;
+    target = 0;
+    m_inkMot.setPosition(0);
 
     intakeOneConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
     intakeOneConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
     intakeOneConf.CurrentLimits.withStatorCurrentLimit(40);
     intakeOneConf.CurrentLimits.withStatorCurrentLimitEnable(true);
+    intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
+    intakeOneConf.Slot0.kP = RobotConstants.kIntakeP;
+    intakeOneConf.Slot0.kI = RobotConstants.kIntakeI;
+    intakeOneConf.Slot0.kD = RobotConstants.kIntakeD;
+    intakeOneConf.Slot0.kG = 0.3;
+    intakeOneConf.MotionMagic.MotionMagicCruiseVelocity = 0;
+    intakeOneConf.MotionMagic.MotionMagicAcceleration = 0;
+    intakeOneConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+
     intakeOneConf.serialize();
     m_inkMot.getConfigurator().apply(intakeOneConf);
-    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Aligned));
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
+
+    intakeFWConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+    intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+    intakeFWConf.CurrentLimits.withStatorCurrentLimit(40);
+    intakeFWConf.CurrentLimits.withStatorCurrentLimitEnable(true);
+    intakeFWConf.serialize();
+    intFWMot.getConfigurator().apply(intakeFWConf);
   }
 
   // turns indexer on and sends intake out
   public void startIntake() {
-    controller.setPID(RobotConstants.kIntakeP, RobotConstants.kIntakeI, RobotConstants.kIntakeD);
-    m_inkMot.set(controller.calculate(m_inkMot.get(), ActivatedPos) / gearRatio);
+    target = ActivatedPos;
     intFWMot.set(1);
   }
   
   // stops indexer and returns intake to original position
   public void endIntake() {
-    controller.setPID(RobotConstants.kIntakeP, RobotConstants.kIntakeI, RobotConstants.kIntakeD);
-    m_inkMot.set(controller.calculate(m_inkMot.get(), notActivatedPos) / gearRatio);
+    target = notActivatedPos;
     intFWMot.set(0);
   }
   public void outakeIntake() {
-    controller.setPID(RobotConstants.kIntakeP, RobotConstants.kIntakeI, RobotConstants.kIntakeD);
-    m_inkMot.set(controller.calculate(m_inkMot.get(), ActivatedPos) / gearRatio);
+    target = ActivatedPos;
     intFWMot.set(-1);
+  }
+  @Override
+  public void periodic() {
+    m_inkMot.setControl(new MotionMagicVoltage(target));
   }
 }
