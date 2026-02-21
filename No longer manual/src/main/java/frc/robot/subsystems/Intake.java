@@ -22,16 +22,15 @@ public class Intake extends SubsystemBase {
   private final double notActivatedPos, ActivatedPos;
   private double target;
   private final TalonFXConfiguration intakeOneConf, intakeFWConf;
-
   public Intake() {
 
     // defining + configuring motors
-    m_inkMot = new TalonFX(11);
-    m_inkMotFollower = new TalonFX(13);
-    intFWMot = new TalonFX(12);
+    m_inkMot = new TalonFX(16);
+    m_inkMotFollower = new TalonFX(17);
+    intFWMot = new TalonFX(18);
     intakeOneConf = new TalonFXConfiguration();
     intakeFWConf = new TalonFXConfiguration();
-    ActivatedPos = 6.7;
+    ActivatedPos = 1.45;
     notActivatedPos = 0;
     target = 0;
     m_inkMot.setPosition(0);
@@ -45,8 +44,8 @@ public class Intake extends SubsystemBase {
     intakeOneConf.Slot0.kI = RobotConstants.kIntakeI;
     intakeOneConf.Slot0.kD = RobotConstants.kIntakeD;
     intakeOneConf.Slot0.kG = 0.3;
-    intakeOneConf.MotionMagic.MotionMagicCruiseVelocity = 0;
-    intakeOneConf.MotionMagic.MotionMagicAcceleration = 0;
+    intakeOneConf.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kIntakevelocity;
+    intakeOneConf.MotionMagic.MotionMagicAcceleration = RobotConstants.kIntakeAcceleration;
     intakeOneConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
     intakeOneConf.serialize();

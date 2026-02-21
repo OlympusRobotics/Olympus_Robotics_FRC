@@ -23,6 +23,9 @@ public class Robot extends TimedRobot {
     public Robot() {
         m_robotContainer = new RobotContainer();
     }
+    @ Override
+    public void robotInit() {
+    }
 
     @Override
     public void robotPeriodic() {
@@ -62,7 +65,9 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void teleopPeriodic() {}
+    public void teleopPeriodic() {
+
+    }
 
     @Override
     public void teleopExit() {}
@@ -73,7 +78,9 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void testPeriodic() {}
+    public void testPeriodic() {
+        
+    }
 
     @Override
     public void testExit() {}

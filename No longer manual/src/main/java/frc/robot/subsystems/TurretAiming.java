@@ -16,7 +16,8 @@ public class TurretAiming extends SubsystemBase {
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, heightRatio, rotationRatio, 
     smoothRotation, smoothHeight, rotationTao, heightTao;
     private TalonFX rotationMotor, heightMotor, flywheelMotor;
-    private TalonFXConfiguration rotationConfigs, heightConfigs, flyConfigs;
+    public TalonFX indexerMotor;
+    private TalonFXConfiguration rotationConfigs, heightConfigs, flyConfigs, indexerConfigs;
     private MotionMagicVoltage rotationoutput, heightoutput;
     private CommandSwerveDrivetrain drivetrain;
 
@@ -25,9 +26,11 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor = new TalonFX(13);
         heightMotor = new TalonFX(14);
         flywheelMotor = new TalonFX(15);
+        indexerMotor = new TalonFX(19);
         rotationConfigs = new TalonFXConfiguration();
         heightConfigs = new TalonFXConfiguration();
         flyConfigs = new TalonFXConfiguration();
+        indexerConfigs = new TalonFXConfiguration();
         turretHeight = .508; 
         kmaxVelocity = 4.71;
         rotationoutput = new MotionMagicVoltage(0);
@@ -46,8 +49,8 @@ public class TurretAiming extends SubsystemBase {
         rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         //motor limits
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 130/360;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -220/360;
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 130.0/360.0;
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -220.0/360.0;
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         rotationConfigs.Feedback.SensorToMechanismRatio = rotationRatio;
@@ -66,14 +69,14 @@ public class TurretAiming extends SubsystemBase {
         heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
         heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
-        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 45/360;
-        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0;
+        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.5;
+        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
         heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         heightConfigs.Feedback.SensorToMechanismRatio = heightRatio;
-        heightConfigs.Slot0.kP = RobotConstants.kTurretRotationP;
-        heightConfigs.Slot0.kI = RobotConstants.kTurretRotationI;
-        heightConfigs.Slot0.kD = RobotConstants.kTurretRotationD;
+        heightConfigs.Slot0.kP = RobotConstants.kTurretHeightP;
+        heightConfigs.Slot0.kI = RobotConstants.kTurretHeightI;
+        heightConfigs.Slot0.kD = RobotConstants.kTurretHeightD;
         heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
         heightConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretHeightAcceleration;
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
@@ -85,6 +88,13 @@ public class TurretAiming extends SubsystemBase {
         flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         flyConfigs.serialize(); //save
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
+
+        indexerConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+        indexerConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        indexerConfigs.CurrentLimits.withStatorCurrentLimit(40);
+        indexerConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
+        indexerConfigs.serialize(); //save
+        indexerMotor.getConfigurator().apply(indexerConfigs);
     }
     public Translation2d targetpose() {
         targetPose = new Translation2d(0, 0);
@@ -188,7 +198,10 @@ public class TurretAiming extends SubsystemBase {
         }
     }
     public void shoot(){
-        flywheelMotor.set(kmaxVelocity/2);
+        flywheelMotor.set(1);
+        if (flywheelMotor.getVelocity().getValueAsDouble() > 90) {
+            indexerMotor.set(1);
+        }
     }
     public void unshoot(){
         flywheelMotor.stopMotor();
@@ -197,7 +210,14 @@ public class TurretAiming extends SubsystemBase {
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
         rotationMotor.setControl(rotationoutput.withPosition(0));
-        heightMotor.setControl(heightoutput.withPosition(5));
+        heightMotor.setControl(heightoutput.withPosition(1.45));
+    }
+   
+    public void resetTurret(){
+        heightMotor.setControl(heightoutput.withPosition(0));
+    }
+    public void reverseIndexer() {
+        indexerMotor.set(-1);
     }
     public void stopMotors(){
         rotationMotor.set(0);
