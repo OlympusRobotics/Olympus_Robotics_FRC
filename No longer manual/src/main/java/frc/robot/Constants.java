@@ -104,5 +104,7 @@ public final class Constants {
     public static final double kIntakevelocity = 10;
     public static final double kIntakeAcceleration = 10;
 
+    //robot configs
+
   }
 }

@@ -7,13 +7,12 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -21,7 +20,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.CameraUsing;
-import frc.robot.subsystems.Climber;
+//import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.TurretAiming;
 
 public class RobotContainer {
@@ -32,8 +31,8 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+    /* private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt(); */
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -45,29 +44,22 @@ public class RobotContainer {
     public final TurretAiming aiming = new TurretAiming(drivetrain);
 
     private final Intake intake = new Intake();
-    private final Climber climber = new Climber();
+    //private final Climber climber = new Climber();
 
     private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
       .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
 
       //TEMPORARILY configured to the shoot instead of climb
-    private final Command climberer = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot()) //extends and retracts the climber
-      .until(() -> joystick.leftBumper().getAsBoolean() == false); //LB button
-    private final Command indexerBackwards = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors());
+    private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot()) //extends and retracts the climber
+      .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
 
-    private final Command intakeOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake()) //toggles the intake
-      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RB button
-
-    private final Command intakesOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake()) //toggles the intake
-      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RB button
-
-    private final ParallelRaceGroup intakingOut = new ParallelCommandGroup(intakesOut, indexerBackwards)
-      .until(() -> joystick.povLeft().getAsBoolean() == false);
+    private final Command intakingOut = Commands.parallel(intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake()), aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors()))
+      .until(() -> joystick.leftBumper().getAsBoolean() == false);
 
     public final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the aiming 🤯
       .until(() -> joystick.x().getAsBoolean() == false); //X button
 
-      public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors()) //locks the aiming 🤯
+      public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors()) //lowers height down 🤯
       .until(() -> joystick.b().getAsBoolean() == false); //X button
 
     private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim()) //when pressed will activate aimbot :3
@@ -85,8 +77,18 @@ public class RobotContainer {
       }, drivetrain)
     .until(() -> joystick.y().getAsBoolean() == false); //on the y button*/
 
-    private final Command resetYaw = drivetrain.startEnd(() -> drivetrain.seedFieldCentric(), () -> drivetrain.seedFieldCentric()) //resets the yaw
-      .until(() -> joystick.back().getAsBoolean() == false); //start button
+    /* private final Command resetYaw = drivetrain.startEnd(() -> drivetrain.seedFieldCentric(), () -> drivetrain.seedFieldCentric()) //resets the yaw
+      .until(() -> joystick.back().getAsBoolean() == false); //start button */
+
+    // Helper to apply a joystick deadband and rescale the remaining range.
+    private double applyDeadband(double value) {
+        final double deadband = 0.05;
+        if (Math.abs(value) <= deadband) {
+            return 0.0;
+        }
+        // Rescale so output starts from 0 after the deadband:
+        return Math.copySign((Math.abs(value) - deadband) / (1.0 - deadband), value);
+    }
 
     public RobotContainer() {
         configureBindings();
@@ -98,9 +100,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(this.applyDeadband(-joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(this.applyDeadband(-joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(this.applyDeadband(-joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -111,26 +113,25 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
         
-
-        joystick.leftBumper().whileTrue(climberer);
+        joystick.leftBumper().whileTrue(intakingOut);
         new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);
-        joystick.rightBumper().whileTrue(intakeOut);
+        new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(shoot);
         joystick.x().whileTrue(locksTurret);
         joystick.b().whileTrue(resetsTurret);
-        joystick.start().whileTrue(unlocksTurret);
-        joystick.back().whileTrue(resetYaw);
+        joystick.a().whileTrue(unlocksTurret);
+        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
         joystick.povLeft().whileTrue(intakingOut);
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        /* joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
         ));
-
+ */
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        /* joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
         joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse)); */
 
         whimseystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
         whimseystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop()));
@@ -142,27 +143,17 @@ public class RobotContainer {
         
 
         // Reset the field-centric heading on left bumper press.
-        joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+
+        NamedCommands.registerCommand("shoot", shoot);
+        NamedCommands.registerCommand("intake", Intake);
     }
 
     public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        final var idle = new SwerveRequest.Idle();
-        return Commands.sequence(
-            // Reset our field centric heading to match the robot
-            // facing away from our alliance station wall (0 deg).
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-            // Then slowly drive forward (away from us) for 5 seconds.
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(0.5)
-                    .withVelocityY(0)
-                    .withRotationalRate(0)
-            )
-            .withTimeout(5.0),
-            // Finally idle for the rest of auton
-            drivetrain.applyRequest(() -> idle)
-        );
-    }
+        
+        // Load the path you want to follow using its name in the GUI
+        return new PathPlannerAuto("New Auto");
+    } 
 }

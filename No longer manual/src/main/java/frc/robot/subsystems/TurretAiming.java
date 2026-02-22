@@ -4,9 +4,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.robot.Constants.RobotConstants;
 
@@ -15,8 +17,7 @@ public class TurretAiming extends SubsystemBase {
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, heightRatio, rotationRatio, 
     smoothRotation, smoothHeight, rotationTao, heightTao;
-    private TalonFX rotationMotor, heightMotor, flywheelMotor;
-    public TalonFX indexerMotor;
+    private TalonFX rotationMotor, heightMotor, flywheelMotor, indexerMotor, feedMotor;
     private TalonFXConfiguration rotationConfigs, heightConfigs, flyConfigs, indexerConfigs;
     private MotionMagicVoltage rotationoutput, heightoutput;
     private CommandSwerveDrivetrain drivetrain;
@@ -27,6 +28,7 @@ public class TurretAiming extends SubsystemBase {
         heightMotor = new TalonFX(14);
         flywheelMotor = new TalonFX(15);
         indexerMotor = new TalonFX(19);
+        feedMotor = new TalonFX(20);
         rotationConfigs = new TalonFXConfiguration();
         heightConfigs = new TalonFXConfiguration();
         flyConfigs = new TalonFXConfiguration();
@@ -95,6 +97,7 @@ public class TurretAiming extends SubsystemBase {
         indexerConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         indexerConfigs.serialize(); //save
         indexerMotor.getConfigurator().apply(indexerConfigs);
+        feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Aligned));
     }
     public Translation2d targetpose() {
         targetPose = new Translation2d(0, 0);
@@ -218,6 +221,9 @@ public class TurretAiming extends SubsystemBase {
     }
     public void reverseIndexer() {
         indexerMotor.set(-1);
+    }
+    public void feedIndexer() {
+        indexerMotor.set(1);
     }
     public void stopMotors(){
         rotationMotor.set(0);
