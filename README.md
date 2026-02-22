@@ -20,4 +20,4 @@ Github repo for code and documentation for FRC team 4982.
 
  Riptide - 2025 season
 
- Manual Test - 2026 season
+ Theseus - 2026 season
