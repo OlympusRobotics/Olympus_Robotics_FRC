@@ -7,8 +7,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -49,11 +47,14 @@ public class RobotContainer {
     private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
       .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
 
+    private final Command bringbackintake = intake.startEnd(() -> intake.endIntake(), () -> intake.endIntake())
+      .until(() -> joystick.rightBumper().getAsBoolean() == false);
       //TEMPORARILY configured to the shoot instead of climb
     private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot()) //extends and retracts the climber
       .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
 
-    private final Command intakingOut = Commands.parallel(intake.startEnd(() -> intake.outakeIntake(), () -> intake.endIntake()), aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors()))
+    private final Command intakingOut = Commands.parallel(intake.startEnd(() -> intake.outakeIntake(), 
+    () -> intake.endIntake()), aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors()))
       .until(() -> joystick.leftBumper().getAsBoolean() == false);
 
     public final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the aiming 🤯
@@ -114,13 +115,14 @@ public class RobotContainer {
         );
         
         joystick.leftBumper().whileTrue(intakingOut);
+        joystick.rightBumper().whileTrue(bringbackintake);
         new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(shoot);
         joystick.x().whileTrue(locksTurret);
         joystick.b().whileTrue(resetsTurret);
         joystick.a().whileTrue(unlocksTurret);
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-        joystick.povLeft().whileTrue(intakingOut);
+
         /* joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
             point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
@@ -147,13 +149,13 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
 
-        NamedCommands.registerCommand("shoot", shoot);
-        NamedCommands.registerCommand("intake", Intake);
+        //NamedCommands.registerCommand("shoot", shoot);
+        //NamedCommands.registerCommand("intake", Intake);
     }
 
-    public Command getAutonomousCommand() {
+    //public Command getAutonomousCommand() {
         
         // Load the path you want to follow using its name in the GUI
-        return new PathPlannerAuto("New Auto");
-    } 
+        //return new PathPlannerAuto("New Auto");
+    //} 
 }

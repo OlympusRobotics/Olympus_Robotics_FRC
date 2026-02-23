@@ -98,11 +98,11 @@ public final class Constants {
     public static final double kTurretHeightAcceleration = 1000; //rps²
       
     //Intake PID
-    public static final double kIntakeP = 0.5; //bullcrap values
+    public static final double kIntakeP = 1; //bullcrap values
     public static final double kIntakeI = 0;
     public static final double kIntakeD = 0.001;
-    public static final double kIntakevelocity = 10;
-    public static final double kIntakeAcceleration = 10;
+    public static final double kIntakevelocity = 100;
+    public static final double kIntakeAcceleration = 100;
 
     //robot configs
 

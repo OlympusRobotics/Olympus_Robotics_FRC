@@ -19,7 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 public class Intake extends SubsystemBase {
 
   private final TalonFX m_inkMot, intFWMot, m_inkMotFollower;
-  private final double notActivatedPos, ActivatedPos;
+  private final double ActivatedPos;
   private double target;
   private final TalonFXConfiguration intakeOneConf, intakeFWConf;
   public Intake() {
@@ -31,15 +31,14 @@ public class Intake extends SubsystemBase {
     intakeOneConf = new TalonFXConfiguration();
     intakeFWConf = new TalonFXConfiguration();
     ActivatedPos = 1.45;
-    notActivatedPos = 0;
     target = 0;
     m_inkMot.setPosition(0);
 
-    intakeOneConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-    intakeOneConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+    intakeOneConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+    intakeOneConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
     intakeOneConf.CurrentLimits.withStatorCurrentLimit(40);
     intakeOneConf.CurrentLimits.withStatorCurrentLimitEnable(true);
-    intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
+    //intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
     intakeOneConf.Slot0.kP = RobotConstants.kIntakeP;
     intakeOneConf.Slot0.kI = RobotConstants.kIntakeI;
     intakeOneConf.Slot0.kD = RobotConstants.kIntakeD;
@@ -52,8 +51,8 @@ public class Intake extends SubsystemBase {
     m_inkMot.getConfigurator().apply(intakeOneConf);
     m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
 
-    intakeFWConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-    intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+    intakeFWConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+    intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
     intakeFWConf.CurrentLimits.withStatorCurrentLimit(40);
     intakeFWConf.CurrentLimits.withStatorCurrentLimitEnable(true);
     intakeFWConf.serialize();
@@ -68,7 +67,7 @@ public class Intake extends SubsystemBase {
   
   // stops indexer and returns intake to original position
   public void endIntake() {
-    target = notActivatedPos;
+    target = 0;
     intFWMot.set(0);
   }
   public void outakeIntake() {

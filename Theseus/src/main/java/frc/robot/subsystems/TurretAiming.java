@@ -46,7 +46,7 @@ public class TurretAiming extends SubsystemBase {
 
         //basic motor configurations
         rotationConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        rotationConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        rotationConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
         //current limits
         rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
@@ -68,7 +68,7 @@ public class TurretAiming extends SubsystemBase {
 
         //height motors stuff
         heightConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
         heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.5;
@@ -84,15 +84,15 @@ public class TurretAiming extends SubsystemBase {
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
 
         //flywheel stuff
-        flyConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        flyConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+        flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
         flyConfigs.CurrentLimits.withStatorCurrentLimit(40);
         flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         flyConfigs.serialize(); //save
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
 
         indexerConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        indexerConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
+        indexerConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
         indexerConfigs.CurrentLimits.withStatorCurrentLimit(40);
         indexerConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         indexerConfigs.serialize(); //save
@@ -201,13 +201,14 @@ public class TurretAiming extends SubsystemBase {
         }
     }
     public void shoot(){
-        flywheelMotor.set(1);
-        if (flywheelMotor.getVelocity().getValueAsDouble() > 90) {
-            indexerMotor.set(1);
-        }
+        flywheelMotor.set(1);    
+        indexerMotor.set(-1);
+        feedMotor.set(1);
+        
     }
     public void unshoot(){
         flywheelMotor.stopMotor();
+        feedMotor.stopMotor();
     }
     public void lockTurret(){
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
@@ -228,6 +229,7 @@ public class TurretAiming extends SubsystemBase {
     public void stopMotors(){
         rotationMotor.set(0);
         heightMotor.set(0);
+        indexerMotor.set(0);
     }
     @Override
     public void periodic() {
