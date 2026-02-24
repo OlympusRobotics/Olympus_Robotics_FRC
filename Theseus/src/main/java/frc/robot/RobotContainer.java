@@ -9,6 +9,9 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -149,13 +152,13 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
 
-        //NamedCommands.registerCommand("shoot", shoot);
-        //NamedCommands.registerCommand("intake", Intake);
+        NamedCommands.registerCommand("shoot", shoot);
+        NamedCommands.registerCommand("intake", Intake);
     }
 
-    //public Command getAutonomousCommand() {
+    public Command getAutonomousCommand() {
         
         // Load the path you want to follow using its name in the GUI
-        //return new PathPlannerAuto("New Auto");
-    //} 
+        return new PathPlannerAuto("New Auto");
+    } 
 }
