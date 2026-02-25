@@ -209,7 +209,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 (speeds, driveFeedforwards) -> this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds)),
                 new PPHolonomicDriveController(
                     new PIDConstants(5, 0),
-                    new PIDConstants(5, 0)),
+                    new PIDConstants(.8, 0)),
                 rconfig, // The robot configuration
                 () -> {
                     // Boolean supplier that controls when the path will be mirrored for the red

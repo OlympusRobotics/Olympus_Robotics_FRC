@@ -68,7 +68,7 @@ public final class Constants {
     //Module Constants
     public static final double kMaxModuleSpeed = 4.72;
     public static final double kMaxAngularSpeed = 2 * Math.PI;
-    public static final int kMaxVoltage = 13;
+    public static final int kMaxVoltage = 12;
     public static final double kWheelRadius = 0.0508;
     public static final double kDriveGearRatio = 6.75;
     public static final double kRotGearRatio = 12.8;

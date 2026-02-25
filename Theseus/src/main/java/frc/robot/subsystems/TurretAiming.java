@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -67,7 +68,7 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor.getConfigurator().apply(rotationConfigs);
 
         //height motors stuff
-        heightConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+        heightConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
         heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
         heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
@@ -84,7 +85,7 @@ public class TurretAiming extends SubsystemBase {
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
 
         //flywheel stuff
-        flyConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+        flyConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
         flyConfigs.CurrentLimits.withStatorCurrentLimit(40);
         flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
@@ -161,6 +162,8 @@ public class TurretAiming extends SubsystemBase {
         targetAngle = Math.atan2(actualY, actualX);
         if (targetAngle > Math.toRadians(135)) {targetAngle -= Math.toRadians(360);}
         if (targetAngle < Math.toRadians(-225)) {targetAngle += Math.toRadians(360);}
+        double smartdashboardangle = Math.toDegrees(targetAngle);
+        SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
         return targetAngle / (2 * Math.PI);
     }
 

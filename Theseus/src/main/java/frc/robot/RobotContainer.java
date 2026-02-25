@@ -9,9 +9,14 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -36,25 +41,26 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt(); */
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
-
     private final CommandXboxController joystick = new CommandXboxController(0);
     private final CommandXboxController whimseystick = new CommandXboxController(1);
-
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final CameraUsing visioningit = new CameraUsing(drivetrain);
     public final TurretAiming aiming = new TurretAiming(drivetrain);
-
     private final Intake intake = new Intake();
+    private final Field2d field = new Field2d();
+    private final SendableChooser<Command> autoChooser;
     //private final Climber climber = new Climber();
 
     private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
       .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
+    private final Command autoIntake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake());
 
     private final Command bringbackintake = intake.startEnd(() -> intake.endIntake(), () -> intake.endIntake())
       .until(() -> joystick.rightBumper().getAsBoolean() == false);
       //TEMPORARILY configured to the shoot instead of climb
     private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot()) //extends and retracts the climber
       .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
+    private final Command autoshoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot());
 
     private final Command intakingOut = Commands.parallel(intake.startEnd(() -> intake.outakeIntake(), 
     () -> intake.endIntake()), aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors()))
@@ -68,7 +74,6 @@ public class RobotContainer {
 
     private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim()) //when pressed will activate aimbot :3
       .until(() -> joystick.a().getAsBoolean() == false); //Start button
-
     /*private final Command llAutoAim = new RunCommand(() -> { //limelight aimbot :3
 
         double forwardVal = applyDeadband(limes.aimAndRange()[0]);
@@ -95,7 +100,14 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
+        drivetrain.configureAutobuilder();
         configureBindings();
+        NamedCommands.registerCommand("shoot", autoshoot.withTimeout(4));
+        NamedCommands.registerCommand("intake", autoIntake.withTimeout(6));
+        SmartDashboard.putData("Field", field);
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("New Auto", autoChooser);
+        SmartDashboard.putData("New New Auto", autoChooser);
     }
 
     private void configureBindings() {
@@ -150,15 +162,14 @@ public class RobotContainer {
         // Reset the field-centric heading on left bumper press.
 
         drivetrain.registerTelemetry(logger::telemeterize);
-
-
-        NamedCommands.registerCommand("shoot", shoot);
-        NamedCommands.registerCommand("intake", Intake);
     }
-
     public Command getAutonomousCommand() {
-        
         // Load the path you want to follow using its name in the GUI
-        return new PathPlannerAuto("New Auto");
+        //return new PathPlannerAuto("New Auto");
+        return new PathPlannerAuto("New New Auto");
     } 
+    public void periodic() {
+      field.setRobotPose(drivetrain.getState().Pose);
+      SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
+    }
 }
