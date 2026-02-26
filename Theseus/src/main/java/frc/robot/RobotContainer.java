@@ -40,9 +40,12 @@ public class RobotContainer {
     /* private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt(); */
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    //initalize controllers (joy and whimsey lmao im so funny :3)
     private final CommandXboxController joystick = new CommandXboxController(0);
     private final CommandXboxController whimseystick = new CommandXboxController(1);
+
+    //initalize the subsystems
+    private final Telemetry logger = new Telemetry(MaxSpeed);
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final CameraUsing visioningit = new CameraUsing(drivetrain);
     public final TurretAiming aiming = new TurretAiming(drivetrain);
@@ -51,30 +54,44 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
     //private final Climber climber = new Climber();
 
+
+    //Initalize contoller commands
+    /** Opens and closes intake */
     private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
       .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
+
+    /** Opens and closes intake without controller requiremets*/
     private final Command autoIntake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake());
 
+    /** Closes intake */
     private final Command bringbackintake = intake.startEnd(() -> intake.endIntake(), () -> intake.endIntake())
       .until(() -> joystick.rightBumper().getAsBoolean() == false);
-      //TEMPORARILY configured to the shoot instead of climb
-    private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot()) //extends and retracts the climber
+      
+    /** Spins the flywheels to shoot a ball */
+    private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot())
       .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
+
+    /** Spins the flywheels to shoot a ball without controller*/
     private final Command autoshoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot());
 
+    /** Intake stuff */
     private final Command intakingOut = Commands.parallel(intake.startEnd(() -> intake.outakeIntake(), 
     () -> intake.endIntake()), aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors()))
       .until(() -> joystick.leftBumper().getAsBoolean() == false);
 
-    public final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the aiming 🤯
+    /** Locks the turret 🤯*/
+    public final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors())
       .until(() -> joystick.x().getAsBoolean() == false); //X button
 
-      public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors()) //lowers height down 🤯
+    /** Resets the turret */
+    public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
       .until(() -> joystick.b().getAsBoolean() == false); //X button
 
-    private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim()) //when pressed will activate aimbot :3
+      /**Unlocks the turret and tartet aims */
+    private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim())
       .until(() -> joystick.a().getAsBoolean() == false); //Start button
-    /*private final Command llAutoAim = new RunCommand(() -> { //limelight aimbot :3
+
+    /*private final Command llAutoAim = new RunCommand(() -> { //stinky stinky limelight stuff
 
         double forwardVal = applyDeadband(limes.aimAndRange()[0]);
         double strafeVal = applyDeadband((-joystick.getLeftX())); // Negate to match joystick direction
@@ -89,7 +106,11 @@ public class RobotContainer {
     /* private final Command resetYaw = drivetrain.startEnd(() -> drivetrain.seedFieldCentric(), () -> drivetrain.seedFieldCentric()) //resets the yaw
       .until(() -> joystick.back().getAsBoolean() == false); //start button */
 
-    // Helper to apply a joystick deadband and rescale the remaining range.
+    /** 
+     * Helper to apply a joystick deadband and rescale the remaining range. 
+     * @param value the value to apply deadband to
+     * @return the value after the deadband
+    */
     private double applyDeadband(double value) {
         final double deadband = 0.05;
         if (Math.abs(value) <= deadband) {
@@ -129,6 +150,7 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
         
+        //Binds the commands to the buttons
         joystick.leftBumper().whileTrue(intakingOut);
         joystick.rightBumper().whileTrue(bringbackintake);
         new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);

@@ -18,10 +18,10 @@ public class TurretAiming extends SubsystemBase {
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, heightRatio, rotationRatio, 
     smoothRotation, smoothHeight, rotationTao, heightTao;
-    private TalonFX rotationMotor, heightMotor, flywheelMotor, indexerMotor, feedMotor;
-    private TalonFXConfiguration rotationConfigs, heightConfigs, flyConfigs, indexerConfigs;
-    private MotionMagicVoltage rotationoutput, heightoutput;
-    private CommandSwerveDrivetrain drivetrain;
+    private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerMotor, feedMotor;
+    private final TalonFXConfiguration rotationConfigs, heightConfigs, flyConfigs, indexerConfigs;
+    private final MotionMagicVoltage rotationoutput, heightoutput;
+    private final CommandSwerveDrivetrain drivetrain;
 
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -100,6 +100,10 @@ public class TurretAiming extends SubsystemBase {
         indexerMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Aligned));
     }
+    /** 
+     * Gets the target field position based on the alliance and current position
+     * @return The Translation2d of where it should be
+    */
     public Translation2d targetpose() {
         targetPose = new Translation2d(0, 0);
         //if on red alliance
@@ -141,7 +145,7 @@ public class TurretAiming extends SubsystemBase {
         return targetPose;
     }
 
-    //gets the height of the target based on which target it is aiming at, and subtracts the robot height to get the actual height
+    /**Gets the height of the target based on which target it is aiming at, and subtracts the robot height to get the actual height */
     public double getTargetHeight(){
         if (roboticPose.getX() < 4 || roboticPose.getX() > 12.5) {
             return 1.8288 - turretHeight;
@@ -151,7 +155,7 @@ public class TurretAiming extends SubsystemBase {
         }
     }
 
-    //calculating the actual angle while the robot is moving
+    /**Calculating the actual angle while the robot is moving*/
     public double vectorCalculations() {
         double chassisSpeeded = Math.pow((Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) + 
         Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)), .5);
@@ -167,7 +171,7 @@ public class TurretAiming extends SubsystemBase {
         return targetAngle / (2 * Math.PI);
     }
 
-    //moves the turret to the wanted spots
+    /**Moves the turret to the wanted spots*/
     public void targetAim(){
         if (roboticPose == null) return;
         targetpose();
@@ -186,7 +190,10 @@ public class TurretAiming extends SubsystemBase {
         heightMotor.setControl(heightoutput.withPosition(smoothHeight));
     }
 
-    //kinematics used to figure out the angle
+    /**
+     * Kinematics used to figure out the angle
+     * Max definetly wrote it trust
+    */
     public double maxFormula(){
         targetx = (targetpose().getX() - roboticPose.getX()); 
         targety = (targetpose().getY() - roboticPose.getY());
@@ -203,16 +210,19 @@ public class TurretAiming extends SubsystemBase {
             return 0;
         }
     }
+    /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
         flywheelMotor.set(1);    
         indexerMotor.set(-1);
         feedMotor.set(1);
         
     }
+    /** Stops shooting */
     public void unshoot(){
         flywheelMotor.stopMotor();
         feedMotor.stopMotor();
     }
+    /**Locks the turret */
     public void lockTurret(){
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
@@ -220,15 +230,19 @@ public class TurretAiming extends SubsystemBase {
         heightMotor.setControl(heightoutput.withPosition(1.45));
     }
    
+    /** Resets the angle of the turret to 0 */
     public void resetTurret(){
         heightMotor.setControl(heightoutput.withPosition(0));
     }
+    /**Reverses the direction of the Indexer */
     public void reverseIndexer() {
         indexerMotor.set(-1);
     }
+    /**Starts moving the Indexer */
     public void feedIndexer() {
         indexerMotor.set(1);
     }
+    /**Stops all turret related motors, the Rotation, Height, and Indexer motors */
     public void stopMotors(){
         rotationMotor.set(0);
         heightMotor.set(0);

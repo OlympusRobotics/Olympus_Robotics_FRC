@@ -6,8 +6,12 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/**
+ * @deprecated 
+ * We shouldn't be using this*/
 public class LLVision extends SubsystemBase {
 
+  /**@deprecated */
   public LLVision() {}
 
   /**
