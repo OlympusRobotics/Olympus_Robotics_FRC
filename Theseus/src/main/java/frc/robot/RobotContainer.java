@@ -191,7 +191,6 @@ public class RobotContainer {
         return new PathPlannerAuto("New New Auto");
     } 
     public void periodic() {
-      field.setRobotPose(drivetrain.getState().Pose);
       SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
     }
 }

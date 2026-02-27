@@ -176,6 +176,7 @@ public class TurretAiming extends SubsystemBase {
         if (roboticPose == null) return;
         targetpose();
         getTargetHeight();
+        SmartDashboard.putString("penis", "peepee poopoo");
         double desiredAngle  = vectorCalculations();
         double desiredHeight = maxFormula();
         double rotError = desiredAngle - smoothRotation;
