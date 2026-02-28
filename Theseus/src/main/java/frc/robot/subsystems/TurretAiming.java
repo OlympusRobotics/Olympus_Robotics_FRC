@@ -4,99 +4,37 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.robot.Constants.RobotConstants;
+import static frc.robot.Constants.TurretConfigs.*;
 
 public class TurretAiming extends SubsystemBase {
     private Pose2d roboticPose;
     private Translation2d targetPose;
-    private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, heightRatio, rotationRatio, 
+    private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, 
     smoothRotation, smoothHeight, rotationTao, heightTao;
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerMotor, feedMotor;
-    private final TalonFXConfiguration rotationConfigs, heightConfigs, flyConfigs, indexerConfigs;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
 
+    /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
-        rotationMotor = new TalonFX(13);
-        heightMotor = new TalonFX(14);
-        flywheelMotor = new TalonFX(15);
-        indexerMotor = new TalonFX(19);
-        feedMotor = new TalonFX(20);
-        rotationConfigs = new TalonFXConfiguration();
-        heightConfigs = new TalonFXConfiguration();
-        flyConfigs = new TalonFXConfiguration();
-        indexerConfigs = new TalonFXConfiguration();
-        turretHeight = .508; 
-        kmaxVelocity = 4.71;
-        rotationoutput = new MotionMagicVoltage(0);
-        heightoutput = new MotionMagicVoltage(0);
-        heightRatio = 5;
-        rotationRatio = 100;
-        smoothRotation = 0;
-        smoothHeight = 0;
-        rotationTao = .05;
-        heightTao = .1;
+        rotationMotor = new TalonFX(RobotConstants.kTurretRotationID);
+        heightMotor =   new TalonFX(RobotConstants.kTurretHeightID);
+        flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
+        indexerMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
+        feedMotor =     new TalonFX(RobotConstants.kTurretFeedID);
+        rotationoutput =new MotionMagicVoltage(0);
+        heightoutput =  new MotionMagicVoltage(0);
 
-        //basic motor configurations
-        rotationConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        rotationConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        //current limits
-        rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
-        rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
-        //motor limits
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 130.0/360.0;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -220.0/360.0;
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        rotationConfigs.Feedback.SensorToMechanismRatio = rotationRatio;
-        rotationConfigs.Slot0.kP = RobotConstants.kTurretRotationP;
-        rotationConfigs.Slot0.kI = RobotConstants.kTurretRotationI;
-        rotationConfigs.Slot0.kD = RobotConstants.kTurretRotationD;
-        rotationConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
-        rotationConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretRotationAcceleration;
-        //save
-        rotationConfigs.serialize();
-        //apply
+        //Set up motors
         rotationMotor.getConfigurator().apply(rotationConfigs);
-
-        //height motors stuff
-        heightConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
-        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        heightConfigs.CurrentLimits.withStatorCurrentLimit(40);
-        heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
-        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.5;
-        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
-        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        heightConfigs.Feedback.SensorToMechanismRatio = heightRatio;
-        heightConfigs.Slot0.kP = RobotConstants.kTurretHeightP;
-        heightConfigs.Slot0.kI = RobotConstants.kTurretHeightI;
-        heightConfigs.Slot0.kD = RobotConstants.kTurretHeightD;
-        heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
-        heightConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretHeightAcceleration;
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
-
-        //flywheel stuff
-        flyConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        flyConfigs.CurrentLimits.withStatorCurrentLimit(40);
-        flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
-        flyConfigs.serialize(); //save
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
-
-        indexerConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
-        indexerConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        indexerConfigs.CurrentLimits.withStatorCurrentLimit(40);
-        indexerConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
-        indexerConfigs.serialize(); //save
         indexerMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Aligned));
     }
