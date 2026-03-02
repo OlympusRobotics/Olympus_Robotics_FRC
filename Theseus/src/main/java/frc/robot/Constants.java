@@ -187,8 +187,10 @@ public final class Constants {
         //flywheel stuff
         flyConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        flyConfigs.CurrentLimits.withStatorCurrentLimit(40);
+        flyConfigs.CurrentLimits.withStatorCurrentLimit(22);
+        flyConfigs.CurrentLimits.withSupplyCurrentLimit(25);
         flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
+        flyConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
         flyConfigs.serialize(); //save
 
         //indexer stuff
