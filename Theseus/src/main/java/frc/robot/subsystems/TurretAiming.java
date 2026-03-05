@@ -27,7 +27,7 @@ public class TurretAiming extends SubsystemBase {
         heightMotor =   new TalonFX(RobotConstants.kTurretHeightID);
         flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
         indexerMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
-        feedMotor =     new TalonFX(RobotConstants.kTurretFeedID);
+        feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         rotationoutput =new MotionMagicVoltage(0);
         heightoutput =  new MotionMagicVoltage(0);
 
@@ -36,7 +36,7 @@ public class TurretAiming extends SubsystemBase {
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
         indexerMotor.getConfigurator().apply(indexerConfigs);
-        feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
     /** 
      * Gets the target field position based on the alliance and current position
