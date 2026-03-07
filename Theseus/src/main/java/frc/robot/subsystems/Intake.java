@@ -5,6 +5,7 @@ package frc.robot.subsystems;
 
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.IntakeConstants.*;
 
@@ -15,7 +16,9 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 public class Intake extends SubsystemBase {
 
-  private final TalonFX m_inkMot, intFWMot, m_inkMotFollower;
+  public final TalonFX m_inkMot;
+  private final TalonFX intFWMot;
+  private final TalonFX m_inkMotFollower;
   private double target;
   public Intake() {
 
@@ -34,18 +37,23 @@ public class Intake extends SubsystemBase {
 
   // turns indexer on and sends intake out
   public void startIntake() {
-    target = ActivatedPos;
-    intFWMot.set(1);
+    target = Constants.IntakeConstants.ActivatedPos;
+    //intFWMot.set(1);
   }
-  
+  public void spinflywheel() {
+    intFWMot.set(.35);
+  }
+  public void stopspin() {
+    intFWMot.set(0);
+  }
   // stops indexer and returns intake to original position
   public void endIntake() {
     target = 0;
-    intFWMot.set(0);
+    //intFWMot.set(0);
   }
   public void outakeIntake() {
     target = ActivatedPos;
-    intFWMot.set(-1);
+    //intFWMot.set(-1);
   }
   @Override
   public void periodic() {

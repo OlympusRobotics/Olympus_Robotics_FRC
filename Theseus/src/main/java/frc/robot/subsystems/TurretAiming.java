@@ -31,7 +31,7 @@ public class TurretAiming extends SubsystemBase {
         heightMotor =   new TalonFX(RobotConstants.kTurretHeightID);
         flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
         indexerMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
-        feedMotor =     new TalonFX(RobotConstants.kTurretFeedID);
+        feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         rotationoutput =new MotionMagicVoltage(0);
         heightoutput =  new MotionMagicVoltage(0);
 
@@ -122,6 +122,7 @@ public class TurretAiming extends SubsystemBase {
         if (roboticPose == null) return;
         targetpose();
         getTargetHeight();
+        SmartDashboard.putString("penis", "peepee poopoo");
         double desiredAngle  = vectorCalculations();
         double desiredHeight = maxFormula();
         double rotError = desiredAngle - smoothRotation;

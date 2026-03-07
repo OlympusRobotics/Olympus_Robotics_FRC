@@ -50,7 +50,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final CameraUsing visioningit = new CameraUsing(drivetrain);
     public final TurretAiming aiming = new TurretAiming(drivetrain);
-    private final Intake intake = new Intake();
+    public final Intake intake = new Intake();
     private final Field2d field = new Field2d();
     private final SendableChooser<Command> autoChooser;
     //private final Climber climber = new Climber();
@@ -58,7 +58,10 @@ public class RobotContainer {
 
     //Initalize contoller commands
     /** Opens and closes intake */
-    private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake()) //Opens and closes the intake respectivly
+    private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.startIntake()) //Opens and closes the intake respectivly
+      .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
+
+    private final Command flywheelintake = intake.startEnd(() -> intake.spinflywheel(), () -> intake.stopspin()) //Opens and closes the intake respectivly
       .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
 
     /** Opens and closes intake without controller requiremets*/
@@ -155,6 +158,8 @@ public class RobotContainer {
         joystick.leftBumper().whileTrue(intakingOut);
         joystick.rightBumper().whileTrue(bringbackintake);
         new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);
+        new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(flywheelintake);
+
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(shoot);
         joystick.x().whileTrue(locksTurret);
         joystick.b().whileTrue(resetsTurret);
@@ -194,7 +199,6 @@ public class RobotContainer {
         return new PathPlannerAuto("New New Auto");
     } 
     public void periodic() {
-      field.setRobotPose(drivetrain.getState().Pose);
       SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
     }
 }
