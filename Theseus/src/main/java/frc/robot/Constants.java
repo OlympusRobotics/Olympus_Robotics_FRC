@@ -155,8 +155,8 @@ public final class Constants {
         rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         //motor limits
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 130.0/360.0;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -220.0/360.0;
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .5; //130.0/360.0;
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.5; //-220.0/360.0;
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         rotationConfigs.Feedback.SensorToMechanismRatio = rotationRatio;

@@ -32,6 +32,7 @@ import frc.robot.subsystems.TurretAiming;
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private boolean useTurretMotionMagic = true;
     
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -88,7 +89,7 @@ public class RobotContainer {
       .until(() -> joystick.b().getAsBoolean() == false); //X button
 
       /**Unlocks the turret and tartet aims */
-    private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim())
+    private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(useTurretMotionMagic), () -> aiming.targetAim(useTurretMotionMagic))
       .until(() -> joystick.a().getAsBoolean() == false); //Start button
 
     /*private final Command llAutoAim = new RunCommand(() -> { //stinky stinky limelight stuff
@@ -159,6 +160,8 @@ public class RobotContainer {
         joystick.b().whileTrue(resetsTurret);
         joystick.a().whileTrue(unlocksTurret);
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        
+        joystick.start().onTrue(aiming.runOnce(() -> {useTurretMotionMagic = !useTurretMotionMagic;}) );
 
         /* joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->

@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -11,6 +12,8 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.TurretConfigs.*;
 
+import java.util.Optional;
+
 public class TurretAiming extends SubsystemBase {
     private Pose2d roboticPose;
     private Translation2d targetPose;
@@ -19,6 +22,7 @@ public class TurretAiming extends SubsystemBase {
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
+    private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -37,6 +41,8 @@ public class TurretAiming extends SubsystemBase {
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
         indexerMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+
+        stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -109,8 +115,10 @@ public class TurretAiming extends SubsystemBase {
         return targetAngle / (2 * Math.PI);
     }
 
-    /**Moves the turret to the wanted spots*/
-    public void targetAim(){
+    /**Moves the turret to the wanted spots
+     * @param useMotionMagic if the rotation motor should calculate using MotionMagic or not
+    */
+    public void targetAim(Boolean useMotionMagic){
         if (roboticPose == null) return;
         targetpose();
         getTargetHeight();
@@ -124,8 +132,12 @@ public class TurretAiming extends SubsystemBase {
         if (Math.abs(heightError) > .01) {
             smoothHeight += heightTao * heightError;
         }
-        rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
         heightMotor.setControl(heightoutput.withPosition(smoothHeight));
+        if (useMotionMagic == null || useMotionMagic == true) {
+            rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
+        } else {
+            rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(rotationMotor.getPosition().getValueAsDouble(), smoothRotation));
+        }
     }
 
     /**
@@ -154,6 +166,9 @@ public class TurretAiming extends SubsystemBase {
         indexerMotor.set(-1);
         feedMotor.set(1);
         
+    }
+    private double enc2Rad(double EncoderPosition){
+        return ((EncoderPosition - 0.5) * 2 * Math.PI);
     }
     /** Stops shooting */
     public void unshoot(){
