@@ -40,7 +40,7 @@ public class TurretAiming extends SubsystemBase {
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
         indexerMotor.getConfigurator().apply(indexerConfigs);
-        feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
     }

@@ -119,11 +119,11 @@ public final class Constants {
     public static final double kTurretHeightAcceleration = 1000; //rps²
       
     //Intake PID
-    public static final double kIntakeP = 3; //bullcrap values
+    public static final double kIntakeP = 0.8; //bullcrap values
     public static final double kIntakeI = 0;
     public static final double kIntakeD = 0.0035;
-    public static final double kIntakevelocity = 1000;
-    public static final double kIntakeAcceleration = 1000;
+    public static final double kIntakevelocity = 500;
+    public static final double kIntakeAcceleration = 500;
 
     //robot config
 
@@ -210,7 +210,7 @@ public final class Constants {
     public static final TalonFXConfiguration intakeConf = new TalonFXConfiguration();
     /** Configs for the intakeFW motor from {@link IntakeConstants} */
     public static final TalonFXConfiguration intakeFWConf = new TalonFXConfiguration();
-    public static final double ActivatedPos = -2.1;
+    public static final double ActivatedPos = -1.5;
     static {
       //
       intakeConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
@@ -221,10 +221,10 @@ public final class Constants {
       intakeConf.Slot0.kP = RobotConstants.kIntakeP;
       intakeConf.Slot0.kI = RobotConstants.kIntakeI;
       intakeConf.Slot0.kD = RobotConstants.kIntakeD;
-      intakeConf.Slot0.kG = 3.5;
+      intakeConf.Slot0.kG = 0;
       intakeConf.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kIntakevelocity;
       intakeConf.MotionMagic.MotionMagicAcceleration = RobotConstants.kIntakeAcceleration;
-      intakeConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+      //intakeConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
       intakeConf.serialize();
 
       //Intake FW config
