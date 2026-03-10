@@ -30,7 +30,7 @@ public class Intake extends SubsystemBase {
     target = 0;
 
     m_inkMot.getConfigurator().apply(intakeConf);
-    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Aligned));
     intFWMot.getConfigurator().apply(intakeFWConf);
     m_inkMot.setPosition(0);
 

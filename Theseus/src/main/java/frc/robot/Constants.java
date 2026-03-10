@@ -138,7 +138,7 @@ public final class Constants {
     public static final TalonFXConfiguration flyConfigs = new TalonFXConfiguration();
     /** Configuration for the indexer from {@link TurretConfigs} */
     public static final TalonFXConfiguration indexerConfigs = new TalonFXConfiguration();
-    public static final Double rotationRatio = 100.0;
+    public static final Double rotationRatio = 40.0;
     public static final Double turretHeight = .508; 
     public static final Double kmaxVelocity = 4.71;
     public static final Double heightRatio = 5.0;
@@ -196,10 +196,10 @@ public final class Constants {
         flyConfigs.serialize(); //save
 
         //indexer stuff
-        indexerConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+        indexerConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         indexerConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        indexerConfigs.CurrentLimits.withStatorCurrentLimit(15);
-        indexerConfigs.CurrentLimits.withSupplyCurrentLimit(16);
+        indexerConfigs.CurrentLimits.withStatorCurrentLimit(18);
+        indexerConfigs.CurrentLimits.withSupplyCurrentLimit(19);
         indexerConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
         indexerConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         indexerConfigs.serialize(); //save
