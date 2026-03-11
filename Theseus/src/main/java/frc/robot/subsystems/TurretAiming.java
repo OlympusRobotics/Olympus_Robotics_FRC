@@ -32,8 +32,8 @@ public class TurretAiming extends SubsystemBase {
         flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
         indexerMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
         feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
-        rotationoutput =new MotionMagicVoltage(0);
-        heightoutput =  new MotionMagicVoltage(0);
+        rotationoutput = new MotionMagicVoltage(0);
+        heightoutput =   new MotionMagicVoltage(0);
 
         //Set up motors
         rotationMotor.getConfigurator().apply(rotationConfigs);
