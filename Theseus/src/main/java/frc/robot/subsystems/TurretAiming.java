@@ -31,8 +31,8 @@ public class TurretAiming extends SubsystemBase {
         heightMotor =   new TalonFX(RobotConstants.kTurretHeightID);
         flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
         indexerLMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
-        indexerRMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
-        feedMotor =  new TalonFX(RobotConstants.kTurretRFeedID);
+        indexerRMotor =  new TalonFX(RobotConstants.kTurretRIndexerID);
+        feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         rotationoutput =new MotionMagicVoltage(0);
         heightoutput =  new MotionMagicVoltage(0);
 
@@ -40,8 +40,9 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor.getConfigurator().apply(rotationConfigs);
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
-        indexerMotor.getConfigurator().apply(indexerConfigs);
-        feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerLMotor.getConfigurator().apply(indexerConfigs);
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
 
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
     }

@@ -40,7 +40,7 @@ public final class Constants {
     public static final double kBackRightEncoderOffset = 0.565;
 
     //Gyro ID
-    public static final int kGyroID = 9;
+    public static final int kGyroID = 21;
 
     //Climber ID
     public static final int kClimberID = 10;
@@ -51,8 +51,8 @@ public final class Constants {
     public static final int kTurretHeightID = (14);
     public static final int kTurretFlywheelID = (15);
     public static final int kTurretIndexerID = (19);
-    public static final int kTurretRFeedID = (20);
-    public static final int kTurretLFeedID = (21);
+    public static final int kTurretFeedID = (20);
+    public static final int kTurretRIndexerID = (22);
 
     //intake device ids
     public static final int kIntakeID = 16;
