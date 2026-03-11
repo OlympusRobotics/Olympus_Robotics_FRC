@@ -76,7 +76,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        m_robotContainer.intake.m_inkMot.setPosition(0);
+        //m_robotContainer.intake.m_inkMot.setPosition(0);
     }
 
     @Override
@@ -89,11 +89,11 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        /* m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
-        }
+        } */
     }
 
     @Override
@@ -109,6 +109,8 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().cancel(m_autonomousCommand);
         }
+
+        m_robotContainer.intake.m_inkMot.setPosition(0);
     }
 
     @Override

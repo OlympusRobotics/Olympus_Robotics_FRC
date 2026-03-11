@@ -120,11 +120,11 @@ public final class Constants {
     public static final double kTurretHeightAcceleration = 1000; //rps²
       
     //Intake PID
-    public static final double kIntakeP = 3; //bullcrap values
+    public static final double kIntakeP = 0.8; //bullcrap values
     public static final double kIntakeI = 0;
     public static final double kIntakeD = 0.0035;
-    public static final double kIntakevelocity = 1000;
-    public static final double kIntakeAcceleration = 1000;
+    public static final double kIntakevelocity = 500;
+    public static final double kIntakeAcceleration = 500;
 
     //robot config
 
@@ -139,7 +139,7 @@ public final class Constants {
     public static final TalonFXConfiguration flyConfigs = new TalonFXConfiguration();
     /** Configuration for the indexer from {@link TurretConfigs} */
     public static final TalonFXConfiguration indexerConfigs = new TalonFXConfiguration();
-    public static final Double rotationRatio = 100.0;
+    public static final Double rotationRatio = 40.0;
     public static final Double turretHeight = .508; 
     public static final Double kmaxVelocity = 4.71;
     public static final Double heightRatio = 5.0;
@@ -156,8 +156,8 @@ public final class Constants {
         rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         //motor limits
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 130.0/360.0;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -220.0/360.0 ;
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .5; //130.0/360.0;
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.5; //-220.0/360.0;
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         rotationConfigs.Feedback.SensorToMechanismRatio = rotationRatio;
@@ -197,10 +197,10 @@ public final class Constants {
         flyConfigs.serialize(); //save
 
         //indexer stuff
-        indexerConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+        indexerConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         indexerConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        indexerConfigs.CurrentLimits.withStatorCurrentLimit(15);
-        indexerConfigs.CurrentLimits.withSupplyCurrentLimit(16);
+        indexerConfigs.CurrentLimits.withStatorCurrentLimit(18);
+        indexerConfigs.CurrentLimits.withSupplyCurrentLimit(19);
         indexerConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
         indexerConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         indexerConfigs.serialize(); //save
@@ -211,7 +211,7 @@ public final class Constants {
     public static final TalonFXConfiguration intakeConf = new TalonFXConfiguration();
     /** Configs for the intakeFW motor from {@link IntakeConstants} */
     public static final TalonFXConfiguration intakeFWConf = new TalonFXConfiguration();
-    public static final double ActivatedPos = -1.9;
+    public static final double ActivatedPos = -1.5;
     static {
       //
       intakeConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
@@ -222,10 +222,10 @@ public final class Constants {
       intakeConf.Slot0.kP = RobotConstants.kIntakeP;
       intakeConf.Slot0.kI = RobotConstants.kIntakeI;
       intakeConf.Slot0.kD = RobotConstants.kIntakeD;
-      intakeConf.Slot0.kG = 3.5;
+      intakeConf.Slot0.kG = 0;
       intakeConf.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kIntakevelocity;
       intakeConf.MotionMagic.MotionMagicAcceleration = RobotConstants.kIntakeAcceleration;
-      intakeConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+      //intakeConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
       intakeConf.serialize();
 
       //Intake FW config
