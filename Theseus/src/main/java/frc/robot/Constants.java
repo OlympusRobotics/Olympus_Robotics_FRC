@@ -51,7 +51,8 @@ public final class Constants {
     public static final int kTurretHeightID = (14);
     public static final int kTurretFlywheelID = (15);
     public static final int kTurretIndexerID = (19);
-    public static final int kTurretFeedID = (20);
+    public static final int kTurretRFeedID = (20);
+    public static final int kTurretLFeedID = (21);
 
     //intake device ids
     public static final int kIntakeID = 16;
@@ -210,7 +211,7 @@ public final class Constants {
     public static final TalonFXConfiguration intakeConf = new TalonFXConfiguration();
     /** Configs for the intakeFW motor from {@link IntakeConstants} */
     public static final TalonFXConfiguration intakeFWConf = new TalonFXConfiguration();
-    public static final double ActivatedPos = -2.1;
+    public static final double ActivatedPos = -1.9;
     static {
       //
       intakeConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);

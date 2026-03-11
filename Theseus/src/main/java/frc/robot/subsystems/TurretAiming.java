@@ -16,7 +16,7 @@ public class TurretAiming extends SubsystemBase {
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, 
     smoothRotation, smoothHeight, rotationTao, heightTao;
-    private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerMotor, feedMotor;
+    private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
 
@@ -26,8 +26,9 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor = new TalonFX(RobotConstants.kTurretRotationID);
         heightMotor =   new TalonFX(RobotConstants.kTurretHeightID);
         flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
-        indexerMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
-        feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
+        indexerLMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
+        indexerRMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
+        feedMotor =  new TalonFX(RobotConstants.kTurretRFeedID);
         rotationoutput =new MotionMagicVoltage(0);
         heightoutput =  new MotionMagicVoltage(0);
 
@@ -35,8 +36,9 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor.getConfigurator().apply(rotationConfigs);
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
-        indexerMotor.getConfigurator().apply(indexerConfigs);
-        feedMotor.setControl(new Follower(indexerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerLMotor.getConfigurator().apply(indexerConfigs);
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -152,7 +154,7 @@ public class TurretAiming extends SubsystemBase {
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
         flywheelMotor.set(1);    
-        indexerMotor.set(-1);
+        indexerLMotor.set(-1);
         feedMotor.set(1);
         
     }
@@ -175,17 +177,17 @@ public class TurretAiming extends SubsystemBase {
     }
     /**Reverses the direction of the Indexer */
     public void reverseIndexer() {
-        indexerMotor.set(-1);
+        indexerLMotor.set(-1);
     }
     /**Starts moving the Indexer */
     public void feedIndexer() {
-        indexerMotor.set(1);
+        indexerLMotor.set(1);
     }
     /**Stops all turret related motors, the Rotation, Height, and Indexer motors */
     public void stopMotors(){
         rotationMotor.set(0);
         heightMotor.set(0);
-        indexerMotor.set(0);
+        indexerLMotor.set(0);
     }
     @Override
     public void periodic() {
