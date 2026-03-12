@@ -41,8 +41,8 @@ public class TurretAiming extends SubsystemBase {
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
         indexerLMotor.getConfigurator().apply(indexerConfigs);
-        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
-        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
 
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
     }
@@ -166,8 +166,9 @@ public class TurretAiming extends SubsystemBase {
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
         flywheelMotor.set(1);    
-        indexerLMotor.set(-1);
-        feedMotor.set(1);
+        indexerLMotor.setVoltage(-12);
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         
     }
     private double enc2Rad(double EncoderPosition){
@@ -176,7 +177,10 @@ public class TurretAiming extends SubsystemBase {
     /** Stops shooting */
     public void unshoot(){
         flywheelMotor.stopMotor();
-        feedMotor.stopMotor();
+        indexerLMotor.stopMotor();
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+
     }
     /**Locks the turret */
     public void lockTurret(){
@@ -192,17 +196,24 @@ public class TurretAiming extends SubsystemBase {
     }
     /**Reverses the direction of the Indexer */
     public void reverseIndexer() {
-        indexerLMotor.set(-1);
+        indexerLMotor.set(1);
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        
     }
     /**Starts moving the Indexer */
     public void feedIndexer() {
-        indexerLMotor.set(1);
+        indexerLMotor.set(-1);
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
     /**Stops all turret related motors, the Rotation, Height, and Indexer motors */
     public void stopMotors(){
-        rotationMotor.set(0);
-        heightMotor.set(0);
-        indexerLMotor.set(0);
+        rotationMotor.stopMotor();
+        heightMotor.stopMotor();
+        indexerLMotor.stopMotor();
+        indexerRMotor.stopMotor();
+        feedMotor.stopMotor();
     }
     @Override
     public void periodic() {

@@ -89,7 +89,7 @@ public final class Constants {
 
     //Module Constants
     public static final double kMaxModuleSpeed = 4.72;
-    public static final double kMaxAngularSpeed = 2 * Math.PI;
+    public static final double kMaxAngularSpeed = 8 * Math.PI;
     public static final int kMaxVoltage = 12;
     public static final double kWheelRadius = 0.0508;
     public static final double kDriveGearRatio = 6.75;
@@ -120,11 +120,11 @@ public final class Constants {
     public static final double kTurretHeightAcceleration = 1000; //rps²
       
     //Intake PID
-    public static final double kIntakeP = 0.8; //bullcrap values
+    public static final double kIntakeP = 1.; //bullcrap values
     public static final double kIntakeI = 0;
-    public static final double kIntakeD = 0.0035;
-    public static final double kIntakevelocity = 500;
-    public static final double kIntakeAcceleration = 500;
+    public static final double kIntakeD = 0;
+    public static final double kIntakevelocity = 300;
+    public static final double kIntakeAcceleration = 300;
 
     //robot config
 
@@ -190,8 +190,8 @@ public final class Constants {
         //flywheel stuff
         flyConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        flyConfigs.CurrentLimits.withStatorCurrentLimit(22);
-        flyConfigs.CurrentLimits.withSupplyCurrentLimit(25);
+        flyConfigs.CurrentLimits.withStatorCurrentLimit(60);
+        flyConfigs.CurrentLimits.withSupplyCurrentLimit(60);
         flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         flyConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
         flyConfigs.serialize(); //save
@@ -211,10 +211,10 @@ public final class Constants {
     public static final TalonFXConfiguration intakeConf = new TalonFXConfiguration();
     /** Configs for the intakeFW motor from {@link IntakeConstants} */
     public static final TalonFXConfiguration intakeFWConf = new TalonFXConfiguration();
-    public static final double ActivatedPos = -1.5;
+    public static final double ActivatedPos = 1.3;
     static {
       //
-      intakeConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+      intakeConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
       intakeConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
       intakeConf.CurrentLimits.withStatorCurrentLimit(40);
       intakeConf.CurrentLimits.withStatorCurrentLimitEnable(true);
@@ -231,8 +231,8 @@ public final class Constants {
       //Intake FW config
       intakeFWConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
       intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-      intakeFWConf.CurrentLimits.withStatorCurrentLimit(22);
-      intakeFWConf.CurrentLimits.withSupplyCurrentLimit(25);
+      intakeFWConf.CurrentLimits.withStatorCurrentLimit(30);
+      intakeFWConf.CurrentLimits.withSupplyCurrentLimit(35);
       intakeFWConf.CurrentLimits.withSupplyCurrentLimitEnable(true);
       intakeFWConf.CurrentLimits.withStatorCurrentLimitEnable(true);
       intakeFWConf.serialize();

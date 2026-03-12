@@ -31,7 +31,7 @@ import frc.robot.subsystems.TurretAiming;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private double MaxAngularRate = RotationsPerSecond.of(3).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
     private boolean useTurretMotionMagic = true;
     
     /* Setting up bindings for necessary control of the swerve drive platform */
@@ -141,8 +141,8 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(this.applyDeadband(-joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(this.applyDeadband(-joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
+                drive.withVelocityX(-this.applyDeadband(-joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-this.applyDeadband(-joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(this.applyDeadband(-joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -187,6 +187,7 @@ public class RobotContainer {
         whimseystick.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
         whimseystick.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
         whimseystick.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        
         
 
         // Reset the field-centric heading on left bumper press.
