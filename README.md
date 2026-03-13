@@ -9,15 +9,12 @@ Github repo for code and documentation for FRC team 4982.
 
  Each folder contains the WPILib code for that particular year. The folder is named after whatever we decided to call the robot that year. There is a `gradlew` file that allows you to upload to the RoboRio and will theoretically automatically handle dependancies. This file does not exist on robots developed using python and robotpy.
  Any code before 2024 has an outdated gradle and has not been pulled to the newest version of wpilib.
- 
- Kinkmaster69 - oldest 
- 
- Marvin - 2022 season
- 
- Bob - 2023 season
- 
- Perry - 2024 season
 
- Riptide - 2025 season
-
- Theseus - 2026 season
+|Robot Name     |Season Year|Language|
+|---------------|-------|-------|
+|[Kinkmaster69](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/kinkmaster69)     |oldest |C++    |
+|[Marvin](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/marvin)                 |2022   |C++    |
+|[BobTheCheezIt](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/BobTheCheezIt)   |2023   |C++    |
+|[Perry](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/perry)                   |2024   |Python |
+|[Riptide](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Riptide)               |2025   |Python |
+|[Theseus](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Theseus)               |2026   |Java   |
