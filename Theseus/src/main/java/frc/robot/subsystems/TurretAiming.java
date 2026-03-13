@@ -40,7 +40,7 @@ public class TurretAiming extends SubsystemBase {
         throughbore = new DutyCycleEncoder(2, 1, 0.216);
         targetAngle = 0;
         roboticPose = new Pose2d();
-        kmaxVelocity = 2;
+        kmaxVelocity = 25;
         heightTao = .05;
         rotationTao = .05;
         desiredAngle = 0;
@@ -145,10 +145,8 @@ public class TurretAiming extends SubsystemBase {
             return 80;
         }
     }
-    /**Moves the turret to the wanted spots
-     * @param useMotionMagic if the rotation motor should calculate using MotionMagic or not
-    */
-    public void targetAim(Boolean useMotionMagic){
+    /**Moves the turret to the wanted spots*/
+    public void targetAim(){
         if (roboticPose == null) return;
         targetpose();
         getTargetHeight();
