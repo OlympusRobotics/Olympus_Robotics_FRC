@@ -12,9 +12,9 @@ Github repo for code and documentation for FRC team 4982.
 
 |Robot Name     |Season Year|Language|
 |---------------|-------|-------|
-|[Kinkmaster69](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/kinkmaster69)     |oldest |C++    |
-|[Marvin](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/marvin)                 |2022   |C++    |
-|[BobTheCheezIt](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/BobTheCheezIt)   |2023   |C++    |
-|[Perry](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/perry)                   |2024   |Python |
-|[Riptide](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Riptide)               |2025   |Python |
-|[Theseus](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Theseus)               |2026   |Java   |
+|[Kinkmaster69](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/kinkmaster69)     |≈2020 |C++    |
+|[Marvin](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/marvin)                 | 2022 |C++    |
+|[BobTheCheezIt](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/BobTheCheezIt)   | 2023 |C++    |
+|[Perry](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/perry)                   | 2024 |Python |
+|[Riptide](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Riptide)               | 2025 |Python |
+|[Theseus](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Theseus)               | 2026 |Java   |
