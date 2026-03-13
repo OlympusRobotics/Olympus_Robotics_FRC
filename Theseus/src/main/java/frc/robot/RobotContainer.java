@@ -183,12 +183,18 @@ public class RobotContainer {
         whimseystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
         whimseystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop()));
 
-        whimseystick.y().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        whimseystick.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-        whimseystick.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        whimseystick.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        
-        
+        whimseystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
+        whimseystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
+        whimseystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
+        whimseystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
+        whimseystick.povDown().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kForward));
+        whimseystick.povUp().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kReverse));
+        whimseystick.povRight().whileTrue(drivetrain.sysIdDynamicRot(Direction.kForward));
+        whimseystick.povLeft().whileTrue(drivetrain.sysIdDynamicRot(Direction.kReverse));
+        whimseystick.leftTrigger().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kForward));
+        whimseystick.leftBumper().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kReverse));
+        whimseystick.rightTrigger().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kForward));
+        whimseystick.rightBumper().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
 

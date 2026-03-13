@@ -3,26 +3,28 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.TurretConfigs.*;
-
-import java.util.Optional;
 
 public class TurretAiming extends SubsystemBase {
     private Pose2d roboticPose;
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, 
-    smoothRotation, smoothHeight, rotationTao, heightTao;
+    smoothRotation, smoothHeight, rotationTao, heightTao, desiredAngle;
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
     private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
+    private final DutyCycleEncoder throughbore;
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -35,7 +37,13 @@ public class TurretAiming extends SubsystemBase {
         feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         rotationoutput = new MotionMagicVoltage(0);
         heightoutput =   new MotionMagicVoltage(0);
-
+        throughbore = new DutyCycleEncoder(2, 1, 0.216);
+        targetAngle = 0;
+        roboticPose = new Pose2d();
+        kmaxVelocity = 2;
+        heightTao = .05;
+        rotationTao = .05;
+        desiredAngle = 0;
         //Set up motors
         rotationMotor.getConfigurator().apply(rotationConfigs);
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
@@ -43,7 +51,6 @@ public class TurretAiming extends SubsystemBase {
         indexerLMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
-
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
     }
     /** 
@@ -103,20 +110,41 @@ public class TurretAiming extends SubsystemBase {
 
     /**Calculating the actual angle while the robot is moving*/
     public double vectorCalculations() {
-        double chassisSpeeded = Math.pow((Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond, 2) + 
-        Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond, 2)), .5);
-        double chassisAngle = Math.atan2(drivetrain.getChassisSpeeds().vyMetersPerSecond, drivetrain.getChassisSpeeds().vxMetersPerSecond);
+        Translation2d target = targetpose();
+        targetx = (target.getX() - roboticPose.getX()); 
+        targety = (target.getY() - roboticPose.getY());
+        targetAngle = (Math.atan2(targety, targetx));
         double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
-        double actualX = (shootingXSpeed * Math.sin(targetAngle)) - (chassisSpeeded * Math.sin(chassisAngle));
-        double actualY = (shootingXSpeed * Math.cos(targetAngle)) - (chassisSpeeded * Math.cos(chassisAngle));
+        double actualX = (shootingXSpeed * Math.cos(targetAngle)) - (drivetrain.getChassisSpeeds().vxMetersPerSecond);
+        double actualY = (shootingXSpeed * Math.sin(targetAngle)) - (drivetrain.getChassisSpeeds().vyMetersPerSecond);
         targetAngle = Math.atan2(actualY, actualX);
-        if (targetAngle > Math.toRadians(135)) {targetAngle -= Math.toRadians(360);}
-        if (targetAngle < Math.toRadians(-225)) {targetAngle += Math.toRadians(360);}
-        double smartdashboardangle = Math.toDegrees(targetAngle);
+        targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
+        if (targetAngle > Math.toRadians(180)) {targetAngle -= Math.toRadians(360);}
+        if (targetAngle < Math.toRadians(-180)) {targetAngle += Math.toRadians(360);}
+        double smartdashboardangle = Math.toDegrees(targetAngle / 2 * Math.PI);
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
         return targetAngle / (2 * Math.PI);
     }
-
+    /**
+     * Kinematics used to figure out the angle
+     * Max definetly wrote it trust
+    */
+    public double maxFormula(){
+        Translation2d target = targetpose();
+        targetx = (target.getX() - roboticPose.getX()); 
+        targety = (target.getY() - roboticPose.getY());
+        targetDistance = (Math.sqrt(Math.pow(targetx, 2)+Math.pow(targety, 2)));
+        if ((Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
+        ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
+        Math.pow(kmaxVelocity, 4))))) >= 0) {
+            return 90 - Math.atan2((targetDistance + Math.sqrt(Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
+            ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
+            Math.pow(kmaxVelocity, 4)))))), (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2)))) / (2 * Math.PI);
+        }
+        else {
+            return 80;
+        }
+    }
     /**Moves the turret to the wanted spots
      * @param useMotionMagic if the rotation motor should calculate using MotionMagic or not
     */
@@ -124,45 +152,20 @@ public class TurretAiming extends SubsystemBase {
         if (roboticPose == null) return;
         targetpose();
         getTargetHeight();
-        SmartDashboard.putString("penis", "peepee poopoo");
-        double desiredAngle  = vectorCalculations();
         double desiredHeight = maxFormula();
+        desiredAngle  = vectorCalculations();
         double rotError = desiredAngle - smoothRotation;
-        if (Math.abs(rotError) > .02) {
-            smoothRotation += rotationTao * rotError;
-        }
+        
+        smoothRotation += rotationTao * rotError;
+        
         double heightError = desiredHeight - smoothHeight;
         if (Math.abs(heightError) > .01) {
             smoothHeight += heightTao * heightError;
         }
         heightMotor.setControl(heightoutput.withPosition(smoothHeight));
-        if (useMotionMagic == null || useMotionMagic == true) {
-            rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
-        } else {
-            rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(rotationMotor.getPosition().getValueAsDouble(), smoothRotation));
-        }
+        rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
     }
 
-    /**
-     * Kinematics used to figure out the angle
-     * Max definetly wrote it trust
-    */
-    public double maxFormula(){
-        targetx = (targetpose().getX() - roboticPose.getX()); 
-        targety = (targetpose().getY() - roboticPose.getY());
-        targetAngle = (Math.atan2(targety, targetx));
-        targetDistance = (Math.sqrt(Math.pow(targetx, 2)+Math.pow(targety, 2)));
-        if ((Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
-        ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
-        Math.pow(kmaxVelocity, 4))))) >= 0) {
-            return Math.atan2((targetDistance + Math.sqrt(Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
-            ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
-            Math.pow(kmaxVelocity, 4)))))), (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2)))) / (2 * Math.PI);
-        }
-        else {
-            return 0;
-        }
-    }
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
         flywheelMotor.set(1);    
@@ -171,9 +174,9 @@ public class TurretAiming extends SubsystemBase {
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         
     }
-    private double enc2Rad(double EncoderPosition){
+    /* private double enc2Rad(double EncoderPosition){
         return ((EncoderPosition - 0.5) * 2 * Math.PI);
-    }
+    } */
     /** Stops shooting */
     public void unshoot(){
         flywheelMotor.stopMotor();
@@ -217,7 +220,12 @@ public class TurretAiming extends SubsystemBase {
     }
     @Override
     public void periodic() {
-        if (CameraUsing.robotPose2d == null) {return;}
-        roboticPose = CameraUsing.robotPose2d;
+        SmartDashboard.putNumber("targetAngle", targetAngle);
+        SmartDashboard.putNumber("pose?", targety);
+        SmartDashboard.putNumber("pose2", targetx);
+        SmartDashboard.putNumber("desiredAngle", desiredAngle);
+        SmartDashboard.putNumber("smoothRotation", smoothRotation);
+        roboticPose = drivetrain.getState().Pose;
+        //targetAim(false);
     }
 }

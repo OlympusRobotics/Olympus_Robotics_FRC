@@ -1,7 +1,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.signals.GravityTypeValue;
+//import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -107,11 +107,11 @@ public final class Constants {
     public static final double kCameraHeight = .2;
     
     //Turret aiming pid
-    public static final double kTurretRotationP = 0.6; //kP ≈ 0.4–0.8 
+    public static final double kTurretRotationP = 150; //kP ≈ 0.4–0.8 
     public static final double kTurretRotationI = 0;
-    public static final double kTurretRotationD = 0.005; // kD ≈ 0.001–0.01
-    public static final double kTurretRotationVelocity = 180; //rps
-    public static final double kTurretRotationAcceleration = 200; //rps²
+    public static final double kTurretRotationD = 0.0; // kD ≈ 0.001–0.01
+    public static final double kTurretRotationVelocity = 3; //rps
+    public static final double kTurretRotationAcceleration = 6; //rps²
 
     public static final double kTurretHeightP = 2; //kP slightly higher than yaw
     public static final double kTurretHeightI = 0;

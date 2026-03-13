@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.photonvision.PhotonCamera;
-import edu.wpi.first.math.geometry.Pose2d;
+
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.RobotConstants;
 
 public class CameraUsing extends SubsystemBase {
@@ -18,7 +21,6 @@ public class CameraUsing extends SubsystemBase {
     private Camera camerafile;
     //private double thankYouToElvisForDesigningOurRobotChassis;
     public static Rotation2d robotRotation2d;
-    public static Pose2d robotPose2d;
     private CommandSwerveDrivetrain drivetrain;
 
         public CameraUsing(CommandSwerveDrivetrain drivetrain) {
@@ -49,7 +51,7 @@ public class CameraUsing extends SubsystemBase {
         }
         //System.out.println(thankYouToElvisForDesigningOurRobotChassis);
     private void processCamera() {
-        double lowestAmbiguity = .3;
+        double lowestAmbiguity = .1;
 
         for (var camPair : List.of(
                 Map.entry(camBL, robotToCamBL), Map.entry(camBR, robotToCamBR),
@@ -62,14 +64,16 @@ public class CameraUsing extends SubsystemBase {
             var camData = camerafile.cameraProcessing(cam);
 
             if (camData.robotpose() != null && camData.result().hasTargets()) {
-                drivetrain.addVisionMeasurement(camData.robotpose().toPose2d(), camData.result().getTimestampSeconds());
-
                 double ambiguity = camData.result().getBestTarget().getPoseAmbiguity();
                 if (ambiguity < lowestAmbiguity) {
+                    lowestAmbiguity = ambiguity;
                     drivetrain.addVisionMeasurement(
                         camData.robotpose().toPose2d(),
-                        camData.result().getTimestampSeconds()
-                    );
+                        camData.result().getTimestampSeconds(),
+                        VecBuilder.fill(1.0, 1.0, Units.degreesToRadians(60))
+                        );
+                    SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotpose().getX());
+                    SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotpose().getY());
                 }
             }
         }

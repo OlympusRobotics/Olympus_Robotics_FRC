@@ -117,6 +117,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
     private SysIdRoutine m_SysIdRoutineApplying = m_sysIdRoutineRotation;
+    private SysIdRoutine m_SysIdRoutineApplied = m_sysIdRoutineSteer;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -244,9 +245,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param direction Direction of the SysId Quasistatic test
      * @return Command to run
      */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    public Command sysIdQuasistaticRot(SysIdRoutine.Direction direction) {
         return m_SysIdRoutineApplying.quasistatic(direction);
     }
+    public Command sysIdQuasistaticTrans(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.quasistatic(direction);
+    }
+    public Command sysIdQuasistaticSteer(SysIdRoutine.Direction direction) {
+        return m_SysIdRoutineApplied.quasistatic(direction);
+    }
+    
 
     /**
      * Runs the SysId Dynamic test in the given direction for the routine
@@ -255,8 +263,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param direction Direction of the SysId Dynamic test
      * @return Command to run
      */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    public Command sysIdDynamicRot(SysIdRoutine.Direction direction) {
         return m_SysIdRoutineApplying.dynamic(direction);
+    }
+    public Command sysIdDynamicTrans(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.dynamic(direction);
+    }
+    public Command sysIdDynamicSteer(SysIdRoutine.Direction direction) {
+        return m_SysIdRoutineApplied.dynamic(direction);
     }
 
     @Override
@@ -316,7 +330,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
+        super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
     }
 
     /**
@@ -338,7 +352,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs
     ) {
-        super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
+        super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     }
 
     /**
