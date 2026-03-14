@@ -15,6 +15,8 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
+import org.littletonrobotics.junction.Logger;
+
 public class Intake extends SubsystemBase {
 
   public final TalonFX m_inkMot;
@@ -61,5 +63,9 @@ public class Intake extends SubsystemBase {
   @Override
   public void periodic() {
     m_inkMot.setControl(new MotionMagicVoltage(target));
+
+    Logger.recordOutput("Intake/TargetPosition", target);
+    Logger.recordOutput("Intake/ActualPosition", m_inkMot.getPosition().getValueAsDouble());
+    Logger.recordOutput("Intake/FlywheelOutput", intFWMot.get());
   }
 }
