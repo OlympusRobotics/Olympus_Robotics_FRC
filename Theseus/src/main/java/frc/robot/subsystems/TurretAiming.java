@@ -37,6 +37,7 @@ public class TurretAiming extends SubsystemBase {
     private boolean turretLocked = false;
     private boolean wasDisabled = true;
     private boolean manualMode = false;
+    private boolean velocityCompensation = false;
     private int manualHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine step for short presses
     private static final double MANUAL_STEP_FAST = 0.008; // fast step after holding ~1s
@@ -72,6 +73,7 @@ public class TurretAiming extends SubsystemBase {
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
 
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> rotationMotor.setPosition(0)).ignoringDisable(true));
+        SmartDashboard.putBoolean("Velocity Compensation", velocityCompensation);
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -134,11 +136,14 @@ public class TurretAiming extends SubsystemBase {
         targetx = (target.getX() - roboticPose.getX()); 
         targety = (target.getY() - roboticPose.getY());
         targetAngle = (Math.atan2(targety, targetx));
-        double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
-        // Add robot velocity so the projectile leads the target
-        double actualX = (shootingXSpeed * Math.cos(targetAngle));
-        double actualY = (shootingXSpeed * Math.sin(targetAngle)) + (drivetrain.getChassisSpeeds().vyMetersPerSecond);
-        targetAngle = Math.atan2(actualY, actualX);
+        velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
+        if (velocityCompensation) {
+            double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
+            // Add robot velocity so the projectile leads the target
+            double actualX = (shootingXSpeed * Math.cos(targetAngle));
+            double actualY = (shootingXSpeed * Math.sin(targetAngle)) + (drivetrain.getChassisSpeeds().vyMetersPerSecond);
+            targetAngle = Math.atan2(actualY, actualX);
+        }
         // Convert from field-relative to robot-relative
         targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
         targetAngle += Math.PI;
