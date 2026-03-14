@@ -75,7 +75,7 @@ public class TurretAiming extends SubsystemBase {
         if (CommandSwerveDrivetrain.getAlliance()) {
             //red alliance hub area
             if (roboticPose.getX() > 12.5) {
-                return targetPose = new Translation2d(4.621, 4.035);
+                return targetPose = new Translation2d(11.914, 4.035);
             }
             //not red alliance hub area
             else if (roboticPose.getX() < 12.5) {
@@ -93,7 +93,7 @@ public class TurretAiming extends SubsystemBase {
         else if (!CommandSwerveDrivetrain.getAlliance()) {
             //blue alliance hub area
             if (roboticPose.getX() < 4) {
-                return targetPose = new Translation2d(11.914, 4.035);
+                return targetPose = new Translation2d(4.621, 4.035);
             } 
             //not blue alliance hub area
             else if (roboticPose.getX() > 4) {
@@ -128,7 +128,7 @@ public class TurretAiming extends SubsystemBase {
         targetAngle = (Math.atan2(targety, targetx));
         double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
         // Add robot velocity so the projectile leads the target
-        double actualX = (shootingXSpeed * Math.cos(targetAngle)) + (drivetrain.getChassisSpeeds().vxMetersPerSecond);
+        double actualX = (shootingXSpeed * Math.cos(targetAngle));
         double actualY = (shootingXSpeed * Math.sin(targetAngle)) + (drivetrain.getChassisSpeeds().vyMetersPerSecond);
         targetAngle = Math.atan2(actualY, actualX);
         // Convert from field-relative to robot-relative
@@ -138,7 +138,7 @@ public class TurretAiming extends SubsystemBase {
         if (targetAngle < 0) { targetAngle += 2 * Math.PI; }
         double smartdashboardangle = Math.toDegrees(targetAngle);
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
-        return targetAngle / (2 * Math.PI);
+        return (targetAngle) / (2 * Math.PI) / (2 * Math.PI);
     }
     /**
      * Kinematics used to figure out the angle
