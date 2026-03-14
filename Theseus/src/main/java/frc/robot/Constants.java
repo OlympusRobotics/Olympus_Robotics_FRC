@@ -141,8 +141,8 @@ public final class Constants {
     public static final TalonFXConfiguration flyConfigs = new TalonFXConfiguration();
     /** Configuration for the indexer from {@link TurretConfigs} */
     public static final TalonFXConfiguration indexerConfigs = new TalonFXConfiguration();
-    // Measured: 180° physical reads 181.76° at ratio 32.66 → corrected to 32.98
-    public static final Double rotationRatio = 32.98;
+    // Measured: zeroed, then 180° physical reads 183.251° at 32.98 → corrected to 33.58
+    public static final Double rotationRatio = 33.58;
     public static final Double turretHeight = .508; 
     public static final Double kmaxVelocity = 4.71;
     public static final Double heightRatio = 5.0;
