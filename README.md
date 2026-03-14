@@ -3,18 +3,29 @@
 <img src="./funnyLogoLong.png" width="500" alt="Olympus Logo"/>
 
 ## Purpose
-Github repo for code and documentation for FRC team 4982.
 
-## Folders
+GitHub repo for code and documentation for FRC Team 4982 — Olympus Robotics.
 
- Each folder contains the WPILib code for that particular year. The folder is named after whatever we decided to call the robot that year. There is a `gradlew` file that allows you to upload to the RoboRio and will theoretically automatically handle dependancies. This file does not exist on robots developed using python and robotpy.
- Any code before 2024 has an outdated gradle and has not been pulled to the newest version of wpilib.
+## Current Season — Theseus (2026)
 
-|Robot Name     |Season Year|Language|
-|---------------|-------|-------|
-|[Kinkmaster69](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/kinkmaster69)     |≈2020 |C++    |
-|[Marvin](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/marvin)                 | 2022 |C++    |
-|[BobTheCheezIt](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/BobTheCheezIt)   | 2023 |C++    |
-|[Perry](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/perry)                   | 2024 |Python |
-|[Riptide](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Riptide)               | 2025 |Python |
-|[Theseus](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Theseus)               | 2026 |Java   |
+**Theseus** is the active robot for the 2026 season, written in Java with GradleRIO 2026.2.1.
+
+- **Architecture**: WPILib Command-Based (`TimedCommandRobot`, subsystems, commands)
+- **Drive**: Swerve (CTRE TalonFX drive + REV Spark Max rotation + absolute encoders)
+- **Gyro**: CTRE Pigeon2
+- **Vision**: PhotonVision
+- **Autonomous**: PathPlanner
+- **Build**: `./gradlew build` · **Deploy**: `./gradlew deploy`
+
+## Robots
+
+Each folder contains the WPILib code for that season's robot. Code before 2024 uses an outdated Gradle version and has not been updated.
+
+| Robot | Season | Language | Status |
+|-------|--------|----------|--------|
+| [Theseus](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Theseus)             | 2026 | Java   | **Active** |
+| [Riptide](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/Riptide)             | 2025 | Python | Legacy |
+| [Perry](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/perry)                 | 2024 | Python | Legacy |
+| [BobTheCheezIt](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/BobTheCheezIt) | 2023 | C++    | Legacy |
+| [Marvin](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/marvin)               | 2022 | C++    | Legacy |
+| [Kinkmaster69](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/kinkmaster69)   | ≈2020 | C++   | Legacy |
