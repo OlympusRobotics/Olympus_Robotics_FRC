@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.controls.Follower;
@@ -60,6 +61,8 @@ public class TurretAiming extends SubsystemBase {
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+
+        SmartDashboard.putData("Zero Turret", new InstantCommand(() -> rotationMotor.setPosition(0)).ignoringDisable(true));
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -238,6 +241,7 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("pose2", targetx);
         SmartDashboard.putNumber("desiredAngle", desiredAngle);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
+        SmartDashboard.putNumber("Turret Angle", rotationMotor.getPosition().getValueAsDouble() * 360.0);
         if (targetPose != null) {
             turretTargetPub.set(new double[] { targetPose.getX(), targetPose.getY(), 0 });
         }
