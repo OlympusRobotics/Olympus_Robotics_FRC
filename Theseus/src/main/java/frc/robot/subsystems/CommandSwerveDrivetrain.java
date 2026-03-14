@@ -1,4 +1,5 @@
 package frc.robot.subsystems;
+// NOTE: Changes to drivetrain behavior or auto config must be reflected in Theseus/README.md (Swerve Drivetrain section).
 
 import static edu.wpi.first.units.Units.*;
 

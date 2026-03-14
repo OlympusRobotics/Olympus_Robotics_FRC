@@ -5,6 +5,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+// NOTE: Changes to CAN IDs, PID values, or hardware constants here
+// must also be reflected in Theseus/README.md (CAN ID Map, Subsystems sections).
 public final class Constants {
   public static class OperatorConstants {
     //Controller Ports

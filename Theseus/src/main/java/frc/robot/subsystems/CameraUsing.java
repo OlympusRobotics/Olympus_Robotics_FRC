@@ -1,4 +1,5 @@
 package frc.robot.subsystems;
+// NOTE: Changes to camera names, positions, or vision config must be reflected in Theseus/README.md (Vision section).
 
 import java.util.List;
 import java.util.Map;

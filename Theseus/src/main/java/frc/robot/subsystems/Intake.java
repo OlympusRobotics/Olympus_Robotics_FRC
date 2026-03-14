@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
+// NOTE: Changes to motors, CAN IDs, or positions must be reflected in Theseus/README.md (Intake section).
 
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;

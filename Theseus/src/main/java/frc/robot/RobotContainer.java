@@ -29,6 +29,8 @@ import frc.robot.subsystems.CameraUsing;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.TurretAiming;
 
+// NOTE: Changes to controller bindings, subsystem wiring, or auto commands here
+// must also be reflected in Theseus/README.md (Controller Bindings, Autonomous sections).
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(3).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
