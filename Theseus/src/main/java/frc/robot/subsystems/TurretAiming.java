@@ -40,8 +40,8 @@ public class TurretAiming extends SubsystemBase {
         targetAngle = 0;
         roboticPose = new Pose2d();
         kmaxVelocity = 2;
-        heightTao = .05;
-        rotationTao = .05;
+        heightTao = .15;
+        rotationTao = .15;
         desiredAngle = 0;
         //Set up motors
         rotationMotor.getConfigurator().apply(rotationConfigs);
@@ -114,12 +114,15 @@ public class TurretAiming extends SubsystemBase {
         targety = (target.getY() - roboticPose.getY());
         targetAngle = (Math.atan2(targety, targetx));
         double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
-        double actualX = (shootingXSpeed * Math.cos(targetAngle)) - (drivetrain.getChassisSpeeds().vxMetersPerSecond);
-        double actualY = (shootingXSpeed * Math.sin(targetAngle)) - (drivetrain.getChassisSpeeds().vyMetersPerSecond);
+        // Add robot velocity so the projectile leads the target
+        double actualX = (shootingXSpeed * Math.cos(targetAngle)) + (drivetrain.getChassisSpeeds().vxMetersPerSecond);
+        double actualY = (shootingXSpeed * Math.sin(targetAngle)) + (drivetrain.getChassisSpeeds().vyMetersPerSecond);
         targetAngle = Math.atan2(actualY, actualX);
+        // Convert from field-relative to robot-relative
         targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
-        if (targetAngle > Math.toRadians(360)) {targetAngle -= Math.toRadians(360);}
-        if (targetAngle < Math.toRadians(0)) {targetAngle += Math.toRadians(360);}
+        // Normalize to [0, 2π)
+        targetAngle = Math.IEEEremainder(targetAngle, 2 * Math.PI);
+        if (targetAngle < 0) { targetAngle += 2 * Math.PI; }
         double smartdashboardangle = Math.toDegrees(targetAngle);
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
         return targetAngle / (2 * Math.PI);
@@ -219,12 +222,12 @@ public class TurretAiming extends SubsystemBase {
     }
     @Override
     public void periodic() {
+        roboticPose = drivetrain.getState().Pose;
+        targetAim();
         SmartDashboard.putNumber("targetAngle", targetAngle);
         SmartDashboard.putNumber("pose?", targety);
         SmartDashboard.putNumber("pose2", targetx);
         SmartDashboard.putNumber("desiredAngle", desiredAngle);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
-        roboticPose = drivetrain.getState().Pose;
-        targetAim();
     }
 }
