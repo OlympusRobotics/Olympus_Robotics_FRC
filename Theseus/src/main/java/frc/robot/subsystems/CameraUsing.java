@@ -16,6 +16,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.RobotConstants;
 
+import org.littletonrobotics.junction.Logger;
+
 public class CameraUsing extends SubsystemBase {
     private Transform3d robotToCamFL, robotToCamFR, robotToCamBL, robotToCamBR;
     private PhotonCamera camFL, camFR, camBL, camBR;
@@ -53,6 +55,7 @@ public class CameraUsing extends SubsystemBase {
         //System.out.println(thankYouToElvisForDesigningOurRobotChassis);
     private void processCamera() {
         double lowestAmbiguity = .1;
+        boolean hasTarget = false;
 
         for (var camPair : List.of(
                 Map.entry(camBL, robotToCamBL), Map.entry(camBR, robotToCamBR),
@@ -68,6 +71,7 @@ public class CameraUsing extends SubsystemBase {
                 double ambiguity = camData.result().getBestTarget().getPoseAmbiguity();
                 if (ambiguity < lowestAmbiguity) {
                     lowestAmbiguity = ambiguity;
+                    hasTarget = true;
                     drivetrain.addVisionMeasurement(
                         camData.robotpose().toPose2d(),
                         camData.result().getTimestampSeconds(),
@@ -75,9 +79,12 @@ public class CameraUsing extends SubsystemBase {
                         );
                     SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotpose().getX());
                     SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotpose().getY());
+                    Logger.recordOutput("Vision/EstimatedPose", camData.robotpose().toPose2d());
                 }
             }
         }
+        Logger.recordOutput("Vision/HasTarget", hasTarget);
+        Logger.recordOutput("Vision/LowestAmbiguity", lowestAmbiguity);
     }
     @Override
     public void periodic() {

@@ -1,11 +1,12 @@
 package frc.robot.subsystems;
 // NOTE: Changes to motors, CAN IDs, or aiming logic must be reflected in Theseus/README.md (Turret Aiming section).
 
-//import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -17,6 +18,8 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.TurretConfigs.*;
 
+import org.littletonrobotics.junction.Logger;
+
 public class TurretAiming extends SubsystemBase {
     private Pose2d roboticPose;
     private Translation2d targetPose;
@@ -26,7 +29,8 @@ public class TurretAiming extends SubsystemBase {
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleArrayPublisher turretTargetPub;
-    //private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
+    private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
+    private final DutyCycleEncoder throughbore;
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -39,7 +43,7 @@ public class TurretAiming extends SubsystemBase {
         feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         rotationoutput = new MotionMagicVoltage(0);
         heightoutput =   new MotionMagicVoltage(0);
-        //throughbore = new DutyCycleEncoder(2, 1, 0.216);
+        throughbore = new DutyCycleEncoder(2, 1, 0.216);
         targetAngle = 0;
         roboticPose = new Pose2d();
         kmaxVelocity = 2;
@@ -55,7 +59,7 @@ public class TurretAiming extends SubsystemBase {
         indexerLMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
-        //stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+        stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -237,5 +241,13 @@ public class TurretAiming extends SubsystemBase {
         if (targetPose != null) {
             turretTargetPub.set(new double[] { targetPose.getX(), targetPose.getY(), 0 });
         }
+
+        Logger.recordOutput("Turret/RotationPosition", rotationMotor.getPosition().getValueAsDouble());
+        Logger.recordOutput("Turret/HeightPosition", heightMotor.getPosition().getValueAsDouble());
+        Logger.recordOutput("Turret/FlywheelVelocity", flywheelMotor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Turret/ThroughborePosition", throughbore.get());
+        Logger.recordOutput("Turret/TargetAngle", targetAngle);
+        Logger.recordOutput("Turret/DesiredAngle", desiredAngle);
+        Logger.recordOutput("Turret/SmoothRotation", smoothRotation);
     }
 }

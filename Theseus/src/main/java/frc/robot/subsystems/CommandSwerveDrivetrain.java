@@ -31,6 +31,8 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.TunerConstants.TunerSwerveDrivetrain;
 
+import org.littletonrobotics.junction.Logger;
+
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
@@ -293,6 +295,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        var state = getState();
+        Logger.recordOutput("Drivetrain/Pose", state.Pose);
+        Logger.recordOutput("Drivetrain/Speeds", state.Speeds);
+        Logger.recordOutput("Drivetrain/ModuleStates", state.ModuleStates);
+        Logger.recordOutput("Drivetrain/ModuleTargets", state.ModuleTargets);
         
     }
     
