@@ -194,7 +194,7 @@ public class TurretAiming extends SubsystemBase {
         desiredAngle  = vectorCalculations();
         SmartDashboard.putNumber("desiredangle", desiredAngle);
 
-        if (turretLocked) return;
+        if (turretLocked || manualMode) return;
 
         double rotError = desiredAngle - rotationMotor.getPosition().getValueAsDouble();
         
@@ -304,9 +304,7 @@ public class TurretAiming extends SubsystemBase {
     @Override
     public void periodic() {
         roboticPose = drivetrain.getState().Pose;
-        if (!manualMode) {
-            targetAim();
-        }
+        targetAim();
         SmartDashboard.putBoolean("Turret Manual", manualMode);
         SmartDashboard.putNumber("targetAngle", Math.toDegrees(targetAngle));
         SmartDashboard.putNumber("pose?", targety);
