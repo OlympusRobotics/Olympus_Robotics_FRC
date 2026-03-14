@@ -16,6 +16,8 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.TurretConfigs.*;
 
+import org.littletonrobotics.junction.Logger;
+
 public class TurretAiming extends SubsystemBase {
     private Pose2d roboticPose;
     private Translation2d targetPose;
@@ -225,6 +227,13 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("desiredAngle", desiredAngle);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
         roboticPose = drivetrain.getState().Pose;
-        //targetAim(false);
+
+        Logger.recordOutput("Turret/RotationPosition", rotationMotor.getPosition().getValueAsDouble());
+        Logger.recordOutput("Turret/HeightPosition", heightMotor.getPosition().getValueAsDouble());
+        Logger.recordOutput("Turret/FlywheelVelocity", flywheelMotor.getVelocity().getValueAsDouble());
+        Logger.recordOutput("Turret/ThroughborePosition", throughbore.get());
+        Logger.recordOutput("Turret/TargetAngle", targetAngle);
+        Logger.recordOutput("Turret/DesiredAngle", desiredAngle);
+        Logger.recordOutput("Turret/SmoothRotation", smoothRotation);
     }
 }

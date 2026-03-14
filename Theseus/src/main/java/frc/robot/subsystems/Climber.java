@@ -9,6 +9,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.RobotConstants;
 
+import org.littletonrobotics.junction.Logger;
+
 public class Climber extends SubsystemBase {
 
   final TalonFX m_Climber; // One climber motor for now
@@ -61,5 +63,11 @@ public class Climber extends SubsystemBase {
       return 1;
     }
     return 0;
+  }
+
+  @Override
+  public void periodic() {
+    Logger.recordOutput("Climber/Position", m_Climber.getPosition().getValueAsDouble());
+    Logger.recordOutput("Climber/Temperature", m_Climber.getDeviceTemp().getValueAsDouble());
   }
 }
