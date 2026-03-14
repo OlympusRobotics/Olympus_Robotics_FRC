@@ -3,7 +3,9 @@ package frc.robot.subsystems;
 
 //import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -23,6 +25,7 @@ public class TurretAiming extends SubsystemBase {
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
+    private final Field2d turretField;
     //private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
 
     /** Subsystem for the turret */
@@ -43,6 +46,8 @@ public class TurretAiming extends SubsystemBase {
         heightTao = .15;
         rotationTao = .15;
         desiredAngle = 0;
+        turretField = new Field2d();
+        SmartDashboard.putData("Turret Target", turretField);
         //Set up motors
         rotationMotor.getConfigurator().apply(rotationConfigs);
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
@@ -229,5 +234,8 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("pose2", targetx);
         SmartDashboard.putNumber("desiredAngle", desiredAngle);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
+        if (targetPose != null) {
+            turretField.setRobotPose(new Pose2d(targetPose, new Rotation2d()));
+        }
     }
 }
