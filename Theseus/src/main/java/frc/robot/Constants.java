@@ -150,6 +150,11 @@ public final class Constants {
     public static final Double smoothHeight = 0.0;
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
+    // Soft limits (mechanism rotations)
+    public static final double ROTATION_FORWARD_LIMIT = 1.0;
+    public static final double ROTATION_REVERSE_LIMIT = 0.0;
+    public static final double HEIGHT_FORWARD_LIMIT = 1.5;
+    public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     static {
       //This applies all the configuration
         //basic motor configurations
@@ -159,8 +164,8 @@ public final class Constants {
         rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         //motor limits
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .9; 
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0; 
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ROTATION_FORWARD_LIMIT; 
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ROTATION_REVERSE_LIMIT; 
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         rotationConfigs.Feedback.SensorToMechanismRatio = rotationRatio;
@@ -178,8 +183,8 @@ public final class Constants {
         heightConfigs.CurrentLimits.withSupplyCurrentLimit(25);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         heightConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
-        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.5;
-        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
+        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = HEIGHT_FORWARD_LIMIT;
+        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = HEIGHT_REVERSE_LIMIT;
         heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         heightConfigs.Feedback.SensorToMechanismRatio = heightRatio;

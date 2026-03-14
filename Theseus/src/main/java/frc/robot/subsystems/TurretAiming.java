@@ -17,6 +17,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
+import edu.wpi.first.math.MathUtil;
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.TurretConfigs.*;
 
@@ -36,7 +37,10 @@ public class TurretAiming extends SubsystemBase {
     private boolean turretLocked = false;
     private boolean wasDisabled = true;
     private boolean manualMode = false;
-    private static final double MANUAL_STEP = 0.005; // turret rotations per cycle (~90°/sec)
+    private int manualHoldCycles = 0;
+    private static final double MANUAL_STEP_SLOW = 0.002; // fine step for short presses
+    private static final double MANUAL_STEP_FAST = 0.008; // fast step after holding ~1s
+    private static final int MANUAL_RAMP_CYCLES = 50;     // cycles before ramping up (~1s at 50Hz)
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -195,11 +199,13 @@ public class TurretAiming extends SubsystemBase {
         double rotError = desiredAngle - rotationMotor.getPosition().getValueAsDouble();
         
         smoothRotation += rotationTao * rotError;
+        smoothRotation = MathUtil.clamp(smoothRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         
         double heightError = desiredHeight - smoothHeight;
         if (Math.abs(heightError) > .01) {
             smoothHeight += heightTao * heightError;
         }
+        smoothHeight = MathUtil.clamp(smoothHeight, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
         heightMotor.setControl(heightoutput.withPosition(smoothHeight));
         rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
         //rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
@@ -251,11 +257,21 @@ public class TurretAiming extends SubsystemBase {
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
     /** Nudge the turret manually. Automatically switches to manual mode.
+     * Starts slow for precision, ramps up after holding ~1 second.
      * @param direction +1 for right, -1 for left */
     public void manualRotate(double direction) {
         manualMode = true;
-        smoothRotation += MANUAL_STEP * direction;
+        manualHoldCycles++;
+        double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
+        double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
+        smoothRotation += step * direction;
+        smoothRotation = MathUtil.clamp(smoothRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
+    }
+
+    /** Resets the manual rotation ramp counter (call when D-pad is released) */
+    public void resetManualRamp() {
+        manualHoldCycles = 0;
     }
 
     /** Switch back to auto-aim mode */
@@ -268,6 +284,7 @@ public class TurretAiming extends SubsystemBase {
         manualMode = true;
         rotationMotor.setPosition(0);
         smoothRotation = 0;
+        rotationMotor.setControl(rotationoutput.withPosition(0));
     }
 
     /** @return true if turret is in manual mode */
