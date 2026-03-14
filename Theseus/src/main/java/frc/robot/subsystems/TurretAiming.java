@@ -1,10 +1,9 @@
 package frc.robot.subsystems;
 // NOTE: Changes to motors, CAN IDs, or aiming logic must be reflected in Theseus/README.md (Turret Aiming section).
 
-import edu.wpi.first.math.controller.PIDController;
+//import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -24,8 +23,7 @@ public class TurretAiming extends SubsystemBase {
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
-    private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
-    private final DutyCycleEncoder throughbore;
+    //private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -38,10 +36,10 @@ public class TurretAiming extends SubsystemBase {
         feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         rotationoutput = new MotionMagicVoltage(0);
         heightoutput =   new MotionMagicVoltage(0);
-        throughbore = new DutyCycleEncoder(2, 1, 0.216);
+        //throughbore = new DutyCycleEncoder(2, 1, 0.216);
         targetAngle = 0;
         roboticPose = new Pose2d();
-        kmaxVelocity = 25;
+        kmaxVelocity = 2;
         heightTao = .05;
         rotationTao = .05;
         desiredAngle = 0;
@@ -52,7 +50,7 @@ public class TurretAiming extends SubsystemBase {
         indexerLMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
-        stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+        //stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -120,9 +118,9 @@ public class TurretAiming extends SubsystemBase {
         double actualY = (shootingXSpeed * Math.sin(targetAngle)) - (drivetrain.getChassisSpeeds().vyMetersPerSecond);
         targetAngle = Math.atan2(actualY, actualX);
         targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
-        if (targetAngle > Math.toRadians(180)) {targetAngle -= Math.toRadians(360);}
-        if (targetAngle < Math.toRadians(-180)) {targetAngle += Math.toRadians(360);}
-        double smartdashboardangle = Math.toDegrees(targetAngle / 2 * Math.PI);
+        if (targetAngle > Math.toRadians(360)) {targetAngle -= Math.toRadians(360);}
+        if (targetAngle < Math.toRadians(0)) {targetAngle += Math.toRadians(360);}
+        double smartdashboardangle = Math.toDegrees(targetAngle);
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
         return targetAngle / (2 * Math.PI);
     }
@@ -153,6 +151,7 @@ public class TurretAiming extends SubsystemBase {
         getTargetHeight();
         double desiredHeight = maxFormula();
         desiredAngle  = vectorCalculations();
+        SmartDashboard.putNumber("desiredangle", desiredAngle);
         double rotError = desiredAngle - smoothRotation;
         
         smoothRotation += rotationTao * rotError;
@@ -162,7 +161,8 @@ public class TurretAiming extends SubsystemBase {
             smoothHeight += heightTao * heightError;
         }
         heightMotor.setControl(heightoutput.withPosition(smoothHeight));
-        rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
+        rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
+        //rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
     }
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
@@ -225,6 +225,6 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("desiredAngle", desiredAngle);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
         roboticPose = drivetrain.getState().Pose;
-        //targetAim(false);
+        targetAim();
     }
 }

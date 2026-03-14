@@ -71,7 +71,7 @@ public class CameraUsing extends SubsystemBase {
                     drivetrain.addVisionMeasurement(
                         camData.robotpose().toPose2d(),
                         camData.result().getTimestampSeconds(),
-                        VecBuilder.fill(1.0, 1.0, Units.degreesToRadians(60))
+                        VecBuilder.fill(.05, .05, Units.degreesToRadians(20))
                         );
                     SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotpose().getX());
                     SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotpose().getY());
