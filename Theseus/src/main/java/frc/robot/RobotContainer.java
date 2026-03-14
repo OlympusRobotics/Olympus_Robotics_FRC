@@ -167,6 +167,12 @@ public class RobotContainer {
         joystick.b().whileTrue(resetsTurret);
         joystick.a().whileTrue(unlocksTurret);
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+
+        // D-pad turret controls: left/right = manual rotate, up = auto-aim, down = zero
+        joystick.povLeft().whileTrue(aiming.run(() -> aiming.manualRotate(-1)));
+        joystick.povRight().whileTrue(aiming.run(() -> aiming.manualRotate(1)));
+        joystick.povUp().onTrue(aiming.runOnce(() -> aiming.enableAutoAim()));
+        joystick.povDown().onTrue(aiming.runOnce(() -> aiming.zeroTurret()));
         
         //joystick.start().onTrue(aiming.runOnce(() -> {useTurretMotionMagic = !useTurretMotionMagic;}) );
 

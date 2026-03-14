@@ -97,6 +97,8 @@ Vision-guided turret with rotation, height adjustment, flywheel, and indexer fee
 - Ballistic trajectory calculation for automatic launch angle
 - Compensates for robot velocity while aiming
 - Targets alliance-specific hub positions (red/blue)
+- **Two modes:** auto-aim (default) and manual (D-pad left/right to rotate, D-pad up to return to auto)
+- Skips aiming while robot is disabled to prevent windup on first enable
 
 ### Vision (PhotonVision)
 
@@ -137,6 +139,10 @@ Single TalonFX (CAN ID 10) with PID position control.
 | X | Lock turret (safe position) |
 | B | Reset turret height |
 | Back | Reset field-centric heading |
+| D-pad left | Manual turret rotate left (switches to manual mode) |
+| D-pad right | Manual turret rotate right (switches to manual mode) |
+| D-pad up | Return to auto-aim mode |
+| D-pad down | Zero/calibrate turret encoder |
 
 ### Operator (Xbox — Port 1)
 
