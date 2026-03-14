@@ -32,6 +32,7 @@ public class TurretAiming extends SubsystemBase {
     private final DoubleArrayPublisher turretTargetPub;
     private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
     private final DutyCycleEncoder throughbore;
+    private boolean turretLocked = false;
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -167,6 +168,9 @@ public class TurretAiming extends SubsystemBase {
         double desiredHeight = maxFormula();
         desiredAngle  = vectorCalculations();
         SmartDashboard.putNumber("desiredangle", desiredAngle);
+
+        if (turretLocked) return;
+
         double rotError = desiredAngle - smoothRotation;
         
         smoothRotation += rotationTao * rotError;
@@ -201,6 +205,7 @@ public class TurretAiming extends SubsystemBase {
     }
     /**Locks the turret */
     public void lockTurret(){
+        turretLocked = true;
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
         rotationMotor.setControl(rotationoutput.withPosition(0));
@@ -226,6 +231,7 @@ public class TurretAiming extends SubsystemBase {
     }
     /**Stops all turret related motors, the Rotation, Height, and Indexer motors */
     public void stopMotors(){
+        turretLocked = false;
         rotationMotor.stopMotor();
         heightMotor.stopMotor();
         indexerLMotor.stopMotor();
