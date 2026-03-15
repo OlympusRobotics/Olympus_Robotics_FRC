@@ -80,7 +80,7 @@ Triple-motor intake with flywheel for game piece manipulation.
 
 ### Turret Aiming
 
-Vision-guided turret with rotation, height adjustment, flywheel, and indexer feed.
+Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and indexer feed.
 
 | Motor | Type | CAN ID | Current Limit |
 |-------|------|--------|---------------|
@@ -94,11 +94,13 @@ Vision-guided turret with rotation, height adjustment, flywheel, and indexer fee
 - **Rotation range:** -0.43 to 0.41 rotations (soft-limited), 40:1 gearing
 - **Height range:** 0 to 1.5 rotations, 5:1 gearing
 - Uses through-bore encoder (DIO channel 2) for absolute rotation reference
+- **Auto-aim:** Automatically targets alliance-specific hub/field positions based on robot location
 - Ballistic trajectory calculation for automatic launch angle
-- Compensates for robot velocity while aiming
-- Targets alliance-specific hub positions (red/blue)
+- Compensates for robot velocity while aiming (toggleable via SmartDashboard/Elastic)
+- Motor position in mechanism rotations (0–1 = full turret turn); converted to radians via × 2π for pose logging
+- `Turret/ActualPose` and `Turret/DesiredPose` logged continuously (even while disabled) for AdvantageScope visualization
 - **Two modes:** auto-aim (default) and manual (D-pad left/right to rotate, D-pad up to return to auto)
-- Skips aiming while robot is disabled to prevent windup on first enable
+- Skips motor commands while robot is disabled to prevent windup on first enable
 
 ### Vision (PhotonVision)
 
