@@ -152,7 +152,7 @@ public class TurretAiming extends SubsystemBase {
         targetAngle = -Math.IEEEremainder(targetAngle, 2 * Math.PI);
         double smartdashboardangle = Math.toDegrees(targetAngle);
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
-        return (targetAngle) / (2 * Math.PI) / (2 * Math.PI);
+        return (targetAngle) / (2 * Math.PI);
     }
     /**
      * Kinematics used to figure out the angle
@@ -178,7 +178,17 @@ public class TurretAiming extends SubsystemBase {
     public void targetAim(){
         if (roboticPose == null) return;
 
-        // Don't accumulate error while disabled — it causes the turret to
+        // Always compute the target so DesiredPose is available even while disabled.
+        targetpose();
+        getTargetHeight();
+        double desiredHeight = maxFormula();
+        desiredRotation  = vectorCalculations();
+        // Wrap desiredRotation into soft limits by adding/subtracting a full rotation
+        while (desiredRotation < ROTATION_REVERSE_LIMIT) { desiredRotation += 1.0; }
+        while (desiredRotation > ROTATION_FORWARD_LIMIT) { desiredRotation -= 1.0; }
+        SmartDashboard.putNumber("desiredRotation", desiredRotation);
+
+        // Don't send motor commands while disabled — it causes the turret to
         // wind up and slam on first enable.
         if (!DriverStation.isEnabled()) {
             wasDisabled = true;
@@ -192,15 +202,6 @@ public class TurretAiming extends SubsystemBase {
             smoothHeight = heightMotor.getPosition().getValueAsDouble();
             wasDisabled = false;
         }
-
-        targetpose();
-        getTargetHeight();
-        double desiredHeight = maxFormula();
-        desiredRotation  = vectorCalculations();
-        // Wrap desiredRotation into soft limits by adding/subtracting a full rotation
-        while (desiredRotation < ROTATION_REVERSE_LIMIT) { desiredRotation += 1.0; }
-        while (desiredRotation > ROTATION_FORWARD_LIMIT) { desiredRotation -= 1.0; }
-        SmartDashboard.putNumber("desiredRotation", desiredRotation);
 
         if (turretLocked || !autoAimEnabled) return;
 
@@ -343,17 +344,17 @@ public class TurretAiming extends SubsystemBase {
         // Pose2d for turret: desired and actual field headings.
         // targetAngle is robot-relative (negated), so the field-relative desired heading is:
         //   robotHeading - targetAngle
-        // For actual, convert motor position back: motorPos * (2π)² gives the negated
-        // robot-relative angle (same transform as vectorCalculations), so same formula.
-        if (roboticPose != null && targetPose != null) {
+        // For actual, convert motor position (mechanism rotations) back to radians
+        // via motorPos * 2π, then add robot heading for field-relative angle.
+        if (roboticPose != null) {
             double robotHeading = roboticPose.getRotation().getRadians();
+
+            double actualMotorPos = rotationMotor.getPosition().getValueAsDouble();
+            double actualFieldAngle = robotHeading - actualMotorPos * 2 * Math.PI;
+            Logger.recordOutput("Turret/ActualPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(actualFieldAngle)));
 
             double desiredFieldAngle = robotHeading - targetAngle;
             Logger.recordOutput("Turret/DesiredPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(desiredFieldAngle)));
-
-            double actualMotorPos = rotationMotor.getPosition().getValueAsDouble();
-            double actualFieldAngle = robotHeading + actualMotorPos * 4 * Math.PI * Math.PI;
-            Logger.recordOutput("Turret/ActualPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(actualFieldAngle)));
         }
     }
 }
