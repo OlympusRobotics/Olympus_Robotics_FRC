@@ -340,13 +340,19 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
         Logger.recordOutput("Turret/SmoothRotation", smoothRotation);
 
-        // Pose2d for turret: desired and actual positions on the field
+        // Pose2d for turret: desired and actual field headings.
+        // targetAngle is robot-relative (negated), so the field-relative desired heading is:
+        //   robotHeading - targetAngle
+        // For actual, convert motor position back: motorPos * (2π)² gives the negated
+        // robot-relative angle (same transform as vectorCalculations), so same formula.
         if (roboticPose != null && targetPose != null) {
-            double desiredFieldAngle = roboticPose.getRotation().getRadians() + desiredRotation * 2 * Math.PI;
+            double robotHeading = roboticPose.getRotation().getRadians();
+
+            double desiredFieldAngle = robotHeading - targetAngle;
             Logger.recordOutput("Turret/DesiredPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(desiredFieldAngle)));
 
-            double actualRotation = rotationMotor.getPosition().getValueAsDouble();
-            double actualFieldAngle = roboticPose.getRotation().getRadians() + actualRotation * 2 * Math.PI;
+            double actualMotorPos = rotationMotor.getPosition().getValueAsDouble();
+            double actualFieldAngle = robotHeading + actualMotorPos * 4 * Math.PI * Math.PI;
             Logger.recordOutput("Turret/ActualPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(actualFieldAngle)));
         }
     }
