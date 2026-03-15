@@ -36,8 +36,7 @@ public class TurretAiming extends SubsystemBase {
     private final DutyCycleEncoder throughbore;
     private boolean turretLocked = false;
     private boolean wasDisabled = true;
-    private boolean manualMode = false;
-    private boolean velocityCompensation = false;
+    private boolean autoAimEnabled = false;
     private int manualHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine step for short presses
     private static final double MANUAL_STEP_FAST = 0.008; // fast step after holding ~1s
@@ -73,7 +72,8 @@ public class TurretAiming extends SubsystemBase {
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
 
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> rotationMotor.setPosition(0)).ignoringDisable(true));
-        SmartDashboard.putBoolean("Velocity Compensation", velocityCompensation);
+        SmartDashboard.putBoolean("Velocity Compensation", false);
+        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -136,7 +136,7 @@ public class TurretAiming extends SubsystemBase {
         targetx = (target.getX() - roboticPose.getX()); 
         targety = (target.getY() - roboticPose.getY());
         targetAngle = (Math.atan2(targety, targetx));
-        velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
+        boolean velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
         if (velocityCompensation) {
             double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
             // Add robot velocity so the projectile leads the target
@@ -146,7 +146,6 @@ public class TurretAiming extends SubsystemBase {
         }
         // Convert from field-relative to robot-relative
         targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
-        targetAngle += Math.PI;
         // Normalize to [0, 2π)
         targetAngle = Math.IEEEremainder(targetAngle, 2 * Math.PI);
         if (targetAngle < 0) { targetAngle += 2 * Math.PI; }
@@ -199,7 +198,7 @@ public class TurretAiming extends SubsystemBase {
         desiredAngle  = vectorCalculations();
         SmartDashboard.putNumber("desiredangle", desiredAngle);
 
-        if (turretLocked || manualMode) return;
+        if (turretLocked || !autoAimEnabled) return;
 
         double rotError = desiredAngle - rotationMotor.getPosition().getValueAsDouble();
         
@@ -265,7 +264,7 @@ public class TurretAiming extends SubsystemBase {
      * Starts slow for precision, ramps up after holding ~1 second.
      * @param direction +1 for right, -1 for left */
     public void manualRotate(double direction) {
-        manualMode = true;
+        autoAimEnabled = false;
         manualHoldCycles++;
         double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
         double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
@@ -281,12 +280,12 @@ public class TurretAiming extends SubsystemBase {
 
     /** Switch back to auto-aim mode */
     public void enableAutoAim() {
-        manualMode = false;
+        autoAimEnabled = true;
     }
 
     /** Zero the turret rotation encoder at current physical position */
     public void zeroTurret() {
-        manualMode = true;
+        autoAimEnabled = false;
         rotationMotor.setPosition(0);
         smoothRotation = 0;
         rotationMotor.setControl(rotationoutput.withPosition(0));
@@ -294,7 +293,7 @@ public class TurretAiming extends SubsystemBase {
 
     /** @return true if turret is in manual mode */
     public boolean isManualMode() {
-        return manualMode;
+        return !autoAimEnabled;
     }
 
     /**Stops all turret related motors, the Rotation, Height, and Indexer motors */
@@ -309,8 +308,10 @@ public class TurretAiming extends SubsystemBase {
     @Override
     public void periodic() {
         roboticPose = drivetrain.getState().Pose;
+        autoAimEnabled = SmartDashboard.getBoolean("Auto Aim", false);
         targetAim();
-        SmartDashboard.putBoolean("Turret Manual", manualMode);
+        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
+        SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled);
         SmartDashboard.putNumber("targetAngle", Math.toDegrees(targetAngle));
         SmartDashboard.putNumber("pose?", targety);
         SmartDashboard.putNumber("pose2", targetx);
