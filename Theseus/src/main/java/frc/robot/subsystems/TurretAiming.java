@@ -94,7 +94,7 @@ public class TurretAiming extends SubsystemBase {
                     return targetPose = new Translation2d(15, 7);
                 }
                 //lower portion of field
-                else if (roboticPose.getY() < 4) {
+                else if (roboticPose.getY() < 4.425) {
                     return targetPose = new Translation2d(15, 1);
                 }
             }
@@ -102,7 +102,7 @@ public class TurretAiming extends SubsystemBase {
         //if on blue alliance
         else if (!CommandSwerveDrivetrain.getAlliance()) {
             //blue alliance hub area
-            if (roboticPose.getX() < 4) {
+            if (roboticPose.getX() < 4.425) {
                 return targetPose = new Translation2d(4.621, 4.035);
             } 
             //not blue alliance hub area
@@ -146,9 +146,8 @@ public class TurretAiming extends SubsystemBase {
         }
         // Convert from field-relative to robot-relative
         targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
-        // Normalize to [0, 2π)
-        targetAngle = Math.IEEEremainder(targetAngle, 2 * Math.PI);
-        if (targetAngle < 0) { targetAngle += 2 * Math.PI; }
+        // Normalize to [-π, π) so 0 = front of robot
+        targetAngle = -Math.IEEEremainder(targetAngle, 2 * Math.PI);
         double smartdashboardangle = Math.toDegrees(targetAngle);
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
         return (targetAngle) / (2 * Math.PI) / (2 * Math.PI);
@@ -196,6 +195,9 @@ public class TurretAiming extends SubsystemBase {
         getTargetHeight();
         double desiredHeight = maxFormula();
         desiredAngle  = vectorCalculations();
+        // Wrap desiredAngle into soft limits by adding/subtracting a full rotation
+        while (desiredAngle < ROTATION_REVERSE_LIMIT) { desiredAngle += 1.0; }
+        while (desiredAngle > ROTATION_FORWARD_LIMIT) { desiredAngle -= 1.0; }
         SmartDashboard.putNumber("desiredangle", desiredAngle);
 
         if (turretLocked || !autoAimEnabled) return;
