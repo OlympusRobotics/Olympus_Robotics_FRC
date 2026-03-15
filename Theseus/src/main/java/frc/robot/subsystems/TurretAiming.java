@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -27,7 +28,7 @@ public class TurretAiming extends SubsystemBase {
     private Pose2d roboticPose;
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, 
-    smoothRotation, smoothHeight, rotationTao, heightTao, desiredAngle;
+    smoothRotation, smoothHeight, rotationTao, heightTao, desiredRotation;
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
@@ -60,7 +61,7 @@ public class TurretAiming extends SubsystemBase {
         kmaxVelocity = 2;
         heightTao = .15;
         rotationTao = .15;
-        desiredAngle = 0;
+        desiredRotation = 0;
         turretTargetPub = NetworkTableInstance.getDefault()
             .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
         //Set up motors
@@ -195,15 +196,15 @@ public class TurretAiming extends SubsystemBase {
         targetpose();
         getTargetHeight();
         double desiredHeight = maxFormula();
-        desiredAngle  = vectorCalculations();
-        // Wrap desiredAngle into soft limits by adding/subtracting a full rotation
-        while (desiredAngle < ROTATION_REVERSE_LIMIT) { desiredAngle += 1.0; }
-        while (desiredAngle > ROTATION_FORWARD_LIMIT) { desiredAngle -= 1.0; }
-        SmartDashboard.putNumber("desiredangle", desiredAngle);
+        desiredRotation  = vectorCalculations();
+        // Wrap desiredRotation into soft limits by adding/subtracting a full rotation
+        while (desiredRotation < ROTATION_REVERSE_LIMIT) { desiredRotation += 1.0; }
+        while (desiredRotation > ROTATION_FORWARD_LIMIT) { desiredRotation -= 1.0; }
+        SmartDashboard.putNumber("desiredRotation", desiredRotation);
 
         if (turretLocked || !autoAimEnabled) return;
 
-        double rotError = desiredAngle - rotationMotor.getPosition().getValueAsDouble();
+        double rotError = desiredRotation - rotationMotor.getPosition().getValueAsDouble();
         
         smoothRotation += rotationTao * rotError;
         smoothRotation = MathUtil.clamp(smoothRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
@@ -324,7 +325,7 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("targetAngle", Math.toDegrees(targetAngle));
         SmartDashboard.putNumber("pose?", targety);
         SmartDashboard.putNumber("pose2", targetx);
-        SmartDashboard.putNumber("desiredAngle", desiredAngle);
+        SmartDashboard.putNumber("desiredRotation", desiredRotation);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
         SmartDashboard.putNumber("Turret Angle", rotationMotor.getPosition().getValueAsDouble() * 360.0);
         if (targetPose != null) {
@@ -336,7 +337,17 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/FlywheelVelocity", flywheelMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Turret/ThroughborePosition", throughbore.get());
         Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
-        Logger.recordOutput("Turret/DesiredAngle", desiredAngle);
+        Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
         Logger.recordOutput("Turret/SmoothRotation", smoothRotation);
+
+        // Pose2d for turret: desired and actual positions on the field
+        if (roboticPose != null && targetPose != null) {
+            double desiredFieldAngle = roboticPose.getRotation().getRadians() + desiredRotation * 2 * Math.PI;
+            Logger.recordOutput("Turret/DesiredPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(desiredFieldAngle)));
+
+            double actualRotation = rotationMotor.getPosition().getValueAsDouble();
+            double actualFieldAngle = roboticPose.getRotation().getRadians() + actualRotation * 2 * Math.PI;
+            Logger.recordOutput("Turret/ActualPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(actualFieldAngle)));
+        }
     }
 }
