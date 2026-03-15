@@ -18,7 +18,7 @@ This is a multi-year FRC robotics repository for Team 4982 — Olympus Robotics.
 
 All robots use the **WPILib Command-Based** architecture:
 
-- `TimedCommandRobot` as the robot base class.
+- `LoggedRobot` (AdvantageKit) as the robot base class for Theseus.
 - Subsystems encapsulate hardware (motors, sensors, encoders).
 - Commands compose subsystem actions for autonomous and teleop.
 - `RobotContainer` wires subsystems, commands, and controller bindings.
@@ -45,7 +45,35 @@ All robots use the **WPILib Command-Based** architecture:
 - Group motor configuration (PID gains, current limits, idle mode) near the top of subsystem constructors.
 - Define positions and setpoints as named constants, not magic numbers.
 - Prefer `Subsystem.setDefaultCommand()` for continuous teleop control.
-- Log telemetry to SmartDashboard / NetworkTables for tuning and debugging.
+- Log telemetry through AdvantageKit `Logger.recordOutput()` (see Logging section below).
+- Use SmartDashboard only for interactive widgets (toggles, Field2d, Mechanism2d).
+
+## Logging & Telemetry (Theseus)
+
+Theseus uses **AdvantageKit** (`org.littletonrobotics.junction`) for all structured telemetry.
+
+- **Always use `Logger.recordOutput("Subsystem/Key", value)`** for data that should be viewable in AdvantageScope.
+- **Never publish structured data directly to NetworkTables** (e.g. `StructPublisher`, manual `NetworkTable.getTable()`). Direct NT publishers create keys under a different namespace than AdvantageKit, so AdvantageScope layouts break when switching between live and log-file sources.
+- AdvantageKit's `NT4Publisher` handles live NT publishing automatically — `Logger.recordOutput()` keys appear under `/RealOutputs/` both live and in `.wpilog` files.
+- **CTRE `SignalLogger`** writes are fine for low-level hoot replay but are separate from AdvantageKit.
+- **SmartDashboard** is acceptable for interactive widgets (`Field2d`, `Mechanism2d`, boolean toggles, command buttons) that don't need log replay.
+- Key naming convention: `"Subsystem/Key"` (e.g. `"Drivetrain/Pose"`, `"Turret/RotationPosition"`, `"Vision/EstimatedPose"`).
+
+### Log Analysis Tools (`Theseus/tools/`)
+
+Python scripts for working with `.wpilog` files offline. All require the `wpiutil` package.
+
+- **`fetch_logs.sh`** / **`fetch_logs.bat`** — Download logs from the roboRIO (`10.49.82.2`) to `Theseus/logs/`. Supports `--purge` and `--purge-all`.
+- **`wpilog_inspect.py`** — List, grep, or dump signals from a `.wpilog` file.
+  ```
+  python3 tools/wpilog_inspect.py <file.wpilog> --keys
+  python3 tools/wpilog_inspect.py <file.wpilog> --grep Pose
+  python3 tools/wpilog_inspect.py <file.wpilog> --dump "/RealOutputs/Drivetrain/Pose"
+  ```
+- **`pose_inspect.py`** — Decode and print `Pose2d` values in a time range. Watches `/RealOutputs/Drivetrain/Pose`, `/RealOutputs/Turret/DesiredPose`, and `/RealOutputs/Turret/ActualPose`.
+  ```
+  python3 tools/pose_inspect.py <file.wpilog> [start_sec] [end_sec]
+  ```
 
 ## When Writing New Code
 
