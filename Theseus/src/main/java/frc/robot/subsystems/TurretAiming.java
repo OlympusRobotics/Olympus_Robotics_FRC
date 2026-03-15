@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 // NOTE: Changes to motors, CAN IDs, or aiming logic must be reflected in Theseus/README.md (Turret Aiming section).
 
-import edu.wpi.first.math.controller.PIDController;
+//import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -33,7 +33,7 @@ public class TurretAiming extends SubsystemBase {
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleArrayPublisher turretTargetPub;
-    private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
+    //private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
     private final DutyCycleEncoder throughbore;
     private boolean turretLocked = false;
     private boolean wasDisabled = true;
@@ -71,7 +71,7 @@ public class TurretAiming extends SubsystemBase {
         indexerLMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
-        stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+        //stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
 
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> rotationMotor.setPosition(0)).ignoringDisable(true));
         SmartDashboard.putBoolean("Velocity Compensation", false);

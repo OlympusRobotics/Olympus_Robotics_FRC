@@ -55,6 +55,7 @@ public class CameraUsing extends SubsystemBase {
         //System.out.println(thankYouToElvisForDesigningOurRobotChassis);
     private void processCamera() {
         double lowestAmbiguity = .1;
+        double nextUpAmbiguity = .2;
         boolean hasTarget = false;
 
         for (var camPair : List.of(
@@ -74,13 +75,27 @@ public class CameraUsing extends SubsystemBase {
                     hasTarget = true;
                     drivetrain.addVisionMeasurement(
                         camData.robotpose().toPose2d(),
-                        camData.result().getTimestampSeconds(),
-                        VecBuilder.fill(.05, .05, Units.degreesToRadians(20))
+                        edu.wpi.first.wpilibj.Timer.getFPGATimestamp(),
+                        VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(10))
                         );
                     SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotpose().getX());
                     SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotpose().getY());
                     Logger.recordOutput("Vision/EstimatedPose", camData.robotpose().toPose2d());
+
                 }
+                else if (ambiguity < nextUpAmbiguity) {
+                    nextUpAmbiguity = ambiguity;
+                    hasTarget = true;
+                    drivetrain.addVisionMeasurement(
+                        camData.robotpose().toPose2d(),
+                        camData.result().getTimestampSeconds(),
+                        VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(10))
+                        );
+                }
+                if (drivetrain.getState().Pose.getX() < .1) {
+                    drivetrain.resetPose(camData.robotpose().toPose2d());
+                }
+                SmartDashboard.putNumber("visionX", camData.robotpose().toPose2d().getX());
             }
         }
         Logger.recordOutput("Vision/HasTarget", hasTarget);
