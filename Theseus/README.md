@@ -117,6 +117,15 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 - Ambiguity threshold: 0.1 (filters noisy detections)
 - Feeds pose estimates into drivetrain odometry
 
+### Network Map
+
+| Device | IP Address | Dashboard | Cameras |
+|--------|------------|-----------|---------|
+| roboRIO | `10.49.82.2` | — | — |
+| Radio | `10.49.82.4` | http://10.49.82.4 | — |
+| PhotonVision coprocessor 1 | `10.49.82.13` | http://10.49.82.13:5800 | CameraFR, CameraBR |
+| PhotonVision coprocessor 2 | `10.49.82.14` | http://10.49.82.14:5800 | CameraFL, CameraBL |
+
 ### Climber
 
 Single TalonFX (CAN ID 10) with PID position control.
