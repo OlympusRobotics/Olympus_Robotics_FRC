@@ -97,6 +97,8 @@ Vision-guided turret with rotation, height adjustment, flywheel, and indexer fee
 - Ballistic trajectory calculation for automatic launch angle
 - Compensates for robot velocity while aiming
 - Targets alliance-specific hub positions (red/blue)
+- **Two modes:** auto-aim (default) and manual (D-pad left/right to rotate, D-pad up to return to auto)
+- Skips aiming while robot is disabled to prevent windup on first enable
 
 ### Vision (PhotonVision)
 
@@ -137,6 +139,10 @@ Single TalonFX (CAN ID 10) with PID position control.
 | X | Lock turret (safe position) |
 | B | Reset turret height |
 | Back | Reset field-centric heading |
+| D-pad left | Manual turret rotate left (switches to manual mode) |
+| D-pad right | Manual turret rotate right (switches to manual mode) |
+| D-pad up | Return to auto-aim mode |
+| D-pad down | Zero/calibrate turret encoder |
 
 ### Operator (Xbox — Port 1)
 
@@ -173,3 +179,40 @@ Autonomous routines use **PathPlanner** with holonomic path following and allian
 | 20 | Turret feed motor |
 | 21 | Pigeon2 gyro |
 | 22 | Turret indexer R |
+
+## Simulator
+
+Run the robot in the WPILib desktop simulator:
+
+```bash
+./gradlew simulateJava
+```
+
+The sim GUI opens automatically. To drive:
+
+1. In the **System Joysticks** panel, drag **Keyboard 0** to **Joystick[0]**
+2. Set mode to **Teleop** and click **Enable**
+
+> **Note:** Close the sim window cleanly (close button, not Ctrl+C) so keyboard mappings persist in `simgui-ds.json`.
+
+### Keyboard Controls (Keyboard 0 → Joystick[0])
+
+| Key | Action |
+|-----|--------|
+| W | Drive forward |
+| S | Drive backward |
+| A | Strafe left |
+| D | Strafe right |
+| E | Rotate left |
+| R | Rotate right |
+| Z, X, C, V | Buttons 1–4 |
+| Numpad arrows | POV hat |
+
+Rotation (E/R) maps to axis 2 in sim. The drive code detects simulation mode and reads axis 2 instead of the Xbox right stick (axis 4). On the real robot, the right stick controls rotation as normal.
+
+### Sim-specific Behavior
+
+- **CAN stale warnings** are normal — no real CAN hardware in sim
+- **PhotonVision not found** is expected — no camera coprocessors
+- **Joystick button warnings** appear until Keyboard 0 is mapped
+- Rotation rate is capped at 1 rot/s for controllable keyboard input

@@ -4,8 +4,12 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.controls.Follower;
@@ -13,6 +17,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
+import edu.wpi.first.math.MathUtil;
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.TurretConfigs.*;
 
@@ -26,8 +31,16 @@ public class TurretAiming extends SubsystemBase {
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
+    private final DoubleArrayPublisher turretTargetPub;
     private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
     private final DutyCycleEncoder throughbore;
+    private boolean turretLocked = false;
+    private boolean wasDisabled = true;
+    private boolean autoAimEnabled = false;
+    private int manualHoldCycles = 0;
+    private static final double MANUAL_STEP_SLOW = 0.002; // fine step for short presses
+    private static final double MANUAL_STEP_FAST = 0.008; // fast step after holding ~1s
+    private static final int MANUAL_RAMP_CYCLES = 50;     // cycles before ramping up (~1s at 50Hz)
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -43,10 +56,12 @@ public class TurretAiming extends SubsystemBase {
         throughbore = new DutyCycleEncoder(2, 1, 0.216);
         targetAngle = 0;
         roboticPose = new Pose2d();
-        kmaxVelocity = 25;
-        heightTao = .05;
-        rotationTao = .05;
+        kmaxVelocity = 2;
+        heightTao = .15;
+        rotationTao = .15;
         desiredAngle = 0;
+        turretTargetPub = NetworkTableInstance.getDefault()
+            .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
         //Set up motors
         rotationMotor.getConfigurator().apply(rotationConfigs);
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
@@ -55,6 +70,10 @@ public class TurretAiming extends SubsystemBase {
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+
+        SmartDashboard.putData("Zero Turret", new InstantCommand(() -> rotationMotor.setPosition(0)).ignoringDisable(true));
+        SmartDashboard.putBoolean("Velocity Compensation", false);
+        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
     }
     /** 
      * Gets the target field position based on the alliance and current position
@@ -66,7 +85,7 @@ public class TurretAiming extends SubsystemBase {
         if (CommandSwerveDrivetrain.getAlliance()) {
             //red alliance hub area
             if (roboticPose.getX() > 12.5) {
-                return targetPose = new Translation2d(4.621, 4.035);
+                return targetPose = new Translation2d(11.914, 4.035);
             }
             //not red alliance hub area
             else if (roboticPose.getX() < 12.5) {
@@ -75,7 +94,7 @@ public class TurretAiming extends SubsystemBase {
                     return targetPose = new Translation2d(15, 7);
                 }
                 //lower portion of field
-                else if (roboticPose.getY() < 4) {
+                else if (roboticPose.getY() < 4.425) {
                     return targetPose = new Translation2d(15, 1);
                 }
             }
@@ -83,8 +102,8 @@ public class TurretAiming extends SubsystemBase {
         //if on blue alliance
         else if (!CommandSwerveDrivetrain.getAlliance()) {
             //blue alliance hub area
-            if (roboticPose.getX() < 4) {
-                return targetPose = new Translation2d(11.914, 4.035);
+            if (roboticPose.getX() < 4.425) {
+                return targetPose = new Translation2d(4.621, 4.035);
             } 
             //not blue alliance hub area
             else if (roboticPose.getX() > 4) {
@@ -117,16 +136,21 @@ public class TurretAiming extends SubsystemBase {
         targetx = (target.getX() - roboticPose.getX()); 
         targety = (target.getY() - roboticPose.getY());
         targetAngle = (Math.atan2(targety, targetx));
-        double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
-        double actualX = (shootingXSpeed * Math.cos(targetAngle)) - (drivetrain.getChassisSpeeds().vxMetersPerSecond);
-        double actualY = (shootingXSpeed * Math.sin(targetAngle)) - (drivetrain.getChassisSpeeds().vyMetersPerSecond);
-        targetAngle = Math.atan2(actualY, actualX);
+        boolean velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
+        if (velocityCompensation) {
+            double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
+            // Add robot velocity so the projectile leads the target
+            double actualX = (shootingXSpeed * Math.cos(targetAngle));
+            double actualY = (shootingXSpeed * Math.sin(targetAngle)) + (drivetrain.getChassisSpeeds().vyMetersPerSecond);
+            targetAngle = Math.atan2(actualY, actualX);
+        }
+        // Convert from field-relative to robot-relative
         targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
-        if (targetAngle > Math.toRadians(180)) {targetAngle -= Math.toRadians(360);}
-        if (targetAngle < Math.toRadians(-180)) {targetAngle += Math.toRadians(360);}
-        double smartdashboardangle = Math.toDegrees(targetAngle / 2 * Math.PI);
+        // Normalize to [-π, π) so 0 = front of robot
+        targetAngle = -Math.IEEEremainder(targetAngle, 2 * Math.PI);
+        double smartdashboardangle = Math.toDegrees(targetAngle);
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
-        return targetAngle / (2 * Math.PI);
+        return (targetAngle) / (2 * Math.PI) / (2 * Math.PI);
     }
     /**
      * Kinematics used to figure out the angle
@@ -151,20 +175,46 @@ public class TurretAiming extends SubsystemBase {
     /**Moves the turret to the wanted spots*/
     public void targetAim(){
         if (roboticPose == null) return;
+
+        // Don't accumulate error while disabled — it causes the turret to
+        // wind up and slam on first enable.
+        if (!DriverStation.isEnabled()) {
+            wasDisabled = true;
+            return;
+        }
+
+        // On the first enabled cycle, sync the smoothing state to the
+        // actual motor positions so there's no accumulated jump.
+        if (wasDisabled) {
+            smoothRotation = rotationMotor.getPosition().getValueAsDouble();
+            smoothHeight = heightMotor.getPosition().getValueAsDouble();
+            wasDisabled = false;
+        }
+
         targetpose();
         getTargetHeight();
         double desiredHeight = maxFormula();
         desiredAngle  = vectorCalculations();
-        double rotError = desiredAngle - smoothRotation;
+        // Wrap desiredAngle into soft limits by adding/subtracting a full rotation
+        while (desiredAngle < ROTATION_REVERSE_LIMIT) { desiredAngle += 1.0; }
+        while (desiredAngle > ROTATION_FORWARD_LIMIT) { desiredAngle -= 1.0; }
+        SmartDashboard.putNumber("desiredangle", desiredAngle);
+
+        if (turretLocked || !autoAimEnabled) return;
+
+        double rotError = desiredAngle - rotationMotor.getPosition().getValueAsDouble();
         
         smoothRotation += rotationTao * rotError;
+        smoothRotation = MathUtil.clamp(smoothRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         
         double heightError = desiredHeight - smoothHeight;
         if (Math.abs(heightError) > .01) {
             smoothHeight += heightTao * heightError;
         }
+        smoothHeight = MathUtil.clamp(smoothHeight, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
         heightMotor.setControl(heightoutput.withPosition(smoothHeight));
-        rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
+        rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
+        //rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
     }
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
@@ -188,6 +238,7 @@ public class TurretAiming extends SubsystemBase {
     }
     /**Locks the turret */
     public void lockTurret(){
+        turretLocked = true;
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
         rotationMotor.setControl(rotationoutput.withPosition(0));
@@ -211,8 +262,45 @@ public class TurretAiming extends SubsystemBase {
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
+    /** Nudge the turret manually. Automatically switches to manual mode.
+     * Starts slow for precision, ramps up after holding ~1 second.
+     * @param direction +1 for right, -1 for left */
+    public void manualRotate(double direction) {
+        autoAimEnabled = false;
+        manualHoldCycles++;
+        double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
+        double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
+        smoothRotation += step * direction;
+        smoothRotation = MathUtil.clamp(smoothRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
+    }
+
+    /** Resets the manual rotation ramp counter (call when D-pad is released) */
+    public void resetManualRamp() {
+        manualHoldCycles = 0;
+    }
+
+    /** Switch back to auto-aim mode */
+    public void enableAutoAim() {
+        autoAimEnabled = true;
+    }
+
+    /** Zero the turret rotation encoder at current physical position */
+    public void zeroTurret() {
+        autoAimEnabled = false;
+        rotationMotor.setPosition(0);
+        smoothRotation = 0;
+        rotationMotor.setControl(rotationoutput.withPosition(0));
+    }
+
+    /** @return true if turret is in manual mode */
+    public boolean isManualMode() {
+        return !autoAimEnabled;
+    }
+
     /**Stops all turret related motors, the Rotation, Height, and Indexer motors */
     public void stopMotors(){
+        turretLocked = false;
         rotationMotor.stopMotor();
         heightMotor.stopMotor();
         indexerLMotor.stopMotor();
@@ -221,18 +309,26 @@ public class TurretAiming extends SubsystemBase {
     }
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("targetAngle", targetAngle);
+        roboticPose = drivetrain.getState().Pose;
+        autoAimEnabled = SmartDashboard.getBoolean("Auto Aim", false);
+        targetAim();
+        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
+        SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled);
+        SmartDashboard.putNumber("targetAngle", Math.toDegrees(targetAngle));
         SmartDashboard.putNumber("pose?", targety);
         SmartDashboard.putNumber("pose2", targetx);
         SmartDashboard.putNumber("desiredAngle", desiredAngle);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
-        roboticPose = drivetrain.getState().Pose;
+        SmartDashboard.putNumber("Turret Angle", rotationMotor.getPosition().getValueAsDouble() * 360.0);
+        if (targetPose != null) {
+            turretTargetPub.set(new double[] { targetPose.getX(), targetPose.getY(), 0 });
+        }
 
         Logger.recordOutput("Turret/RotationPosition", rotationMotor.getPosition().getValueAsDouble());
         Logger.recordOutput("Turret/HeightPosition", heightMotor.getPosition().getValueAsDouble());
         Logger.recordOutput("Turret/FlywheelVelocity", flywheelMotor.getVelocity().getValueAsDouble());
         Logger.recordOutput("Turret/ThroughborePosition", throughbore.get());
-        Logger.recordOutput("Turret/TargetAngle", targetAngle);
+        Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
         Logger.recordOutput("Turret/DesiredAngle", desiredAngle);
         Logger.recordOutput("Turret/SmoothRotation", smoothRotation);
     }
