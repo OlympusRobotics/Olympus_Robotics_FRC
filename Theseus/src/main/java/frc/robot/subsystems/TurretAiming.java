@@ -37,6 +37,7 @@ public class TurretAiming extends SubsystemBase {
     private boolean turretLocked = false;
     private boolean wasDisabled = true;
     private boolean autoAimEnabled = false;
+    private boolean lastDashboardAim = false;
     private int manualHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine step for short presses
     private static final double MANUAL_STEP_FAST = 0.008; // fast step after holding ~1s
@@ -310,9 +311,15 @@ public class TurretAiming extends SubsystemBase {
     @Override
     public void periodic() {
         roboticPose = drivetrain.getState().Pose;
-        autoAimEnabled = SmartDashboard.getBoolean("Auto Aim", false);
+        // Only react to the dashboard toggle when the operator actually
+        // clicked it (value differs from what we last wrote).
+        boolean dashboardAim = SmartDashboard.getBoolean("Auto Aim", autoAimEnabled);
+        if (dashboardAim != lastDashboardAim) {
+            autoAimEnabled = dashboardAim;
+        }
         targetAim();
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
+        lastDashboardAim = autoAimEnabled;
         SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled);
         SmartDashboard.putNumber("targetAngle", Math.toDegrees(targetAngle));
         SmartDashboard.putNumber("pose?", targety);
