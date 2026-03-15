@@ -7,6 +7,7 @@ import java.util.Map;
 import org.photonvision.PhotonCamera;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -14,7 +15,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.RobotConstants;
+
 
 import org.littletonrobotics.junction.Logger;
 
@@ -37,19 +38,19 @@ public class CameraUsing extends SubsystemBase {
             camBR = new PhotonCamera("CameraBR");
 
             robotToCamFL = new Transform3d(
-                    new Translation3d(RobotConstants.kTrackWidth/2, RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight),
+                    new Translation3d(-.15, .3048, .4826),
                     new Rotation3d(0, 0, Math.PI/4));
 
             robotToCamFR = new Transform3d(
-                    new Translation3d(-RobotConstants.kTrackWidth/2, RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight),
+                    new Translation3d(-.15, -.3048, .4826),
                     new Rotation3d(0, 0, -Math.PI/4));
 
             robotToCamBL = new Transform3d(
-                    new Translation3d(RobotConstants.kTrackWidth/2, -RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight),
+                    new Translation3d(-.3302, .2286, .152),
                     new Rotation3d(0, 0, 3*(Math.PI)/4));
 
             robotToCamBR = new Transform3d(
-                    new Translation3d(-RobotConstants.kTrackWidth/2, -RobotConstants.kRobotlength/2, RobotConstants.kCameraHeight),
+                    new Translation3d(-.3302, -.2286, .152),
                     new Rotation3d(0, 0, -3*(Math.PI)/4));
         }
         //System.out.println(thankYouToElvisForDesigningOurRobotChassis);
@@ -67,16 +68,17 @@ public class CameraUsing extends SubsystemBase {
 
             camerafile.setCameraToRobot(transform);
             var camData = camerafile.cameraProcessing(cam);
-
+            
             if (camData.robotpose() != null && camData.result().hasTargets()) {
                 double ambiguity = camData.result().getBestTarget().getPoseAmbiguity();
+                Pose2d pose = camData.robotpose().toPose2d();
                 if (ambiguity < lowestAmbiguity) {
                     lowestAmbiguity = ambiguity;
                     hasTarget = true;
                     drivetrain.addVisionMeasurement(
-                        camData.robotpose().toPose2d(),
+                        pose,
                         edu.wpi.first.wpilibj.Timer.getFPGATimestamp(),
-                        VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(10))
+                        VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(2))
                         );
                     SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotpose().getX());
                     SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotpose().getY());
@@ -87,8 +89,8 @@ public class CameraUsing extends SubsystemBase {
                     nextUpAmbiguity = ambiguity;
                     hasTarget = true;
                     drivetrain.addVisionMeasurement(
-                        camData.robotpose().toPose2d(),
-                        camData.result().getTimestampSeconds(),
+                        pose,
+                        edu.wpi.first.wpilibj.Timer.getFPGATimestamp(),
                         VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(10))
                         );
                 }
