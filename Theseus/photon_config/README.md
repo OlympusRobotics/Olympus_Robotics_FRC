@@ -17,6 +17,7 @@ SSH credentials: `photon` / `vision`
 - `coprocessor-14_dump.json` — Pretty-printed config dump from `.14`
 - `coprocessor-*/` — Raw SCP fetches (gitignored)
 - `fetch_photon_config.py` — Fetch + dump script
+- `check_health.py` — Coprocessor diagnostics (ping, CPU, temp, power, network)
 
 ## Usage
 
@@ -31,6 +32,12 @@ python3 photon_config/fetch_photon_config.py --host 13
 
 # Re-dump existing SQLite without fetching
 python3 photon_config/fetch_photon_config.py --dump-only
+
+# Health check both coprocessors
+python3 photon_config/check_health.py
+
+# Health check one coprocessor only
+python3 photon_config/check_health.py --host 13
 ```
 
 Requires `sshpass` (`brew install sshpass`).
