@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 // NOTE: Changes to motors, CAN IDs, or aiming logic must be reflected in Theseus/README.md (Turret Aiming section).
 
 //import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -25,7 +26,8 @@ import static frc.robot.Constants.TurretConfigs.*;
 import org.littletonrobotics.junction.Logger;
 
 public class TurretAiming extends SubsystemBase {
-    private Pose2d roboticPose;
+    private Pose2d robotPose;
+    private Translation2d turretPosition;
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, 
     smoothRotation, smoothHeight, rotationTao, heightTao, desiredRotation;
@@ -57,7 +59,8 @@ public class TurretAiming extends SubsystemBase {
         heightoutput =   new MotionMagicVoltage(0);
         throughbore = new DutyCycleEncoder(2, 1, 0.216);
         targetAngle = 0;
-        roboticPose = new Pose2d();
+        robotPose = new Pose2d();
+        turretPosition = robotPose.getTranslation();
         kmaxVelocity = 2;
         heightTao = .15;
         rotationTao = .15;
@@ -86,17 +89,17 @@ public class TurretAiming extends SubsystemBase {
         //if on red alliance
         if (CommandSwerveDrivetrain.getAlliance()) {
             //red alliance hub area
-            if (roboticPose.getX() > 12.5) {
+            if (robotPose.getX() > 12.5) {
                 return targetPose = new Translation2d(11.914, 4.035);
             }
             //not red alliance hub area
-            else if (roboticPose.getX() < 12.5) {
+            else if (robotPose.getX() < 12.5) {
                 //upper portion of field
-                if (roboticPose.getY() > 4) {
+                if (robotPose.getY() > 4) {
                     return targetPose = new Translation2d(15, 7);
                 }
                 //lower portion of field
-                else if (roboticPose.getY() < 4.425) {
+                else if (robotPose.getY() < 4.425) {
                     return targetPose = new Translation2d(15, 1);
                 }
             }
@@ -104,17 +107,17 @@ public class TurretAiming extends SubsystemBase {
         //if on blue alliance
         else if (!CommandSwerveDrivetrain.getAlliance()) {
             //blue alliance hub area
-            if (roboticPose.getX() < 4.425) {
+            if (robotPose.getX() < 4.425) {
                 return targetPose = new Translation2d(4.621, 4.035);
             } 
             //not blue alliance hub area
-            else if (roboticPose.getX() > 4) {
+            else if (robotPose.getX() > 4) {
                 //upper portion of field
-                if (roboticPose.getY() > 4) {
+                if (robotPose.getY() > 4) {
                     return targetPose = new Translation2d(2, 7);
                 }
                 //lower portion of field
-                else if (roboticPose.getY() < 4) {
+                else if (robotPose.getY() < 4) {
                     return targetPose = new Translation2d(2, 1);
                 }
             }
@@ -124,7 +127,7 @@ public class TurretAiming extends SubsystemBase {
 
     /**Gets the height of the target based on which target it is aiming at, and subtracts the robot height to get the actual height */
     public double getTargetHeight(){
-        if (roboticPose.getX() < 4 || roboticPose.getX() > 12.5) {
+        if (robotPose.getX() < 4 || robotPose.getX() > 12.5) {
             return 1.8288 - turretHeight;
         }
         else {
@@ -135,8 +138,8 @@ public class TurretAiming extends SubsystemBase {
     /**Calculating the actual angle while the robot is moving*/
     public double vectorCalculations() {
         Translation2d target = targetpose();
-        targetx = (target.getX() - roboticPose.getX()); 
-        targety = (target.getY() - roboticPose.getY());
+        targetx = (target.getX() - turretPosition.getX()); 
+        targety = (target.getY() - turretPosition.getY());
         targetAngle = (Math.atan2(targety, targetx));
         boolean velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
         if (velocityCompensation) {
@@ -160,8 +163,8 @@ public class TurretAiming extends SubsystemBase {
     */
     public double maxFormula(){
         Translation2d target = targetpose();
-        targetx = (target.getX() - roboticPose.getX()); 
-        targety = (target.getY() - roboticPose.getY());
+        targetx = (target.getX() - turretPosition.getX()); 
+        targety = (target.getY() - turretPosition.getY());
         targetDistance = (Math.sqrt(Math.pow(targetx, 2)+Math.pow(targety, 2)));
         if ((Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
         ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
@@ -176,7 +179,7 @@ public class TurretAiming extends SubsystemBase {
     }
     /**Moves the turret to the wanted spots*/
     public void targetAim(){
-        if (roboticPose == null) return;
+        if (robotPose == null || turretPosition == null) return;
 
         // Always compute the target so DesiredPose is available even while disabled.
         targetpose();
@@ -312,7 +315,10 @@ public class TurretAiming extends SubsystemBase {
     }
     @Override
     public void periodic() {
-        roboticPose = drivetrain.getState().Pose;
+        robotPose = drivetrain.getState().Pose;
+        turretPosition = robotPose.transformBy(
+            new Transform2d(new Translation2d(RobotConstants.kTurretXOffsetMeters, 0), new Rotation2d()))
+            .getTranslation();
         // Only react to the dashboard toggle when the operator actually
         // clicked it (value differs from what we last wrote).
         boolean dashboardAim = SmartDashboard.getBoolean("Auto Aim", autoAimEnabled);
@@ -329,6 +335,13 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("desiredRotation", desiredRotation);
         SmartDashboard.putNumber("smoothRotation", smoothRotation);
         SmartDashboard.putNumber("Turret Angle", rotationMotor.getPosition().getValueAsDouble() * 360.0);
+        if (turretPosition != null) {
+            SmartDashboard.putNumber("Turret X", turretPosition.getX());
+            SmartDashboard.putNumber("Turret Y", turretPosition.getY());
+            double turretOffsetDistance = turretPosition.getDistance(robotPose.getTranslation());
+            SmartDashboard.putNumber("Turret Offset Distance", turretOffsetDistance);
+            SmartDashboard.putNumber("Turret Offset Expected", Math.abs(RobotConstants.kTurretXOffsetMeters));
+        }
         if (targetPose != null) {
             turretTargetPub.set(new double[] { targetPose.getX(), targetPose.getY(), 0 });
         }
@@ -340,21 +353,28 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
         Logger.recordOutput("Turret/SmoothRotation", smoothRotation);
+        if (turretPosition != null) {
+            Logger.recordOutput("Turret/PositionX", turretPosition.getX());
+            Logger.recordOutput("Turret/PositionY", turretPosition.getY());
+            double turretOffsetDistance = turretPosition.getDistance(robotPose.getTranslation());
+            Logger.recordOutput("Turret/OffsetDistance", turretOffsetDistance);
+            Logger.recordOutput("Turret/OffsetExpected", Math.abs(RobotConstants.kTurretXOffsetMeters));
+        }
 
         // Pose2d for turret: desired and actual field headings.
         // targetAngle is robot-relative (negated), so the field-relative desired heading is:
         //   robotHeading - targetAngle
         // For actual, convert motor position (mechanism rotations) back to radians
         // via motorPos * 2π, then add robot heading for field-relative angle.
-        if (roboticPose != null) {
-            double robotHeading = roboticPose.getRotation().getRadians();
+        if (robotPose != null && turretPosition != null) {
+            double robotHeading = robotPose.getRotation().getRadians();
 
             double actualMotorPos = rotationMotor.getPosition().getValueAsDouble();
             double actualFieldAngle = robotHeading - actualMotorPos * 2 * Math.PI;
-            Logger.recordOutput("Turret/ActualPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(actualFieldAngle)));
+            Logger.recordOutput("Turret/ActualPose", new Pose2d(turretPosition, new Rotation2d(actualFieldAngle)));
 
             double desiredFieldAngle = robotHeading - targetAngle;
-            Logger.recordOutput("Turret/DesiredPose", new Pose2d(roboticPose.getTranslation(), new Rotation2d(desiredFieldAngle)));
+            Logger.recordOutput("Turret/DesiredPose", new Pose2d(turretPosition, new Rotation2d(desiredFieldAngle)));
         }
     }
 }

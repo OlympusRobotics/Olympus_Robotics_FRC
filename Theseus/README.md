@@ -97,6 +97,7 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 - **Auto-aim:** Automatically targets alliance-specific hub/field positions based on robot location
 - Ballistic trajectory calculation for automatic launch angle
 - Compensates for robot velocity while aiming (toggleable via SmartDashboard/Elastic)
+- Aiming vectors are computed from turret origin, offset 0.1524m behind robot center
 - Motor position in mechanism rotations (0–1 = full turret turn); converted to radians via × 2π for pose logging
 - `Turret/ActualPose` and `Turret/DesiredPose` logged continuously (even while disabled) for AdvantageScope visualization
 - **Two modes:** auto-aim (default) and manual (D-pad left/right to rotate, D-pad up to return to auto)

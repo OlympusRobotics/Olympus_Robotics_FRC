@@ -107,6 +107,7 @@ public final class Constants {
     public static final double kTrackWidth = 0.6858;
     public static final double kRobotlength = 0.6604;
     public static final double kCameraHeight = .2;
+    public static final double kTurretXOffsetMeters = -0.1524;
     
     //Turret aiming pid
     public static final double kTurretRotationP = 150; //kP ≈ 0.4–0.8 
