@@ -30,7 +30,7 @@ public class TurretAiming extends SubsystemBase {
     private Translation2d turretPosition;
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, 
-    smoothRotation, smoothHeight, rotationTao, heightTao, desiredRotation;
+    rotationSetpoint, heightSetpoint, rotationTau, heightTau, desiredRotation;
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
@@ -62,8 +62,8 @@ public class TurretAiming extends SubsystemBase {
         robotPose = new Pose2d();
         turretPosition = robotPose.getTranslation();
         kmaxVelocity = 2;
-        heightTao = .15;
-        rotationTao = .15;
+        heightTau = .15;
+        rotationTau = .15;
         desiredRotation = 0;
         turretTargetPub = NetworkTableInstance.getDefault()
             .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
@@ -201,26 +201,24 @@ public class TurretAiming extends SubsystemBase {
         // On the first enabled cycle, sync the smoothing state to the
         // actual motor positions so there's no accumulated jump.
         if (wasDisabled) {
-            smoothRotation = rotationMotor.getPosition().getValueAsDouble();
-            smoothHeight = heightMotor.getPosition().getValueAsDouble();
+            rotationSetpoint = rotationMotor.getPosition().getValueAsDouble();
+            heightSetpoint = heightMotor.getPosition().getValueAsDouble();
             wasDisabled = false;
         }
 
         if (turretLocked || !autoAimEnabled) return;
 
-        double rotError = desiredRotation - rotationMotor.getPosition().getValueAsDouble();
+        double rotError = desiredRotation - rotationSetpoint;
+        rotationSetpoint += rotationTau * rotError;
+        rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         
-        smoothRotation += rotationTao * rotError;
-        smoothRotation = MathUtil.clamp(smoothRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-        
-        double heightError = desiredHeight - smoothHeight;
+        double heightError = desiredHeight - heightSetpoint;
         if (Math.abs(heightError) > .01) {
-            smoothHeight += heightTao * heightError;
+            heightSetpoint += heightTau * heightError;
         }
-        smoothHeight = MathUtil.clamp(smoothHeight, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
-        heightMotor.setControl(heightoutput.withPosition(smoothHeight));
-        rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
-        //rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
+        heightSetpoint = MathUtil.clamp(heightSetpoint, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
+        heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
+        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
     }
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
@@ -276,9 +274,9 @@ public class TurretAiming extends SubsystemBase {
         manualHoldCycles++;
         double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
         double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
-        smoothRotation += step * direction;
-        smoothRotation = MathUtil.clamp(smoothRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-        rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
+        rotationSetpoint += step * direction;
+        rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
     }
 
     /** Resets the manual rotation ramp counter (call when D-pad is released) */
@@ -295,7 +293,7 @@ public class TurretAiming extends SubsystemBase {
     public void zeroTurret() {
         autoAimEnabled = false;
         rotationMotor.setPosition(0);
-        smoothRotation = 0;
+        rotationSetpoint = 0;
         rotationMotor.setControl(rotationoutput.withPosition(0));
     }
 
@@ -333,7 +331,7 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("pose?", targety);
         SmartDashboard.putNumber("pose2", targetx);
         SmartDashboard.putNumber("desiredRotation", desiredRotation);
-        SmartDashboard.putNumber("smoothRotation", smoothRotation);
+        SmartDashboard.putNumber("rotationSetpoint", rotationSetpoint);
         SmartDashboard.putNumber("Turret Angle", rotationMotor.getPosition().getValueAsDouble() * 360.0);
         if (turretPosition != null) {
             SmartDashboard.putNumber("Turret X", turretPosition.getX());
@@ -352,7 +350,7 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/ThroughborePosition", throughbore.get());
         Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
-        Logger.recordOutput("Turret/SmoothRotation", smoothRotation);
+        Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);
         if (turretPosition != null) {
             Logger.recordOutput("Turret/PositionX", turretPosition.getX());
             Logger.recordOutput("Turret/PositionY", turretPosition.getY());
