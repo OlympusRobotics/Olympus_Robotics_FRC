@@ -152,8 +152,8 @@ public final class Constants {
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
     // Soft limits (mechanism rotations)
-    public static final double ROTATION_FORWARD_LIMIT = 1.0;
-    public static final double ROTATION_REVERSE_LIMIT = 0.0;
+    public static final double ROTATION_FORWARD_LIMIT = .4;
+    public static final double ROTATION_REVERSE_LIMIT = -.6214;
     public static final double HEIGHT_FORWARD_LIMIT = 1.5;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     static {

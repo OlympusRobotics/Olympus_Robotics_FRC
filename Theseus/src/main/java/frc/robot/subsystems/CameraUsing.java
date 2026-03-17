@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -20,7 +21,7 @@ public class CameraUsing extends SubsystemBase {
     // Maximum ambiguity before rejecting a measurement entirely
     private static final double MAX_AMBIGUITY = 0.25;
     // Maximum distance (m) a vision pose can be from odometry before rejection
-    private static final double MAX_POSE_JUMP = 5.0;
+    private static final double MAX_POSE_JUMP = 15.0;
     // Field dimensions (2026 Rebuilt Andymark)
     private static final double FIELD_LENGTH = 16.54;
     private static final double FIELD_WIDTH = 8.21;
@@ -81,6 +82,11 @@ public class CameraUsing extends SubsystemBase {
             double distance = camData.distance();
             Pose2d visionPose = camData.robotPose().toPose2d();
 
+            if (drivetrain.getState().Pose.getX() < 0 || drivetrain.getState().Pose.getX() > FIELD_LENGTH
+                    || drivetrain.getState().Pose.getY() < 0 || drivetrain.getState().Pose.getY() > FIELD_WIDTH) {
+                drivetrain.resetPose(visionPose);
+            }
+
             // Reject garbage ambiguity
             if (ambiguity > MAX_AMBIGUITY) {
                 continue;
@@ -113,6 +119,7 @@ public class CameraUsing extends SubsystemBase {
                 bestAmbiguity = ambiguity;
                 bestPose = visionPose;
             }
+            SmartDashboard.putNumber("bleh", visionPose.getX());
         }
 
         Logger.recordOutput("Vision/HasTarget", measurementCount > 0);

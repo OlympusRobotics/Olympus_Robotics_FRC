@@ -218,7 +218,7 @@ public class TurretAiming extends SubsystemBase {
             smoothHeight += heightTao * heightError;
         }
         smoothHeight = MathUtil.clamp(smoothHeight, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
-        heightMotor.setControl(heightoutput.withPosition(smoothHeight));
+        //heightMotor.setControl(heightoutput.withPosition(smoothHeight));
         rotationMotor.setControl(rotationoutput.withPosition(smoothRotation));
         //rotationMotor.set(stinkyPIDcontrollerthatmayormaynotwork.calculate(throughbore.get(), smoothRotation));
     }
