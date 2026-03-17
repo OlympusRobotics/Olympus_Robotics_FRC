@@ -39,6 +39,8 @@
 package frc.robot;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -49,6 +51,8 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.DataLogWriter;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -63,6 +67,12 @@ public class Robot extends LoggedRobot {
     /** Maximum number of log sessions to keep on the roboRIO. */
     private static final int MAX_LOG_SESSIONS = 20;
     private static final File LOG_DIR = new File("/home/lvuser/logs");
+    private static final DateTimeFormatter LOG_TIMESTAMP_FMT =
+        DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+
+    /** Active enable-cycle log (null when disabled). */
+    private DataLogWriter enableLog;
+    private int enableNtLogger = -1;
 
     /* log and replay timestamp and joystick data */
     private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
@@ -155,6 +165,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void disabledInit() {
         //m_robotContainer.intake.m_inkMot.setPosition(0);
+        stopEnableLog();
     }
 
     @Override
@@ -163,6 +174,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void disabledExit() {
+        startEnableLog();
     }
 
     @Override
@@ -207,6 +219,35 @@ public class Robot extends LoggedRobot {
     @Override
     public void testPeriodic() {
 
+    }
+
+    /** Start a new .wpilog capturing NT data for this enable cycle. */
+    private void startEnableLog() {
+        if (!isReal()) return;
+        String timestamp = LocalDateTime.now().format(LOG_TIMESTAMP_FMT);
+        String filename = "enabled_" + timestamp + ".wpilog";
+        String path = LOG_DIR.getAbsolutePath() + "/" + filename;
+        try {
+            enableLog = new DataLogWriter(path);
+        } catch (java.io.IOException e) {
+            System.err.println("[EnableLog] Failed to create " + path + ": " + e.getMessage());
+            return;
+        }
+        enableNtLogger = NetworkTableInstance.getDefault()
+            .startEntryDataLog(enableLog, "", "");
+        System.out.println("[EnableLog] Started: " + filename);
+    }
+
+    /** Close the current enable-cycle log, if one is active. */
+    private void stopEnableLog() {
+        if (enableLog == null) return;
+        if (enableNtLogger >= 0) {
+            NetworkTableInstance.getDefault().stopEntryDataLog(enableNtLogger);
+            enableNtLogger = -1;
+        }
+        enableLog.close();
+        enableLog = null;
+        System.out.println("[EnableLog] Stopped");
     }
 
     @Override
