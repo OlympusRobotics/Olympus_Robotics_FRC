@@ -59,7 +59,7 @@ echo Downloaded: !FETCHED! file(s), skipped !SKIPPED! already-local file(s)
 if %PURGE_ALL%==1 (
     echo.
     echo Purging ALL logs from roboRIO...
-    ssh %SSH_OPTS% %ROBOT_USER%@%ROBOT_IP% "find %REMOTE_LOG_DIR% -maxdepth 2 -type f ( -name '*.wpilog' -o -name '*.hoot' -o -name '*.revlog' ) -delete && find %REMOTE_LOG_DIR% -mindepth 1 -maxdepth 1 -type d -empty -delete"
+    ssh %SSH_OPTS% %ROBOT_USER%@%ROBOT_IP% "find %REMOTE_LOG_DIR% -maxdepth 2 -type f ( -name '*.wpilog' -o -name '*.hoot' -o -name '*.revlog' ) -exec rm -f {} ; && find %REMOTE_LOG_DIR% -mindepth 1 -maxdepth 1 -type d -exec rmdir {} ; 2>/dev/null"
     echo Done — roboRIO logs purged.
 ) else if %PURGE%==1 if exist "%FETCHED_LIST%" (
     echo.
@@ -67,7 +67,7 @@ if %PURGE_ALL%==1 (
     for /f "usebackq delims=" %%F in ("%FETCHED_LIST%") do (
         ssh %SSH_OPTS% %ROBOT_USER%@%ROBOT_IP% "rm -f '%%F'" >nul 2>&1
     )
-    ssh %SSH_OPTS% %ROBOT_USER%@%ROBOT_IP% "find %REMOTE_LOG_DIR% -mindepth 1 -maxdepth 1 -type d -empty -delete" >nul 2>&1
+    ssh %SSH_OPTS% %ROBOT_USER%@%ROBOT_IP% "find %REMOTE_LOG_DIR% -mindepth 1 -maxdepth 1 -type d -exec rmdir {} ; 2>/dev/null" >nul 2>&1
     echo Done.
 )
 

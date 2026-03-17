@@ -73,8 +73,8 @@ if $PURGE_ALL; then
     echo ""
     echo "Purging ALL logs from roboRIO..."
     ssh $SSH_OPTS "$ROBOT_USER@$ROBOT_IP" \
-        "find $REMOTE_LOG_DIR -maxdepth 2 -type f \( -name '*.wpilog' -o -name '*.hoot' -o -name '*.revlog' \) -delete && \
-         find $REMOTE_LOG_DIR -mindepth 1 -maxdepth 1 -type d -empty -delete"
+        "find $REMOTE_LOG_DIR -maxdepth 2 -type f \( -name '*.wpilog' -o -name '*.hoot' -o -name '*.revlog' \) -exec rm -f {} \; && \
+         find $REMOTE_LOG_DIR -mindepth 1 -maxdepth 1 -type d -exec rmdir {} \; 2>/dev/null"
     echo "Done — roboRIO logs purged."
 elif $PURGE && [ ${#FETCHED[@]} -gt 0 ]; then
     echo ""
@@ -84,7 +84,7 @@ elif $PURGE && [ ${#FETCHED[@]} -gt 0 ]; then
     done
     # Clean up empty directories
     ssh $SSH_OPTS "$ROBOT_USER@$ROBOT_IP" \
-        "find $REMOTE_LOG_DIR -mindepth 1 -maxdepth 1 -type d -empty -delete" 2>/dev/null
+        "find $REMOTE_LOG_DIR -mindepth 1 -maxdepth 1 -type d -exec rmdir {} \; 2>/dev/null"
     echo "Done."
 fi
 
