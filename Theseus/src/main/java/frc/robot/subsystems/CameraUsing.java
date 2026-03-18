@@ -121,6 +121,15 @@ public class CameraUsing extends SubsystemBase {
                 // Multi-tag: very trusted
                 xyStdDev = 0.01;
                 thetaStdDev = Units.degreesToRadians(2);
+
+                // Hard-reset if multi-tag shows large drift from odometry
+                double delta = drivetrain.getState().Pose.getTranslation()
+                        .getDistance(pose.getTranslation());
+                if (delta > 0.5) {
+                    drivetrain.resetPose(pose);
+                    measurementCount++;
+                    continue;
+                }
             } else {
                 // Single-tag: scale by ambiguity
                 xyStdDev = 0.02 + (ambiguity * 2.0);
