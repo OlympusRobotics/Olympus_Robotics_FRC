@@ -91,6 +91,7 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putData("Zero Turret", new InstantCommand(this::zeroTurret).ignoringDisable(true));
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
+        SmartDashboard.putNumber("Shoot Speed", 1.0);
     }
 
     /** Set the MCP joystick reference for simulated input. */
@@ -246,7 +247,7 @@ public class TurretAiming extends SubsystemBase {
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
-        flywheelMotor.set(1);    
+        flywheelMotor.set(MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", 1.0), 0, 1));    
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
