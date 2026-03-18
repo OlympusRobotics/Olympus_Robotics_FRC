@@ -113,8 +113,8 @@ public final class Constants {
     public static final double kTurretRotationP = 150; //kP ≈ 0.4–0.8 
     public static final double kTurretRotationI = 0;
     public static final double kTurretRotationD = 0.0; // kD ≈ 0.001–0.01
-    public static final double kTurretRotationVelocity = 3; //rps
-    public static final double kTurretRotationAcceleration = 6; //rps²
+    public static final double kTurretRotationVelocity = 0.1; //rps  TODO: restore to 3 after testing
+    public static final double kTurretRotationAcceleration = 0.2; //rps²  TODO: restore to 6 after testing
 
     public static final double kTurretHeightP = 2; //kP slightly higher than yaw
     public static final double kTurretHeightI = 0;
@@ -151,9 +151,9 @@ public final class Constants {
     public static final Double smoothHeight = 0.0;
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
-    // Soft limits (mechanism rotations)
-    public static final double ROTATION_FORWARD_LIMIT = 1.0;
-    public static final double ROTATION_REVERSE_LIMIT = 0.0;
+    // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
+    public static final double ROTATION_FORWARD_LIMIT = 0.375;
+    public static final double ROTATION_REVERSE_LIMIT = -0.375;
     public static final double HEIGHT_FORWARD_LIMIT = 1.5;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     static {

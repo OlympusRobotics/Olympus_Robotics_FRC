@@ -49,6 +49,7 @@ public class TurretAiming extends SubsystemBase {
     private static final double MANUAL_STEP_SLOW = 0.002; // fine step for short presses
     private static final double MANUAL_STEP_FAST = 0.008; // fast step after holding ~1s
     private static final int MANUAL_RAMP_CYCLES = 50;     // cycles before ramping up (~1s at 50Hz)
+    private static final double MANUAL_MAX_LEAD = 0.02;   // max setpoint lead over actual position (mechanism rotations)
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -80,7 +81,7 @@ public class TurretAiming extends SubsystemBase {
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         //stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
 
-        SmartDashboard.putData("Zero Turret", new InstantCommand(() -> rotationMotor.setPosition(0)).ignoringDisable(true));
+        SmartDashboard.putData("Zero Turret", new InstantCommand(this::zeroTurret).ignoringDisable(true));
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
     }
@@ -190,9 +191,8 @@ public class TurretAiming extends SubsystemBase {
         cachedTargetHeight = getTargetHeight();
         double desiredHeight = maxFormula();
         desiredRotation  = vectorCalculations();
-        // Wrap desiredRotation into soft limits by adding/subtracting a full rotation
-        while (desiredRotation < ROTATION_REVERSE_LIMIT) { desiredRotation += 1.0; }
-        while (desiredRotation > ROTATION_FORWARD_LIMIT) { desiredRotation -= 1.0; }
+        // Clamp to soft limits (±135° from front-of-robot zero)
+        desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         SmartDashboard.putNumber("desiredRotation", desiredRotation);
 
         // Don't send motor commands while disabled — it causes the turret to
@@ -210,7 +210,13 @@ public class TurretAiming extends SubsystemBase {
             wasDisabled = false;
         }
 
-        if (turretLocked || !autoAimEnabled) return;
+        if (turretLocked || !autoAimEnabled) {
+            // Explicitly hold current setpoint so stale MotionMagic
+            // commands from a previous enable cycle don't persist.
+            rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
+            heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
+            return;
+        }
 
         double rotError = desiredRotation - rotationSetpoint;
         rotationSetpoint += rotationTau * rotError;
@@ -278,8 +284,14 @@ public class TurretAiming extends SubsystemBase {
         manualHoldCycles++;
         double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
         double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
-        rotationSetpoint += step * direction;
-        rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        double desired = rotationSetpoint + step * direction;
+        desired = MathUtil.clamp(desired, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        // Don't let the setpoint outrun the actual motor position
+        double lead = desired - cachedRotationPos;
+        if (Math.abs(lead) > MANUAL_MAX_LEAD) {
+            desired = cachedRotationPos + Math.copySign(MANUAL_MAX_LEAD, lead);
+        }
+        rotationSetpoint = desired;
         rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
     }
 
@@ -293,12 +305,15 @@ public class TurretAiming extends SubsystemBase {
         autoAimEnabled = true;
     }
 
-    /** Zero the turret rotation encoder at current physical position */
+    /** Zero the turret rotation and height encoders at current physical position */
     public void zeroTurret() {
         autoAimEnabled = false;
         rotationMotor.setPosition(0);
         rotationSetpoint = 0;
         rotationMotor.setControl(rotationoutput.withPosition(0));
+        heightMotor.setPosition(0);
+        heightSetpoint = 0;
+        heightMotor.setControl(heightoutput.withPosition(0));
     }
 
     /** @return true if turret is in manual mode */
