@@ -47,6 +47,7 @@ public class TurretAiming extends SubsystemBase {
     private boolean wasDisabled = true;
     private boolean autoAimEnabled = false;
     private boolean lastDashboardAim = false;
+    private boolean mcpShooting = false;
     private int manualHoldCycles = 0;
     private int manualHeightHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
@@ -385,13 +386,22 @@ public class TurretAiming extends SubsystemBase {
 
         targetAim();
 
-        // Check MCP simulated joystick for height/rotation commands
+        // Check MCP simulated joystick for height/rotation/shoot commands
         if (mcpJoystick != null && mcpJoystick.isActive() && DriverStation.isEnabled()) {
             int mcpPov = mcpJoystick.getPOV();
             if (mcpPov == 0) manualHeight(1);        // D-pad up
             else if (mcpPov == 180) manualHeight(-1); // D-pad down
             else if (mcpPov == 270) manualRotate(-1); // D-pad left
             else if (mcpPov == 90) manualRotate(1);   // D-pad right
+
+            // Right trigger (axis 3) > 0.5 = shoot
+            if (mcpJoystick.getAxis(3) > 0.5) {
+                if (!mcpShooting) { shoot(); mcpShooting = true; }
+            } else if (mcpShooting) {
+                unshoot(); mcpShooting = false;
+            }
+        } else if (mcpShooting) {
+            unshoot(); mcpShooting = false;
         }
 
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
