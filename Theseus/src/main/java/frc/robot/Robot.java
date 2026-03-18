@@ -150,6 +150,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void robotPeriodic() {
         m_timeAndJoystickReplay.update();
+        m_robotContainer.mcpJoystick.poll();
         CommandScheduler.getInstance().run();
         SmartDashboard.putData("Field", field);
         field.setRobotPose(m_robotContainer.drivetrain.getState().Pose);

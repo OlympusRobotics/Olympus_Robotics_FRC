@@ -56,6 +56,7 @@ public class RobotContainer {
     private final Field2d field = new Field2d();
     private final SendableChooser<Command> autoChooser;
     //private final Climber climber = new Climber();
+    public final McpJoystick mcpJoystick = new McpJoystick(0);
 
 
     //Initalize contoller commands
@@ -128,6 +129,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         drivetrain.configureAutobuilder();
+        aiming.setMcpJoystick(mcpJoystick);
         configureBindings();
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(4));
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(6));
@@ -169,11 +171,12 @@ public class RobotContainer {
         joystick.a().whileTrue(unlocksTurret);
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
-        // D-pad turret controls: left/right = manual rotate, up = auto-aim, down = zero
+        // D-pad turret controls: left/right = manual rotate, up/down = manual height
+        // MCP simulated joystick is handled directly in TurretAiming.periodic()
         joystick.povLeft().whileTrue(aiming.run(() -> aiming.manualRotate(-1)).finallyDo(() -> aiming.resetManualRamp()));
         joystick.povRight().whileTrue(aiming.run(() -> aiming.manualRotate(1)).finallyDo(() -> aiming.resetManualRamp()));
-        joystick.povUp().onTrue(aiming.runOnce(() -> aiming.enableAutoAim()));
-        joystick.povDown().onTrue(aiming.runOnce(() -> aiming.zeroTurret()));
+        joystick.povUp().whileTrue(aiming.run(() -> aiming.manualHeight(1)).finallyDo(() -> aiming.resetManualRamp()));
+        joystick.povDown().whileTrue(aiming.run(() -> aiming.manualHeight(-1)).finallyDo(() -> aiming.resetManualRamp()));
         
         //joystick.start().onTrue(aiming.runOnce(() -> {useTurretMotionMagic = !useTurretMotionMagic;}) );
 

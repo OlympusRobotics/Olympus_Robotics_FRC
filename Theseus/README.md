@@ -155,8 +155,8 @@ Single TalonFX (CAN ID 10) with PID position control.
 | Back | Reset field-centric heading |
 | D-pad left | Manual turret rotate left (switches to manual mode) |
 | D-pad right | Manual turret rotate right (switches to manual mode) |
-| D-pad up | Return to auto-aim mode |
-| D-pad down | Zero/calibrate turret encoder |
+| D-pad up | Manual turret height up (switches to manual mode) |
+| D-pad down | Manual turret height down (switches to manual mode) |
 
 ### Operator (Xbox — Port 1)
 

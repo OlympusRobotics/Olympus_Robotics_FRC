@@ -20,6 +20,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.math.MathUtil;
+import frc.robot.McpJoystick;
 import frc.robot.Constants.RobotConstants;
 import static frc.robot.Constants.TurretConfigs.*;
 
@@ -41,15 +42,20 @@ public class TurretAiming extends SubsystemBase {
     private final DoubleArrayPublisher turretTargetPub;
     //private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
     private final DutyCycleEncoder throughbore;
+    private McpJoystick mcpJoystick;
     private boolean turretLocked = false;
     private boolean wasDisabled = true;
     private boolean autoAimEnabled = false;
     private boolean lastDashboardAim = false;
     private int manualHoldCycles = 0;
-    private static final double MANUAL_STEP_SLOW = 0.002; // fine step for short presses
-    private static final double MANUAL_STEP_FAST = 0.008; // fast step after holding ~1s
+    private int manualHeightHoldCycles = 0;
+    private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
+    private static final double MANUAL_STEP_FAST = 0.008; // fast rotation step after holding ~1s
+    private static final double HEIGHT_STEP_SLOW = 0.01;  // fine height step (5:1 ratio needs bigger steps)
+    private static final double HEIGHT_STEP_FAST = 0.04;  // fast height step after holding ~1s
     private static final int MANUAL_RAMP_CYCLES = 50;     // cycles before ramping up (~1s at 50Hz)
-    private static final double MANUAL_MAX_LEAD = 0.02;   // max setpoint lead over actual position (mechanism rotations)
+    private static final double MANUAL_MAX_LEAD = 0.02;   // max rotation setpoint lead over actual position
+    private static final double HEIGHT_MAX_LEAD = 0.1;    // max height setpoint lead over actual position
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -85,6 +91,12 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
     }
+
+    /** Set the MCP joystick reference for simulated input. */
+    public void setMcpJoystick(McpJoystick mcp) {
+        this.mcpJoystick = mcp;
+    }
+
     /** 
      * Gets the target field position based on the alliance and current position
      * @return The Translation2d of where it should be
@@ -295,9 +307,31 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
     }
 
-    /** Resets the manual rotation ramp counter (call when D-pad is released) */
+    /** Nudge the turret height manually. Automatically switches to manual mode.
+     * Starts slow for precision, ramps up after holding ~1 second.
+     * @param direction +1 for up, -1 for down */
+    public void manualHeight(double direction) {
+        autoAimEnabled = false;
+        manualHeightHoldCycles++;
+        double t = Math.min(1.0, (double) manualHeightHoldCycles / MANUAL_RAMP_CYCLES);
+        double step = HEIGHT_STEP_SLOW + (HEIGHT_STEP_FAST - HEIGHT_STEP_SLOW) * t;
+        // Start from actual position if setpoint is out of sync
+        double base = Math.abs(heightSetpoint - cachedHeightPos) > HEIGHT_MAX_LEAD
+                    ? cachedHeightPos : heightSetpoint;
+        double desired = base + step * direction;
+        desired = MathUtil.clamp(desired, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
+        double lead = desired - cachedHeightPos;
+        if (Math.abs(lead) > HEIGHT_MAX_LEAD) {
+            desired = cachedHeightPos + Math.copySign(HEIGHT_MAX_LEAD, lead);
+        }
+        heightSetpoint = desired;
+        heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
+    }
+
+    /** Resets the manual ramp counters (call when D-pad is released) */
     public void resetManualRamp() {
         manualHoldCycles = 0;
+        manualHeightHoldCycles = 0;
     }
 
     /** Switch back to auto-aim mode */
@@ -350,6 +384,16 @@ public class TurretAiming extends SubsystemBase {
         cachedThroughborePos = throughbore.get();
 
         targetAim();
+
+        // Check MCP simulated joystick for height/rotation commands
+        if (mcpJoystick != null && mcpJoystick.isActive() && DriverStation.isEnabled()) {
+            int mcpPov = mcpJoystick.getPOV();
+            if (mcpPov == 0) manualHeight(1);        // D-pad up
+            else if (mcpPov == 180) manualHeight(-1); // D-pad down
+            else if (mcpPov == 270) manualRotate(-1); // D-pad left
+            else if (mcpPov == 90) manualRotate(1);   // D-pad right
+        }
+
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         lastDashboardAim = autoAimEnabled;
         SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled);
@@ -362,11 +406,12 @@ public class TurretAiming extends SubsystemBase {
 
         Logger.recordOutput("Turret/RotationPosition", cachedRotationPos);
         Logger.recordOutput("Turret/HeightPosition", cachedHeightPos);
+        Logger.recordOutput("Turret/HeightSetpoint", heightSetpoint);
+        Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);
         Logger.recordOutput("Turret/FlywheelVelocity", cachedFlywheelVel);
         Logger.recordOutput("Turret/ThroughborePosition", cachedThroughborePos);
         Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
-        Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);
         if (turretPosition != null) {
             Logger.recordOutput("Turret/PositionX", turretPosition.getX());
             Logger.recordOutput("Turret/PositionY", turretPosition.getY());

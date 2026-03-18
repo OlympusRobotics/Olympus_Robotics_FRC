@@ -113,12 +113,12 @@ public final class Constants {
     public static final double kTurretRotationP = 150; //kP ≈ 0.4–0.8 
     public static final double kTurretRotationI = 0;
     public static final double kTurretRotationD = 0.0; // kD ≈ 0.001–0.01
-    public static final double kTurretRotationVelocity = 0.1; //rps  TODO: restore to 3 after testing
-    public static final double kTurretRotationAcceleration = 0.2; //rps²  TODO: restore to 6 after testing
+    public static final double kTurretRotationVelocity = 3; //rps
+    public static final double kTurretRotationAcceleration = 6; //rps²
 
-    public static final double kTurretHeightP = 2; //kP slightly higher than yaw
+    public static final double kTurretHeightP = 60; //kP — needs enough voltage to overcome friction at small errors
     public static final double kTurretHeightI = 0;
-    public static final double kTurretHeightD = 0.0025; //kD small
+    public static final double kTurretHeightD = 0.1; //kD
     public static final double kTurretHeightVelocity = 1000; //rps
     public static final double kTurretHeightAcceleration = 1000; //rps²
       
@@ -192,7 +192,7 @@ public final class Constants {
         heightConfigs.Slot0.kP = RobotConstants.kTurretHeightP;
         heightConfigs.Slot0.kI = RobotConstants.kTurretHeightI;
         heightConfigs.Slot0.kD = RobotConstants.kTurretHeightD;
-        heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
+        heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretHeightVelocity;
         heightConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretHeightAcceleration;
 
         
