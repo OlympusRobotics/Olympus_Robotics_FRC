@@ -119,8 +119,8 @@ public final class Constants {
     public static final double kTurretHeightP = 60; //kP — needs enough voltage to overcome friction at small errors
     public static final double kTurretHeightI = 0;
     public static final double kTurretHeightD = 0.1; //kD
-    public static final double kTurretHeightVelocity = 1000; //rps
-    public static final double kTurretHeightAcceleration = 1000; //rps²
+    public static final double kTurretHeightVelocity = 4; //rps (was 1000 — way too fast for 1.27 rot range)
+    public static final double kTurretHeightAcceleration = 8; //rps² (was 1000 — caused overshoot)
       
     //Intake PID
     public static final double kIntakeP = 1.; //bullcrap values
@@ -154,7 +154,7 @@ public final class Constants {
     // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
     public static final double ROTATION_FORWARD_LIMIT = 0.375;
     public static final double ROTATION_REVERSE_LIMIT = -0.375;
-    public static final double HEIGHT_FORWARD_LIMIT = 1.5;
+    public static final double HEIGHT_FORWARD_LIMIT = 1.27;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     static {
       //This applies all the configuration
@@ -179,7 +179,7 @@ public final class Constants {
 
         //height motors stuff
         heightConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
-        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
+        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
         heightConfigs.CurrentLimits.withStatorCurrentLimit(22);
         heightConfigs.CurrentLimits.withSupplyCurrentLimit(25);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);

@@ -48,6 +48,7 @@ public class TurretAiming extends SubsystemBase {
     private boolean autoAimEnabled = false;
     private boolean lastDashboardAim = false;
     private boolean mcpShooting = false;
+    private boolean mcpAutoAimWasPressed = false;
     private int manualHoldCycles = 0;
     private int manualHeightHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
@@ -236,6 +237,9 @@ public class TurretAiming extends SubsystemBase {
         rotationSetpoint += rotationTau * rotError;
         rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         
+        // Clamp desired height to soft limits BEFORE computing error so the
+        // low-pass filter actually smooths instead of slamming to the limit.
+        desiredHeight = MathUtil.clamp(desiredHeight, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
         double heightError = desiredHeight - heightSetpoint;
         if (Math.abs(heightError) > .01) {
             heightSetpoint += heightTau * heightError;
@@ -394,6 +398,13 @@ public class TurretAiming extends SubsystemBase {
             else if (mcpPov == 180) manualHeight(-1); // D-pad down
             else if (mcpPov == 270) manualRotate(-1); // D-pad left
             else if (mcpPov == 90) manualRotate(1);   // D-pad right
+
+            // Button 1 (A) toggles auto-aim on rising edge
+            boolean mcpAPressed = mcpJoystick.getButton(1);
+            if (mcpAPressed && !mcpAutoAimWasPressed) {
+                if (autoAimEnabled) { autoAimEnabled = false; } else { enableAutoAim(); }
+            }
+            mcpAutoAimWasPressed = mcpAPressed;
 
             // Right trigger (axis 3) > 0.5 = shoot
             if (mcpJoystick.getAxis(3) > 0.5) {
