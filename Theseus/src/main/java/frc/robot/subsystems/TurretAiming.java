@@ -31,6 +31,10 @@ public class TurretAiming extends SubsystemBase {
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, 
     rotationSetpoint, heightSetpoint, rotationTau, heightTau, desiredRotation;
+    // Per-cycle cached values to avoid redundant computation
+    private Translation2d cachedTarget;
+    private double cachedTargetHeight;
+    private double cachedRotationPos, cachedHeightPos, cachedFlywheelVel, cachedThroughborePos;
     private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
@@ -137,9 +141,8 @@ public class TurretAiming extends SubsystemBase {
 
     /**Calculating the actual angle while the robot is moving*/
     public double vectorCalculations() {
-        Translation2d target = targetpose();
-        targetx = (target.getX() - turretPosition.getX()); 
-        targety = (target.getY() - turretPosition.getY());
+        targetx = (cachedTarget.getX() - turretPosition.getX()); 
+        targety = (cachedTarget.getY() - turretPosition.getY());
         targetAngle = (Math.atan2(targety, targetx));
         boolean velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
         if (velocityCompensation) {
@@ -162,16 +165,17 @@ public class TurretAiming extends SubsystemBase {
      * Max definetly wrote it trust
     */
     public double maxFormula(){
-        Translation2d target = targetpose();
-        targetx = (target.getX() - turretPosition.getX()); 
-        targety = (target.getY() - turretPosition.getY());
-        targetDistance = (Math.sqrt(Math.pow(targetx, 2)+Math.pow(targety, 2)));
-        if ((Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
-        ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
-        Math.pow(kmaxVelocity, 4))))) >= 0) {
-            return 90 - Math.atan2((targetDistance + Math.sqrt(Math.pow(targetDistance, 2) - (2*9.80665*targetDistance) * 
-            ((getTargetHeight() / (Math.pow(kmaxVelocity, 2))) + ((9.80665 * Math.pow(targetDistance, 2))/(2 * 
-            Math.pow(kmaxVelocity, 4)))))), (9.80665 * Math.pow(targetDistance, 2) / (Math.pow(kmaxVelocity, 2)))) / (2 * Math.PI);
+        targetx = (cachedTarget.getX() - turretPosition.getX()); 
+        targety = (cachedTarget.getY() - turretPosition.getY());
+        targetDistance = Math.hypot(targetx, targety);
+        double v2 = kmaxVelocity * kmaxVelocity;
+        double v4 = v2 * v2;
+        double d2 = targetDistance * targetDistance;
+        double g = 9.80665;
+        double h = cachedTargetHeight;
+        double discriminant = d2 - (2 * g * targetDistance) * ((h / v2) + ((g * d2) / (2 * v4)));
+        if (discriminant >= 0) {
+            return 90 - Math.atan2((targetDistance + Math.sqrt(discriminant)), (g * d2 / v2)) / (2 * Math.PI);
         }
         else {
             return 80;
@@ -181,9 +185,9 @@ public class TurretAiming extends SubsystemBase {
     public void targetAim(){
         if (robotPose == null || turretPosition == null) return;
 
-        // Always compute the target so DesiredPose is available even while disabled.
-        targetpose();
-        getTargetHeight();
+        // Compute target once per cycle — used by vectorCalculations() and maxFormula()
+        cachedTarget = targetpose();
+        cachedTargetHeight = getTargetHeight();
         double desiredHeight = maxFormula();
         desiredRotation  = vectorCalculations();
         // Wrap desiredRotation into soft limits by adding/subtracting a full rotation
@@ -201,8 +205,8 @@ public class TurretAiming extends SubsystemBase {
         // On the first enabled cycle, sync the smoothing state to the
         // actual motor positions so there's no accumulated jump.
         if (wasDisabled) {
-            rotationSetpoint = rotationMotor.getPosition().getValueAsDouble();
-            heightSetpoint = heightMotor.getPosition().getValueAsDouble();
+            rotationSetpoint = cachedRotationPos;
+            heightSetpoint = cachedHeightPos;
             wasDisabled = false;
         }
 
@@ -323,52 +327,40 @@ public class TurretAiming extends SubsystemBase {
         if (dashboardAim != lastDashboardAim) {
             autoAimEnabled = dashboardAim;
         }
+
+        // Cache CAN reads once per cycle
+        cachedRotationPos = rotationMotor.getPosition().getValueAsDouble();
+        cachedHeightPos = heightMotor.getPosition().getValueAsDouble();
+        cachedFlywheelVel = flywheelMotor.getVelocity().getValueAsDouble();
+        cachedThroughborePos = throughbore.get();
+
         targetAim();
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         lastDashboardAim = autoAimEnabled;
         SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled);
-        SmartDashboard.putNumber("targetAngle", Math.toDegrees(targetAngle));
-        SmartDashboard.putNumber("pose?", targety);
-        SmartDashboard.putNumber("pose2", targetx);
-        SmartDashboard.putNumber("desiredRotation", desiredRotation);
-        SmartDashboard.putNumber("rotationSetpoint", rotationSetpoint);
-        SmartDashboard.putNumber("Turret Angle", rotationMotor.getPosition().getValueAsDouble() * 360.0);
+        SmartDashboard.putNumber("Turret Angle", cachedRotationPos * 360.0);
         if (turretPosition != null) {
-            SmartDashboard.putNumber("Turret X", turretPosition.getX());
-            SmartDashboard.putNumber("Turret Y", turretPosition.getY());
-            double turretOffsetDistance = turretPosition.getDistance(robotPose.getTranslation());
-            SmartDashboard.putNumber("Turret Offset Distance", turretOffsetDistance);
-            SmartDashboard.putNumber("Turret Offset Expected", Math.abs(RobotConstants.kTurretXOffsetMeters));
-        }
-        if (targetPose != null) {
-            turretTargetPub.set(new double[] { targetPose.getX(), targetPose.getY(), 0 });
+            turretTargetPub.set(new double[] {
+                targetPose != null ? targetPose.getX() : 0,
+                targetPose != null ? targetPose.getY() : 0, 0 });
         }
 
-        Logger.recordOutput("Turret/RotationPosition", rotationMotor.getPosition().getValueAsDouble());
-        Logger.recordOutput("Turret/HeightPosition", heightMotor.getPosition().getValueAsDouble());
-        Logger.recordOutput("Turret/FlywheelVelocity", flywheelMotor.getVelocity().getValueAsDouble());
-        Logger.recordOutput("Turret/ThroughborePosition", throughbore.get());
+        Logger.recordOutput("Turret/RotationPosition", cachedRotationPos);
+        Logger.recordOutput("Turret/HeightPosition", cachedHeightPos);
+        Logger.recordOutput("Turret/FlywheelVelocity", cachedFlywheelVel);
+        Logger.recordOutput("Turret/ThroughborePosition", cachedThroughborePos);
         Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
         Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);
         if (turretPosition != null) {
             Logger.recordOutput("Turret/PositionX", turretPosition.getX());
             Logger.recordOutput("Turret/PositionY", turretPosition.getY());
-            double turretOffsetDistance = turretPosition.getDistance(robotPose.getTranslation());
-            Logger.recordOutput("Turret/OffsetDistance", turretOffsetDistance);
-            Logger.recordOutput("Turret/OffsetExpected", Math.abs(RobotConstants.kTurretXOffsetMeters));
         }
 
-        // Pose2d for turret: desired and actual field headings.
-        // targetAngle is robot-relative (negated), so the field-relative desired heading is:
-        //   robotHeading - targetAngle
-        // For actual, convert motor position (mechanism rotations) back to radians
-        // via motorPos * 2π, then add robot heading for field-relative angle.
         if (robotPose != null && turretPosition != null) {
             double robotHeading = robotPose.getRotation().getRadians();
 
-            double actualMotorPos = rotationMotor.getPosition().getValueAsDouble();
-            double actualFieldAngle = robotHeading - actualMotorPos * 2 * Math.PI;
+            double actualFieldAngle = robotHeading - cachedRotationPos * 2 * Math.PI;
             Logger.recordOutput("Turret/ActualPose", new Pose2d(turretPosition, new Rotation2d(actualFieldAngle)));
 
             double desiredFieldAngle = robotHeading - targetAngle;

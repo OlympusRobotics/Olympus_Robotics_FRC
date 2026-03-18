@@ -71,11 +71,11 @@ public class CameraUsing extends SubsystemBase {
             }
 
             camerafile.setCameraToRobot(transform);
-            var camData = camerafile.cameraProcessing(cam);
+            var camData = camerafile.process(cam);
             
-            if (camData.robotpose() != null && camData.result().hasTargets()) {
-                double ambiguity = camData.result().getBestTarget().getPoseAmbiguity();
-                Pose2d pose = camData.robotpose().toPose2d();
+            if (camData.robotPose() != null && camData.pipelineResult().hasTargets()) {
+                double ambiguity = camData.ambiguity();
+                Pose2d pose = camData.robotPose().toPose2d();
                 if (ambiguity < lowestAmbiguity) {
                     lowestAmbiguity = ambiguity;
                     hasTarget = true;
@@ -84,9 +84,9 @@ public class CameraUsing extends SubsystemBase {
                         edu.wpi.first.wpilibj.Timer.getFPGATimestamp(),
                         VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(2))
                         );
-                    SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotpose().getX());
-                    SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotpose().getY());
-                    Logger.recordOutput("Vision/EstimatedPose", camData.robotpose().toPose2d());
+                    SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotPose().getX());
+                    SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotPose().getY());
+                    Logger.recordOutput("Vision/EstimatedPose", camData.robotPose().toPose2d());
 
                 }
                 else if (ambiguity < nextUpAmbiguity) {
@@ -99,9 +99,9 @@ public class CameraUsing extends SubsystemBase {
                         );
                 }
                 if (drivetrain.getState().Pose.getX() < .1) {
-                    drivetrain.resetPose(camData.robotpose().toPose2d());
+                    drivetrain.resetPose(camData.robotPose().toPose2d());
                 }
-                SmartDashboard.putNumber("visionX", camData.robotpose().toPose2d().getX());
+                SmartDashboard.putNumber("visionX", camData.robotPose().toPose2d().getX());
             }
         }
         Logger.recordOutput("Vision/HasTarget", hasTarget);

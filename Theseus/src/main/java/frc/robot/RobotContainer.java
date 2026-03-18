@@ -159,8 +159,9 @@ public class RobotContainer {
         //Binds the commands to the buttons
         joystick.leftBumper().whileTrue(intakingOut);
         joystick.rightBumper().whileTrue(bringbackintake);
-        new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);
-        new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(flywheelintake);
+        Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
+        leftTrigger.whileTrue(Intake);
+        leftTrigger.whileTrue(flywheelintake);
 
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(shoot);
         joystick.x().whileTrue(locksTurret);

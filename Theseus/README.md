@@ -97,7 +97,6 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 - **Auto-aim:** Automatically targets alliance-specific hub/field positions based on robot location
 - Ballistic trajectory calculation for automatic launch angle
 - Compensates for robot velocity while aiming (toggleable via SmartDashboard/Elastic)
-- Aiming vectors are computed from turret origin, offset 0.1524m behind robot center
 - Motor position in mechanism rotations (0–1 = full turret turn); converted to radians via × 2π for pose logging
 - `Turret/ActualPose` and `Turret/DesiredPose` logged continuously (even while disabled) for AdvantageScope visualization
 - **Two modes:** auto-aim (default) and manual (D-pad left/right to rotate, D-pad up to return to auto)
@@ -105,7 +104,7 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 
 ### Vision (PhotonVision)
 
-4-camera AprilTag tracking system for field pose estimation. See [VISION.md](VISION.md) for the full pipeline design and tuning guide.
+4-camera AprilTag tracking system for field pose estimation. See [VISION.md](VISION.md) for the full design rationale.
 
 | Camera | Position | Rotation |
 |--------|----------|----------|
@@ -115,8 +114,8 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 | CameraBR | Back-right (-0.34m, -0.33m, 0.2m) | -135° |
 
 - 2026 Rebuilt Andymark AprilTag field layout
-- All cameras feed the Kalman filter with std devs scaled by ambiguity and distance
-- Sanity gates reject ambiguity > 0.25, out-of-field poses, and > 5m jumps
+- All cameras feed into the Kalman filter with continuously scaled std devs (weighted by ambiguity + distance)
+- Sanity gate rejects ambiguity > 0.25, out-of-field poses, and > 5 m jumps from odometry
 
 ### Network Map
 
