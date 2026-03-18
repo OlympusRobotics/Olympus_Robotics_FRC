@@ -54,6 +54,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
+import com.bionanomics.refinery.mcp.RoboRioMcpServer;
+
 public class Robot extends LoggedRobot {
     private Command m_autonomousCommand;
 
@@ -91,6 +93,7 @@ public class Robot extends LoggedRobot {
         if (isReal()) {
             pruneOldLogs();
         }
+        RoboRioMcpServer.start();
     }
 
     /**
