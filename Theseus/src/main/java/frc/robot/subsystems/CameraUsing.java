@@ -8,121 +8,105 @@ import org.photonvision.PhotonCamera;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.util.Units;
+
 
 import org.littletonrobotics.junction.Logger;
 
 public class CameraUsing extends SubsystemBase {
-    // Maximum ambiguity before rejecting a measurement entirely
-    private static final double MAX_AMBIGUITY = 0.25;
-    // Maximum distance (m) a vision pose can be from odometry before rejection
-    private static final double MAX_POSE_JUMP = 5.0;
-    // Field dimensions (2026 Rebuilt Andymark)
-    private static final double FIELD_LENGTH = 16.54;
-    private static final double FIELD_WIDTH = 8.21;
+    private Transform3d robotToCamFL, robotToCamFR, robotToCamBL, robotToCamBR;
+    private PhotonCamera camFL, camFR, camBL, camBR;
+    private Camera camerafile;
+    //private double thankYouToElvisForDesigningOurRobotChassis;
+    public static Rotation2d robotRotation2d;
+    private CommandSwerveDrivetrain drivetrain;
 
-    private final Transform3d robotToCamFL, robotToCamFR, robotToCamBL, robotToCamBR;
-    private final PhotonCamera camFL, camFR, camBL, camBR;
-    private final Camera cameraProcessor;
-    private final CommandSwerveDrivetrain drivetrain;
+        public CameraUsing(CommandSwerveDrivetrain drivetrain) {
+            this.drivetrain = drivetrain;
+            camerafile = new Camera();
+            //thankYouToElvisForDesigningOurRobotChassis = 67;
+            camerafile = new Camera();
+            camFL = new PhotonCamera("CameraFL");
+            camFR = new PhotonCamera("CameraFR");
+            camBL = new PhotonCamera("CameraBL");
+            camBR = new PhotonCamera("CameraBR");
 
-    public CameraUsing(CommandSwerveDrivetrain drivetrain) {
-        this.drivetrain = drivetrain;
-        cameraProcessor = new Camera();
+            robotToCamFL = new Transform3d(
+                    new Translation3d(-.15, .3048, .4826),
+                    new Rotation3d(0, 0, Math.PI/4));
 
-        camFL = new PhotonCamera("CameraFL");
-        camFR = new PhotonCamera("CameraFR");
-        camBL = new PhotonCamera("CameraBL");
-        camBR = new PhotonCamera("CameraBR");
+            robotToCamFR = new Transform3d(
+                    new Translation3d(-.15, -.3048, .4826),
+                    new Rotation3d(0, 0, -Math.PI/4));
 
-        robotToCamFL = new Transform3d(
-                new Translation3d(-.15, .3048, .4826),
-                new Rotation3d(0, 0, Math.PI / 4));
+            robotToCamBL = new Transform3d(
+                    new Translation3d(-.3302, .2286, .152),
+                    new Rotation3d(0, 0, 3*(Math.PI)/4));
 
-        robotToCamFR = new Transform3d(
-                new Translation3d(-.15, -.3048, .4826),
-                new Rotation3d(0, 0, -Math.PI / 4));
-
-        robotToCamBL = new Transform3d(
-                new Translation3d(-.3302, .2286, .152),
-                new Rotation3d(0, 0, 3 * (Math.PI) / 4));
-
-        robotToCamBR = new Transform3d(
-                new Translation3d(-.3302, -.2286, .152),
-                new Rotation3d(0, 0, -3 * (Math.PI) / 4));
-    }
-
+            robotToCamBR = new Transform3d(
+                    new Translation3d(-.3302, -.2286, .152),
+                    new Rotation3d(0, 0, -3*(Math.PI)/4));
+        }
+        //System.out.println(thankYouToElvisForDesigningOurRobotChassis);
     private void processCamera() {
-        int measurementCount = 0;
-        Pose2d bestPose = null;
-        double bestAmbiguity = MAX_AMBIGUITY;
-        Pose2d currentPose = drivetrain.getState().Pose;
+        double lowestAmbiguity = .1;
+        double nextUpAmbiguity = .2;
+        boolean hasTarget = false;
 
         for (var camPair : List.of(
                 Map.entry(camBL, robotToCamBL), Map.entry(camBR, robotToCamBR),
                 Map.entry(camFL, robotToCamFL), Map.entry(camFR, robotToCamFR))) {
 
             PhotonCamera cam = camPair.getKey();
-            Transform3d robotToCam = camPair.getValue();
+            Transform3d transform = camPair.getValue();
 
-            // estimateFieldToRobotAprilTag expects camera-to-robot, so invert
-            cameraProcessor.setCameraToRobot(robotToCam.inverse());
-            Camera.CameraResult camData = cameraProcessor.process(cam);
-
-            if (camData.robotPose() == null) {
+            if (!cam.isConnected()) {
                 continue;
             }
 
-            double ambiguity = camData.ambiguity();
-            double distance = camData.distance();
-            Pose2d visionPose = camData.robotPose().toPose2d();
+            camerafile.setCameraToRobot(transform);
+            var camData = camerafile.cameraProcessing(cam);
+            
+            if (camData.robotpose() != null && camData.result().hasTargets()) {
+                double ambiguity = camData.result().getBestTarget().getPoseAmbiguity();
+                Pose2d pose = camData.robotpose().toPose2d();
+                if (ambiguity < lowestAmbiguity) {
+                    lowestAmbiguity = ambiguity;
+                    hasTarget = true;
+                    drivetrain.addVisionMeasurement(
+                        pose,
+                        edu.wpi.first.wpilibj.Timer.getFPGATimestamp(),
+                        VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(2))
+                        );
+                    SmartDashboard.putNumber("LowestambiguityreadingX", camData.robotpose().getX());
+                    SmartDashboard.putNumber("LowestambiguityreadingY", camData.robotpose().getY());
+                    Logger.recordOutput("Vision/EstimatedPose", camData.robotpose().toPose2d());
 
-            // Reject garbage ambiguity
-            if (ambiguity > MAX_AMBIGUITY) {
-                continue;
-            }
-
-            // Reject poses outside field bounds
-            if (visionPose.getX() < 0 || visionPose.getX() > FIELD_LENGTH
-                    || visionPose.getY() < 0 || visionPose.getY() > FIELD_WIDTH) {
-                continue;
-            }
-
-            // Reject poses that jump too far from current odometry
-            if (currentPose.getTranslation().getDistance(visionPose.getTranslation()) > MAX_POSE_JUMP) {
-                continue;
-            }
-
-            // Scale std devs continuously by ambiguity and distance
-            double xyStdDev = 0.01 + (ambiguity * 2.0) + (distance * 0.05);
-            double thetaStdDev = Units.degreesToRadians(2 + ambiguity * 50 + distance * 10);
-
-            drivetrain.addVisionMeasurement(
-                    visionPose,
-                    camData.pipelineResult().getTimestampSeconds(),
-                    VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
-
-            measurementCount++;
-
-            // Track the best pose for logging
-            if (ambiguity < bestAmbiguity) {
-                bestAmbiguity = ambiguity;
-                bestPose = visionPose;
+                }
+                else if (ambiguity < nextUpAmbiguity) {
+                    nextUpAmbiguity = ambiguity;
+                    hasTarget = true;
+                    drivetrain.addVisionMeasurement(
+                        pose,
+                        edu.wpi.first.wpilibj.Timer.getFPGATimestamp(),
+                        VecBuilder.fill(0.01, 0.01, Units.degreesToRadians(10))
+                        );
+                }
+                if (drivetrain.getState().Pose.getX() < .1) {
+                    drivetrain.resetPose(camData.robotpose().toPose2d());
+                }
+                SmartDashboard.putNumber("visionX", camData.robotpose().toPose2d().getX());
             }
         }
-
-        Logger.recordOutput("Vision/HasTarget", measurementCount > 0);
-        Logger.recordOutput("Vision/MeasurementCount", measurementCount);
-        if (bestPose != null) {
-            Logger.recordOutput("Vision/EstimatedPose", bestPose);
-            Logger.recordOutput("Vision/BestAmbiguity", bestAmbiguity);
-        }
+        Logger.recordOutput("Vision/HasTarget", hasTarget);
+        Logger.recordOutput("Vision/LowestAmbiguity", lowestAmbiguity);
     }
-
     @Override
     public void periodic() {
         processCamera();
