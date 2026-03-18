@@ -104,7 +104,7 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 
 ### Vision (PhotonVision)
 
-4-camera AprilTag tracking system for field pose estimation. See [VISION.md](VISION.md) for the full design rationale.
+4-camera AprilTag tracking system for field pose estimation using **multi-tag PNP on coprocessor** with single-tag fallback. See [VISION.md](VISION.md) for the full design rationale.
 
 | Camera | Position | Rotation |
 |--------|----------|----------|
@@ -114,8 +114,11 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 | CameraBR | Back-right (-0.34m, -0.33m, 0.2m) | -135° |
 
 - 2026 Rebuilt Andymark AprilTag field layout
-- All cameras feed into the Kalman filter with continuously scaled std devs (weighted by ambiguity + distance)
-- Sanity gate rejects ambiguity > 0.25, out-of-field poses, and > 5 m jumps from odometry
+- **Primary strategy:** `MULTI_TAG_PNP_ON_COPROCESSOR` — coprocessor solves PNP with all visible tags (eliminates 180° ambiguity)
+- **Fallback strategy:** `LOWEST_AMBIGUITY` — single-tag estimate when only one tag visible
+- All cameras feed into the Kalman filter with std devs scaled by tag count and ambiguity
+- Sanity gate rejects ambiguity > 0.25 (single-tag), out-of-field poses, and > 5 m jumps from odometry
+- First 5 good readings hard-reset drivetrain pose (vision-seeded gyro initialization)
 
 ### Network Map
 
