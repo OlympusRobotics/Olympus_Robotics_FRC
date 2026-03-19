@@ -7,10 +7,15 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -45,6 +50,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
     private RobotConfig rconfig;
+
+    private static final int MODULE_COUNT = 4;
+    private final StatusSignal<Current>[] m_driveStatorCurrents;
+    private final StatusSignal<AngularVelocity>[] m_driveVelocities;
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.k180deg;
@@ -137,6 +146,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
+        m_driveStatorCurrents = cacheDriveSignals();
+        m_driveVelocities = cacheDriveVelocitySignals();
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -167,6 +178,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, modules);
+        m_driveStatorCurrents = cacheDriveSignals();
+        m_driveVelocities = cacheDriveVelocitySignals();
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -199,6 +212,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
+        m_driveStatorCurrents = cacheDriveSignals();
+        m_driveVelocities = cacheDriveVelocitySignals();
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -305,7 +320,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Logger.recordOutput("Drivetrain/Speeds", state.Speeds);
         Logger.recordOutput("Drivetrain/ModuleStates", state.ModuleStates);
         Logger.recordOutput("Drivetrain/ModuleTargets", state.ModuleTargets);
-        
+
+        // Per-module drive motor telemetry (used by slip calibration script)
+        double[] statorCurrents = new double[MODULE_COUNT];
+        double[] driveVelocitiesRps = new double[MODULE_COUNT];
+        for (int i = 0; i < MODULE_COUNT; i++) {
+            statorCurrents[i] = m_driveStatorCurrents[i].refresh().getValueAsDouble();
+            driveVelocitiesRps[i] = m_driveVelocities[i].refresh().getValueAsDouble();
+        }
+        Logger.recordOutput("Drivetrain/DriveStatorCurrents", statorCurrents);
+        Logger.recordOutput("Drivetrain/DriveVelocitiesRps", driveVelocitiesRps);
     }
     
     public static boolean getAlliance() {
@@ -318,6 +342,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 return false;
             }
         }
+
+    @SuppressWarnings("unchecked")
+    private StatusSignal<Current>[] cacheDriveSignals() {
+        StatusSignal<Current>[] signals = new StatusSignal[MODULE_COUNT];
+        for (int i = 0; i < MODULE_COUNT; i++) {
+            TalonFX motor = getModule(i).getDriveMotor();
+            signals[i] = motor.getStatorCurrent();
+        }
+        return signals;
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatusSignal<AngularVelocity>[] cacheDriveVelocitySignals() {
+        StatusSignal<AngularVelocity>[] signals = new StatusSignal[MODULE_COUNT];
+        for (int i = 0; i < MODULE_COUNT; i++) {
+            TalonFX motor = getModule(i).getDriveMotor();
+            signals[i] = motor.getVelocity();
+        }
+        return signals;
+    }
 
     private void startSimThread() {
         m_lastSimTime = Utils.getCurrentTimeSeconds();
