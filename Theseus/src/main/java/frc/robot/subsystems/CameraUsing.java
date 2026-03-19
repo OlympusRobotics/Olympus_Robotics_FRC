@@ -102,7 +102,9 @@ public class CameraUsing extends SubsystemBase {
         }
 
         for (var entry : cameras) {
-            if (!entry.camera.isConnected()) {
+            boolean connected = entry.camera.isConnected();
+            Logger.recordOutput("Vision/" + entry.camera.getName() + "/Connected", connected);
+            if (!connected) {
                 continue;
             }
 
@@ -193,6 +195,12 @@ public class CameraUsing extends SubsystemBase {
             );
             measurementCount++;
         }
+
+        // Coprocessor-level connection: L = FL+BL, R = FR+BR
+        boolean coprocessorL = cameras.get(0).camera.isConnected() || cameras.get(2).camera.isConnected();
+        boolean coprocessorR = cameras.get(1).camera.isConnected() || cameras.get(3).camera.isConnected();
+        Logger.recordOutput("Vision/CoprocessorL_Connected", coprocessorL);
+        Logger.recordOutput("Vision/CoprocessorR_Connected", coprocessorR);
 
         Logger.recordOutput("Vision/HasTarget", measurementCount > 0 || !hasSeededPose && goodReadingCount > 0);
         Logger.recordOutput("Vision/MeasurementCount", measurementCount);
