@@ -6,11 +6,17 @@ import java.util.List;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 
+import java.util.Map;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.util.Units;
 
@@ -20,14 +26,33 @@ public class CameraUsing extends SubsystemBase {
     private final CommandSwerveDrivetrain drivetrain;
     private boolean hasSeededPose = false;
     private static final int SEED_READING_COUNT = 5;
+    private static final double SEED_TIMEOUT_SECONDS = 5.0;
     private int goodReadingCount = 0;
+    private double firstEnableTimestamp = -1;
     private static final double CAM_YAW_OFFSET = 0.256;
 
     private record CameraEntry(PhotonCamera camera, Camera estimator) {}
     private final List<CameraEntry> cameras;
 
+    private static final String USE_APRIL_ROTATION_KEY = "Use April Rotation";
+
+    // Starting poses per alliance + station (field coordinates, WPILib convention).
+    // Blue faces 0° (toward red wall), Red faces 180° (toward blue wall).
+    // Stations 1-3 are numbered right-to-left from each alliance's perspective.
+    private static final double FIELD_LENGTH = 16.54;
+    private static final double START_INSET = 0.75; // distance from wall
+    private static final Map<String, Pose2d> STARTING_POSES = Map.of(
+        "Blue1", new Pose2d(START_INSET, 1.0, Rotation2d.kZero),
+        "Blue2", new Pose2d(START_INSET, 4.1, Rotation2d.kZero),
+        "Blue3", new Pose2d(START_INSET, 7.2, Rotation2d.kZero),
+        "Red1",  new Pose2d(FIELD_LENGTH - START_INSET, 7.2, Rotation2d.k180deg),
+        "Red2",  new Pose2d(FIELD_LENGTH - START_INSET, 4.1, Rotation2d.k180deg),
+        "Red3",  new Pose2d(FIELD_LENGTH - START_INSET, 1.0, Rotation2d.k180deg)
+    );
+
     public CameraUsing(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
+        SmartDashboard.putBoolean(USE_APRIL_ROTATION_KEY, false);
 
         // Physical camera positions relative to robot center (robot-to-camera transforms)
         var robotToCamFL = new Transform3d(
@@ -60,6 +85,22 @@ public class CameraUsing extends SubsystemBase {
         int measurementCount = 0;
         double bestAmbiguity = 1.0;
         Pose2d bestPose = null;
+        boolean useAprilRotation = SmartDashboard.getBoolean(USE_APRIL_ROTATION_KEY, false);
+
+        // Track first enable time for seed timeout
+        if (!hasSeededPose && DriverStation.isEnabled() && firstEnableTimestamp < 0) {
+            firstEnableTimestamp = Timer.getFPGATimestamp();
+        }
+
+        // If seeding hasn't completed within timeout after first enable, fall back
+        // to alliance/station starting pose so the robot doesn't stay at (0,0,0).
+        if (!hasSeededPose && firstEnableTimestamp > 0
+                && Timer.getFPGATimestamp() - firstEnableTimestamp > SEED_TIMEOUT_SECONDS) {
+            Pose2d fallback = getStartingPose();
+            drivetrain.resetPose(fallback);
+            Logger.recordOutput("Vision/SeedFallback", fallback);
+            hasSeededPose = true;
+        }
 
         for (var entry : cameras) {
             if (!entry.camera.isConnected()) {
@@ -118,26 +159,36 @@ public class CameraUsing extends SubsystemBase {
             double xyStdDev;
             double thetaStdDev;
             if (tagCount >= 2) {
-                // Multi-tag: very trusted
+                // Multi-tag: very trusted for translation
                 xyStdDev = 0.01;
-                thetaStdDev = Units.degreesToRadians(2);
+                thetaStdDev = useAprilRotation ? Units.degreesToRadians(2) : Double.MAX_VALUE;
 
-                // Hard-reset if multi-tag shows large drift from odometry
+                // Hard-reset if multi-tag shows large translation drift from odometry
                 double delta = drivetrain.getState().Pose.getTranslation()
                         .getDistance(pose.getTranslation());
                 if (delta > 0.5) {
-                    drivetrain.resetPose(pose);
+                    Pose2d resetPose = useAprilRotation
+                            ? pose
+                            : new Pose2d(pose.getTranslation(), drivetrain.getState().Pose.getRotation());
+                    drivetrain.resetPose(resetPose);
                     measurementCount++;
                     continue;
                 }
             } else {
                 // Single-tag: scale by ambiguity
                 xyStdDev = 0.02 + (ambiguity * 2.0);
-                thetaStdDev = Units.degreesToRadians(5 + ambiguity * 50);
+                thetaStdDev = useAprilRotation
+                        ? Units.degreesToRadians(5 + ambiguity * 50)
+                        : Double.MAX_VALUE;
             }
 
+            // Replace vision rotation with gyro rotation when not trusting AprilTag heading
+            Pose2d visionPose = useAprilRotation
+                    ? pose
+                    : new Pose2d(pose.getTranslation(), drivetrain.getState().Pose.getRotation());
+
             drivetrain.addVisionMeasurement(
-                pose,
+                visionPose,
                 estimate.timestampSeconds,
                 VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev)
             );
@@ -148,9 +199,24 @@ public class CameraUsing extends SubsystemBase {
         Logger.recordOutput("Vision/MeasurementCount", measurementCount);
         Logger.recordOutput("Vision/BestAmbiguity", bestAmbiguity);
         Logger.recordOutput("Vision/PoseSeeded", hasSeededPose);
+        Logger.recordOutput("Vision/UseAprilRotation", useAprilRotation);
         if (bestPose != null) {
             Logger.recordOutput("Vision/EstimatedPose", bestPose);
         }
+    }
+
+    /**
+     * Returns the starting pose based on alliance color and driver station number.
+     * Falls back to field center facing 0° if alliance/station is unknown.
+     */
+    private Pose2d getStartingPose() {
+        String alliance = DriverStation.getAlliance()
+                .map(a -> a == DriverStation.Alliance.Red ? "Red" : "Blue")
+                .orElse("Blue");
+        int station = DriverStation.getLocation().orElse(2);
+        String key = alliance + station;
+        return STARTING_POSES.getOrDefault(key,
+                new Pose2d(FIELD_LENGTH / 2, 4.1, Rotation2d.kZero));
     }
 
     @Override
