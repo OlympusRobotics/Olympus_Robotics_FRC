@@ -120,8 +120,8 @@ public final class Constants {
     public static final double kTurretHeightP = 60; //kP — needs enough voltage to overcome friction at small errors
     public static final double kTurretHeightI = 0;
     public static final double kTurretHeightD = 0.5; //kD — increased to damp overshoot
-    public static final double kTurretHeightVelocity = 1.5; //rps (slowed from 4 — was overrunning target)
-    public static final double kTurretHeightAcceleration = 2; //rps² (slowed from 8 — was overshooting)
+    public static final double kTurretHeightVelocity = 6; //rps
+    public static final double kTurretHeightAcceleration = 8; //rps²
       
     //Intake PID
     public static final double kIntakeP = 1.; //bullcrap values

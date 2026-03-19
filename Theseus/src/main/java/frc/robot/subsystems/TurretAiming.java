@@ -49,6 +49,8 @@ public class TurretAiming extends SubsystemBase {
     private boolean headingHoldMode = false;
     private double heldFieldAngle = 0;
     private boolean lastDashboardAim = false;
+    private boolean isShooting = false;
+    private double rememberedHeight = 0;
     private boolean mcpShooting = false;
     private boolean mcpAutoAimWasPressed = false;
     private boolean mcpHeadingHoldWasPressed = false;
@@ -56,11 +58,25 @@ public class TurretAiming extends SubsystemBase {
     private int manualHeightHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
     private static final double MANUAL_STEP_FAST = 0.008; // fast rotation step after holding ~1s
-    private static final double HEIGHT_STEP_SLOW = 0.01;  // fine height step (5:1 ratio needs bigger steps)
-    private static final double HEIGHT_STEP_FAST = 0.04;  // fast height step after holding ~1s
+    private static final double HEIGHT_STEP_SLOW = 0.04;  // fine height step (5:1 ratio needs bigger steps)
+    private static final double HEIGHT_STEP_FAST = 0.16;  // fast height step after holding ~1s
     private static final int MANUAL_RAMP_CYCLES = 50;     // cycles before ramping up (~1s at 50Hz)
     private static final double MANUAL_MAX_LEAD = 0.02;   // max rotation setpoint lead over actual position
     private static final double HEIGHT_MAX_LEAD = 0.1;    // max height setpoint lead over actual position
+    private static final double STATIONARY_SPEED_THRESHOLD = 0.15; // m/s — below this the robot is "stopped"
+
+    /** @return true if the robot is essentially stationary (translation speed below threshold) */
+    private boolean isRobotStationary() {
+        var speeds = drivetrain.getChassisSpeeds();
+        double speed = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        return speed < STATIONARY_SPEED_THRESHOLD;
+    }
+
+    /** Compute the height the motor should actually target right now.
+     *  Raises to remembered height when shooting OR stationary; drops to 0 while moving. */
+    private double effectiveHeight() {
+        return (isShooting || isRobotStationary()) ? rememberedHeight : HEIGHT_REVERSE_LIMIT;
+    }
 
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
@@ -78,7 +94,7 @@ public class TurretAiming extends SubsystemBase {
         robotPose = new Pose2d();
         turretPosition = robotPose.getTranslation();
         kmaxVelocity = 2;
-        heightTau = .25;
+        heightTau = 1.0;
         rotationTau = .15;
         desiredRotation = 0;
         turretTargetPub = NetworkTableInstance.getDefault()
@@ -216,6 +232,7 @@ public class TurretAiming extends SubsystemBase {
         if (wasDisabled) {
             rotationSetpoint = cachedRotationPos;
             heightSetpoint = cachedHeightPos;
+            rememberedHeight = cachedHeightPos;
             wasDisabled = false;
         }
 
@@ -230,7 +247,9 @@ public class TurretAiming extends SubsystemBase {
             double rotError = desiredRotation - rotationSetpoint;
             rotationSetpoint += rotationTau * rotError;
             rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-            // Height stays frozen at current setpoint
+            double hErr = effectiveHeight() - heightSetpoint;
+            if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
+            heightSetpoint = MathUtil.clamp(heightSetpoint, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
             rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
             heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
             return;
@@ -247,8 +266,9 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putNumber("desiredRotation", desiredRotation);
 
         if (turretLocked || !autoAimEnabled) {
-            // Explicitly hold current setpoint so stale MotionMagic
-            // commands from a previous enable cycle don't persist.
+            double hErr = effectiveHeight() - heightSetpoint;
+            if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
+            heightSetpoint = MathUtil.clamp(heightSetpoint, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
             rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
             heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
             return;
@@ -258,10 +278,13 @@ public class TurretAiming extends SubsystemBase {
         rotationSetpoint += rotationTau * rotError;
         rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         
-        // Clamp desired height to soft limits BEFORE computing error so the
-        // low-pass filter actually smooths instead of slamming to the limit.
+        // Track the auto-aim height so it's ready when shooting starts
         desiredHeight = MathUtil.clamp(desiredHeight, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
-        double heightError = desiredHeight - heightSetpoint;
+        double remErr = desiredHeight - rememberedHeight;
+        if (Math.abs(remErr) > 0.01) rememberedHeight += heightTau * remErr;
+        rememberedHeight = MathUtil.clamp(rememberedHeight, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
+
+        double heightError = effectiveHeight() - heightSetpoint;
         if (Math.abs(heightError) > .01) {
             heightSetpoint += heightTau * heightError;
         }
@@ -272,6 +295,7 @@ public class TurretAiming extends SubsystemBase {
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
+        isShooting = true;
         flywheelMotor.set(MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", 1.0), 0, 1));    
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -283,6 +307,7 @@ public class TurretAiming extends SubsystemBase {
     } */
     /** Stops shooting */
     public void unshoot(){
+        isShooting = false;
         flywheelMotor.stopMotor();
         indexerLMotor.stopMotor();
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -345,15 +370,16 @@ public class TurretAiming extends SubsystemBase {
         double t = Math.min(1.0, (double) manualHeightHoldCycles / MANUAL_RAMP_CYCLES);
         double step = HEIGHT_STEP_SLOW + (HEIGHT_STEP_FAST - HEIGHT_STEP_SLOW) * t;
         // Start from actual position if setpoint is out of sync
-        double base = Math.abs(heightSetpoint - cachedHeightPos) > HEIGHT_MAX_LEAD
-                    ? cachedHeightPos : heightSetpoint;
+        double base = Math.abs(rememberedHeight - cachedHeightPos) > HEIGHT_MAX_LEAD
+                    ? cachedHeightPos : rememberedHeight;
         double desired = base + step * direction;
         desired = MathUtil.clamp(desired, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
         double lead = desired - cachedHeightPos;
         if (Math.abs(lead) > HEIGHT_MAX_LEAD) {
             desired = cachedHeightPos + Math.copySign(HEIGHT_MAX_LEAD, lead);
         }
-        heightSetpoint = desired;
+        rememberedHeight = desired;
+        heightSetpoint = effectiveHeight();
         heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
     }
 
@@ -391,6 +417,7 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor.setControl(rotationoutput.withPosition(0));
         heightMotor.setPosition(0);
         heightSetpoint = 0;
+        rememberedHeight = 0;
         heightMotor.setControl(heightoutput.withPosition(0));
     }
 
@@ -475,6 +502,8 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/RotationPosition", cachedRotationPos);
         Logger.recordOutput("Turret/HeightPosition", cachedHeightPos);
         Logger.recordOutput("Turret/HeightSetpoint", heightSetpoint);
+        Logger.recordOutput("Turret/RememberedHeight", rememberedHeight);
+        Logger.recordOutput("Turret/IsShooting", isShooting);
         Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);
         Logger.recordOutput("Turret/FlywheelVelocity", cachedFlywheelVel);
         Logger.recordOutput("Turret/ThroughborePosition", cachedThroughborePos);

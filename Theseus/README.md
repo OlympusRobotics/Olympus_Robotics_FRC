@@ -98,10 +98,11 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 - **Auto-aim:** Automatically targets alliance-specific hub/field positions based on robot location
 - Ballistic trajectory calculation for automatic launch angle
 - Compensates for robot velocity while aiming (toggleable via SmartDashboard/Elastic)
+- **Height drops to 0 while moving and not shooting** to clear obstacles during driving. When stationary, the height shows the remembered setpoint so the driver can preview the aiming angle. When the shoot button (RT) is held, the height raises to the remembered setpoint regardless of robot speed. Manual height adjustments (D-pad up/down) update the remembered height, which persists across shoot/unshoot cycles.
 - Motor position in mechanism rotations (0–1 = full turret turn); converted to radians via × 2π for pose logging
 - `Turret/ActualPose` and `Turret/DesiredPose` logged continuously (even while disabled) for AdvantageScope visualization
 - **Three modes:** auto-aim (tracks field targets), heading-hold (maintains a fixed field angle using gyro only), and manual (D-pad nudge)
-- **Heading hold** (Y button): freezes the turret's current field-relative angle and height; turret counter-rotates as the robot turns using only the gyro — no AprilTag field position required
+- **Heading hold** (Y button): freezes the turret's current field-relative angle; turret counter-rotates as the robot turns using only the gyro — no AprilTag field position required. Height still drops to 0 while moving unless shooting.
 - Skips motor commands while robot is disabled to prevent windup on first enable
 
 ### Vision (PhotonVision)
@@ -150,7 +151,7 @@ Single TalonFX (CAN ID 10) with PID position control.
 | Left trigger (>50%) | Start intake + spin flywheel |
 | Left bumper | Reverse indexer |
 | Right bumper | Close intake |
-| Right trigger (>50%) | Shoot (flywheel + indexer feed) |
+| Right trigger (>50%) | Shoot (flywheel + indexer feed; raises turret height to remembered setpoint) |
 | A | Target aim (vision-guided) |
 | Y | Toggle heading hold (turret maintains field angle via gyro only) |
 | X | Lock turret (safe position) |
@@ -158,8 +159,8 @@ Single TalonFX (CAN ID 10) with PID position control.
 | Back | Reset field-centric heading |
 | D-pad left | Manual turret rotate left (switches to manual mode) |
 | D-pad right | Manual turret rotate right (switches to manual mode) |
-| D-pad up | Manual turret height up (switches to manual mode) |
-| D-pad down | Manual turret height down (switches to manual mode) |
+| D-pad up | Manual turret height up (updates remembered height; switches to manual mode) |
+| D-pad down | Manual turret height down (updates remembered height; switches to manual mode) |
 
 ### Operator (Xbox — Port 1)
 
