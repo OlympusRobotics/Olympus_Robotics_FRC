@@ -226,7 +226,7 @@ public final class Constants {
       //
       intakeConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
       intakeConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
-      intakeConf.CurrentLimits.withStatorCurrentLimit(40);
+      intakeConf.CurrentLimits.withStatorCurrentLimit(80);
       intakeConf.CurrentLimits.withStatorCurrentLimitEnable(true);
       //intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
       intakeConf.Slot0.kP = RobotConstants.kIntakeP;
