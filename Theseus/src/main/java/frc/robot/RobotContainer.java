@@ -82,9 +82,8 @@ public class RobotContainer {
     /** Spins the flywheels to shoot a ball without controller*/
     private final Command autoshoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot());
 
-    /** Intake stuff */
-    private final Command intakingOut = Commands.parallel(intake.startEnd(() -> intake.outakeIntake(), 
-    () -> intake.endIntake()), aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors()))
+    /** Reverse indexer only (left bumper) */
+    private final Command intakingOut = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
       .until(() -> joystick.leftBumper().getAsBoolean() == false);
 
     /** Locks the turret 🤯*/
