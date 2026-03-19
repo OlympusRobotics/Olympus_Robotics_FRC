@@ -194,6 +194,7 @@ Autonomous routines use **PathPlanner** with holonomic path following and allian
 | 20 | Turret feed motor |
 | 21 | Pigeon2 gyro |
 | 22 | Turret indexer R |
+| 23 | Intake flywheel follower |
 
 ## Simulator
 
