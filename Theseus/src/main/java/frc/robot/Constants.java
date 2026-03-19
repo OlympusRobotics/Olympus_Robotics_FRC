@@ -239,7 +239,7 @@ public final class Constants {
       intakeConf.serialize();
 
       //Intake FW config
-      intakeFWConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+      intakeFWConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
       intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
       intakeFWConf.CurrentLimits.withStatorCurrentLimit(30);
       intakeFWConf.CurrentLimits.withSupplyCurrentLimit(35);
