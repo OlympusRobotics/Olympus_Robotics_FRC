@@ -29,7 +29,6 @@ public class CameraUsing extends SubsystemBase {
     private static final double SEED_TIMEOUT_SECONDS = 5.0;
     private int goodReadingCount = 0;
     private double firstEnableTimestamp = -1;
-    private static final double CAM_YAW_OFFSET = 0.256;
 
     private record CameraEntry(PhotonCamera camera, Camera estimator) {}
     private final List<CameraEntry> cameras;
@@ -57,16 +56,16 @@ public class CameraUsing extends SubsystemBase {
         // Physical camera positions relative to robot center (robot-to-camera transforms)
         var robotToCamFL = new Transform3d(
                 new Translation3d(-.15, .3048, .4826),
-                new Rotation3d(0, 0, Math.PI/4 + CAM_YAW_OFFSET));
+                new Rotation3d(0, 0, Math.PI/4));
         var robotToCamFR = new Transform3d(
                 new Translation3d(-.15, -.3048, .4826),
-                new Rotation3d(0, 0, -Math.PI/4 + CAM_YAW_OFFSET));
+                new Rotation3d(0, 0, -Math.PI/4));
         var robotToCamBL = new Transform3d(
                 new Translation3d(-.3302, .2286, .152),
-                new Rotation3d(0, 0, 3*(Math.PI)/4 + CAM_YAW_OFFSET));
+                new Rotation3d(0, Math.toRadians(-14), 3*(Math.PI)/4));
         var robotToCamBR = new Transform3d(
                 new Translation3d(-.3302, -.2286, .152),
-                new Rotation3d(0, 0, -3*(Math.PI)/4 + CAM_YAW_OFFSET));
+                new Rotation3d(0, Math.toRadians(-14), -3*(Math.PI)/4));
 
         var camFL = new PhotonCamera("CameraFL");
         var camFR = new PhotonCamera("CameraFR");
