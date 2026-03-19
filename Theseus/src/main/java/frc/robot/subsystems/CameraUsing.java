@@ -34,6 +34,8 @@ public class CameraUsing extends SubsystemBase {
     private final List<CameraEntry> cameras;
 
     private static final String USE_APRIL_ROTATION_KEY = "Use April Rotation";
+    private static final String ENABLE_VISION_KEY = "Enable Vision";
+    private boolean enableVision = false;
 
     // Starting poses per alliance + station (field coordinates, WPILib convention).
     // Blue faces 0° (toward red wall), Red faces 180° (toward blue wall).
@@ -51,6 +53,7 @@ public class CameraUsing extends SubsystemBase {
 
     public CameraUsing(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
+        SmartDashboard.putBoolean(ENABLE_VISION_KEY, enableVision);
         SmartDashboard.putBoolean(USE_APRIL_ROTATION_KEY, false);
 
         // Physical camera positions relative to robot center (robot-to-camera transforms)
@@ -81,10 +84,7 @@ public class CameraUsing extends SubsystemBase {
     }
 
     private void processCamera() {
-        int measurementCount = 0;
-        double bestAmbiguity = 1.0;
-        Pose2d bestPose = null;
-        boolean useAprilRotation = SmartDashboard.getBoolean(USE_APRIL_ROTATION_KEY, false);
+        enableVision = SmartDashboard.getBoolean(ENABLE_VISION_KEY, false);
 
         // Track first enable time for seed timeout
         if (!hasSeededPose && DriverStation.isEnabled() && firstEnableTimestamp < 0) {
@@ -100,6 +100,18 @@ public class CameraUsing extends SubsystemBase {
             Logger.recordOutput("Vision/SeedFallback", fallback);
             hasSeededPose = true;
         }
+
+        // When vision is disabled, skip all camera processing (seeding + measurements)
+        if (!enableVision) {
+            Logger.recordOutput("Vision/EnableVision", false);
+            SmartDashboard.putBoolean(ENABLE_VISION_KEY, enableVision);
+            return;
+        }
+
+        int measurementCount = 0;
+        double bestAmbiguity = 1.0;
+        Pose2d bestPose = null;
+        boolean useAprilRotation = SmartDashboard.getBoolean(USE_APRIL_ROTATION_KEY, false);
 
         for (var entry : cameras) {
             boolean connected = entry.camera.isConnected();
@@ -207,6 +219,8 @@ public class CameraUsing extends SubsystemBase {
         Logger.recordOutput("Vision/BestAmbiguity", bestAmbiguity);
         Logger.recordOutput("Vision/PoseSeeded", hasSeededPose);
         Logger.recordOutput("Vision/UseAprilRotation", useAprilRotation);
+        Logger.recordOutput("Vision/EnableVision", true);
+        SmartDashboard.putBoolean(ENABLE_VISION_KEY, enableVision);
         if (bestPose != null) {
             Logger.recordOutput("Vision/EstimatedPose", bestPose);
         }
