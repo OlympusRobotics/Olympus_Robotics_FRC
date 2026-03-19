@@ -60,6 +60,7 @@ public final class Constants {
     public static final int kIntakeID = 16;
     public static final int kIntakeFollowerID = 17;
     public static final int kIntakeFWID = 18;
+    public static final int kIntakeFWFollowerID = 23;
 
     //Rotation kP
     public static final double kFrontLeftP = 0.56;
@@ -238,7 +239,7 @@ public final class Constants {
       intakeConf.serialize();
 
       //Intake FW config
-      intakeFWConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+      intakeFWConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
       intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
       intakeFWConf.CurrentLimits.withStatorCurrentLimit(30);
       intakeFWConf.CurrentLimits.withSupplyCurrentLimit(35);

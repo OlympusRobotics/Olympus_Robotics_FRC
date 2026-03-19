@@ -66,13 +66,14 @@ src/main/java/frc/robot/
 
 ### Intake
 
-Triple-motor intake with flywheel for game piece manipulation.
+Four-motor intake with dual flywheel for game piece manipulation.
 
 | Motor | Type | CAN ID | Current Limit |
 |-------|------|--------|---------------|
 | Indexer (main) | TalonFX | 16 | 40A stator |
 | Indexer (follower) | TalonFX | 17 | 40A stator |
-| Flywheel | TalonFX | 18 | 30A stator, 35A supply |
+| Flywheel (primary) | TalonFX | 18 | 30A stator, 35A supply |
+| Flywheel (follower) | TalonFX | 23 | 30A stator, 35A supply |
 
 - **Positions:** Activated 1.3 rot, resting 0 rot
 - Motion Magic for position control (300 RPS velocity, 300 RPS² accel)
