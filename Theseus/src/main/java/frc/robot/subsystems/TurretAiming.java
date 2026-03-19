@@ -75,7 +75,7 @@ public class TurretAiming extends SubsystemBase {
         robotPose = new Pose2d();
         turretPosition = robotPose.getTranslation();
         kmaxVelocity = 2;
-        heightTau = .15;
+        heightTau = .25;
         rotationTau = .15;
         desiredRotation = 0;
         turretTargetPub = NetworkTableInstance.getDefault()

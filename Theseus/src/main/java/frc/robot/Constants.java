@@ -119,9 +119,9 @@ public final class Constants {
 
     public static final double kTurretHeightP = 60; //kP — needs enough voltage to overcome friction at small errors
     public static final double kTurretHeightI = 0;
-    public static final double kTurretHeightD = 0.1; //kD
-    public static final double kTurretHeightVelocity = 4; //rps (was 1000 — way too fast for 1.27 rot range)
-    public static final double kTurretHeightAcceleration = 8; //rps² (was 1000 — caused overshoot)
+    public static final double kTurretHeightD = 0.5; //kD — increased to damp overshoot
+    public static final double kTurretHeightVelocity = 1.5; //rps (slowed from 4 — was overrunning target)
+    public static final double kTurretHeightAcceleration = 2; //rps² (slowed from 8 — was overshooting)
       
     //Intake PID
     public static final double kIntakeP = 1.; //bullcrap values
@@ -155,7 +155,7 @@ public final class Constants {
     // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
     public static final double ROTATION_FORWARD_LIMIT = 0.375;
     public static final double ROTATION_REVERSE_LIMIT = -0.375;
-    public static final double HEIGHT_FORWARD_LIMIT = 1.04;
+    public static final double HEIGHT_FORWARD_LIMIT = 0.92;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     static {
       //This applies all the configuration
@@ -226,7 +226,7 @@ public final class Constants {
       //
       intakeConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
       intakeConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
-      intakeConf.CurrentLimits.withStatorCurrentLimit(80);
+      intakeConf.CurrentLimits.withStatorCurrentLimit(40);
       intakeConf.CurrentLimits.withStatorCurrentLimitEnable(true);
       //intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
       intakeConf.Slot0.kP = RobotConstants.kIntakeP;
@@ -239,7 +239,7 @@ public final class Constants {
       intakeConf.serialize();
 
       //Intake FW config
-      intakeFWConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+      intakeFWConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
       intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
       intakeFWConf.CurrentLimits.withStatorCurrentLimit(30);
       intakeFWConf.CurrentLimits.withSupplyCurrentLimit(35);
