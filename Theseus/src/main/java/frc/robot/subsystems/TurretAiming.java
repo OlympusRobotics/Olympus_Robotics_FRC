@@ -46,9 +46,12 @@ public class TurretAiming extends SubsystemBase {
     private boolean turretLocked = false;
     private boolean wasDisabled = true;
     private boolean autoAimEnabled = false;
+    private boolean headingHoldMode = false;
+    private double heldFieldAngle = 0;
     private boolean lastDashboardAim = false;
     private boolean mcpShooting = false;
     private boolean mcpAutoAimWasPressed = false;
+    private boolean mcpHeadingHoldWasPressed = false;
     private int manualHoldCycles = 0;
     private int manualHeightHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
@@ -201,15 +204,6 @@ public class TurretAiming extends SubsystemBase {
     public void targetAim(){
         if (robotPose == null || turretPosition == null) return;
 
-        // Compute target once per cycle — used by vectorCalculations() and maxFormula()
-        cachedTarget = targetpose();
-        cachedTargetHeight = getTargetHeight();
-        double desiredHeight = maxFormula();
-        desiredRotation  = vectorCalculations();
-        // Clamp to soft limits (±135° from front-of-robot zero)
-        desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-        SmartDashboard.putNumber("desiredRotation", desiredRotation);
-
         // Don't send motor commands while disabled — it causes the turret to
         // wind up and slam on first enable.
         if (!DriverStation.isEnabled()) {
@@ -224,6 +218,33 @@ public class TurretAiming extends SubsystemBase {
             heightSetpoint = cachedHeightPos;
             wasDisabled = false;
         }
+
+        // --- Heading-hold mode: maintain the captured field angle using only gyro ---
+        if (headingHoldMode) {
+            double heading = robotPose.getRotation().getRadians();
+            double robotRelative = Math.IEEEremainder(heldFieldAngle - heading, 2 * Math.PI);
+            desiredRotation = -robotRelative / (2 * Math.PI);
+            desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+            SmartDashboard.putNumber("desiredRotation", desiredRotation);
+
+            double rotError = desiredRotation - rotationSetpoint;
+            rotationSetpoint += rotationTau * rotError;
+            rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+            // Height stays frozen at current setpoint
+            rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
+            heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
+            return;
+        }
+
+        // --- Normal auto-aim path ---
+        // Compute target once per cycle — used by vectorCalculations() and maxFormula()
+        cachedTarget = targetpose();
+        cachedTargetHeight = getTargetHeight();
+        double desiredHeight = maxFormula();
+        desiredRotation  = vectorCalculations();
+        // Clamp to soft limits (±135° from front-of-robot zero)
+        desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        SmartDashboard.putNumber("desiredRotation", desiredRotation);
 
         if (turretLocked || !autoAimEnabled) {
             // Explicitly hold current setpoint so stale MotionMagic
@@ -299,6 +320,7 @@ public class TurretAiming extends SubsystemBase {
      * @param direction +1 for right, -1 for left */
     public void manualRotate(double direction) {
         autoAimEnabled = false;
+        headingHoldMode = false;
         manualHoldCycles++;
         double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
         double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
@@ -318,6 +340,7 @@ public class TurretAiming extends SubsystemBase {
      * @param direction +1 for up, -1 for down */
     public void manualHeight(double direction) {
         autoAimEnabled = false;
+        headingHoldMode = false;
         manualHeightHoldCycles++;
         double t = Math.min(1.0, (double) manualHeightHoldCycles / MANUAL_RAMP_CYCLES);
         double step = HEIGHT_STEP_SLOW + (HEIGHT_STEP_FAST - HEIGHT_STEP_SLOW) * t;
@@ -343,6 +366,21 @@ public class TurretAiming extends SubsystemBase {
     /** Switch back to auto-aim mode */
     public void enableAutoAim() {
         autoAimEnabled = true;
+        headingHoldMode = false;
+    }
+
+    /** Toggle heading-hold mode: turret maintains its current field-relative
+     *  angle using only the gyro, ignoring AprilTag-corrected field position. */
+    public void toggleHeadingHold() {
+        if (headingHoldMode) {
+            headingHoldMode = false;
+        } else {
+            double heading = robotPose != null ? robotPose.getRotation().getRadians() : 0;
+            heldFieldAngle = heading - rotationSetpoint * 2 * Math.PI;
+            headingHoldMode = true;
+            autoAimEnabled = false;
+            turretLocked = false;
+        }
     }
 
     /** Zero the turret rotation and height encoders at current physical position */
@@ -406,6 +444,13 @@ public class TurretAiming extends SubsystemBase {
             }
             mcpAutoAimWasPressed = mcpAPressed;
 
+            // Button 2 (B) toggles heading-hold on rising edge
+            boolean mcpBPressed = mcpJoystick.getButton(2);
+            if (mcpBPressed && !mcpHeadingHoldWasPressed) {
+                toggleHeadingHold();
+            }
+            mcpHeadingHoldWasPressed = mcpBPressed;
+
             // Right trigger (axis 3) > 0.5 = shoot
             if (mcpJoystick.getAxis(3) > 0.5) {
                 if (!mcpShooting) { shoot(); mcpShooting = true; }
@@ -418,7 +463,8 @@ public class TurretAiming extends SubsystemBase {
 
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         lastDashboardAim = autoAimEnabled;
-        SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled);
+        SmartDashboard.putBoolean("Heading Hold", headingHoldMode);
+        SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled && !headingHoldMode);
         SmartDashboard.putNumber("Turret Angle", cachedRotationPos * 360.0);
         if (turretPosition != null) {
             turretTargetPub.set(new double[] {
@@ -434,6 +480,7 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/ThroughborePosition", cachedThroughborePos);
         Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
+        Logger.recordOutput("Turret/HeadingHoldMode", headingHoldMode);
         if (turretPosition != null) {
             Logger.recordOutput("Turret/PositionX", turretPosition.getX());
             Logger.recordOutput("Turret/PositionY", turretPosition.getY());

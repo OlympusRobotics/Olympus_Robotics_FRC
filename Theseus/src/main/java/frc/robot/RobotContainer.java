@@ -174,6 +174,7 @@ public class RobotContainer {
         joystick.x().whileTrue(locksTurret);
         joystick.b().whileTrue(resetsTurret);
         joystick.a().whileTrue(unlocksTurret);
+        joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
         joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // D-pad turret controls: left/right = manual rotate, up/down = manual height

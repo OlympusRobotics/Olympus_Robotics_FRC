@@ -100,7 +100,8 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 - Compensates for robot velocity while aiming (toggleable via SmartDashboard/Elastic)
 - Motor position in mechanism rotations (0–1 = full turret turn); converted to radians via × 2π for pose logging
 - `Turret/ActualPose` and `Turret/DesiredPose` logged continuously (even while disabled) for AdvantageScope visualization
-- **Two modes:** auto-aim (default) and manual (D-pad left/right to rotate, D-pad up to return to auto)
+- **Three modes:** auto-aim (tracks field targets), heading-hold (maintains a fixed field angle using gyro only), and manual (D-pad nudge)
+- **Heading hold** (Y button): freezes the turret's current field-relative angle and height; turret counter-rotates as the robot turns using only the gyro — no AprilTag field position required
 - Skips motor commands while robot is disabled to prevent windup on first enable
 
 ### Vision (PhotonVision)
@@ -151,6 +152,7 @@ Single TalonFX (CAN ID 10) with PID position control.
 | Right bumper | Close intake |
 | Right trigger (>50%) | Shoot (flywheel + indexer feed) |
 | A | Target aim (vision-guided) |
+| Y | Toggle heading hold (turret maintains field angle via gyro only) |
 | X | Lock turret (safe position) |
 | B | Reset turret height |
 | Back | Reset field-centric heading |
