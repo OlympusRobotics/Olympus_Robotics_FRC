@@ -148,7 +148,7 @@ Single TalonFX (CAN ID 10) with PID position control.
 |-------|--------|
 | Left stick | Field-centric drive (translation) |
 | Right stick X | Rotation |
-| Left trigger (>50%) | Start intake + spin flywheel |
+| Left trigger (>50%) | Toggle intake flywheel (arm deploys on first press, flywheel toggles on/off) |
 | Left bumper | Reverse indexer |
 | Right bumper | Close intake |
 | Right trigger (>50%) | Shoot (flywheel + indexer feed; raises turret height to remembered setpoint) |

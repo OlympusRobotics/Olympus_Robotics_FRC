@@ -61,12 +61,11 @@ public class RobotContainer {
 
 
     //Initalize contoller commands
-    /** Opens and closes intake */
-    private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.startIntake()) //Opens and closes the intake respectivly
-      .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
-
-    private final Command flywheelintake = intake.startEnd(() -> intake.spinflywheel(), () -> intake.stopspin()) //Opens and closes the intake respectivly
-      .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
+    /** Toggles intake flywheel on/off and deploys arm (LT) */
+    private final Command intakeToggle = intake.startEnd(
+      () -> { intake.startIntake(); intake.spinflywheel(); },
+      () -> { intake.stopspin(); }
+    );
 
     /** Opens and closes intake without controller requiremets*/
     private final Command autoIntake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake());
@@ -167,8 +166,7 @@ public class RobotContainer {
         joystick.leftBumper().whileTrue(intakingOut);
         joystick.rightBumper().whileTrue(bringbackintake);
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
-        leftTrigger.whileTrue(Intake);
-        leftTrigger.whileTrue(flywheelintake);
+        leftTrigger.toggleOnTrue(intakeToggle);
 
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(shoot);
         joystick.x().whileTrue(locksTurret);
