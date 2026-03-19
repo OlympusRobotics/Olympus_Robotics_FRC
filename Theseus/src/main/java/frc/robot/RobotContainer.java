@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -56,15 +57,15 @@ public class RobotContainer {
     private final Field2d field = new Field2d();
     private final SendableChooser<Command> autoChooser;
     //private final Climber climber = new Climber();
+    public final McpJoystick mcpJoystick = new McpJoystick(0);
 
 
     //Initalize contoller commands
-    /** Opens and closes intake */
-    private final Command Intake = intake.startEnd(() -> intake.startIntake(), () -> intake.startIntake()) //Opens and closes the intake respectivly
-      .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
-
-    private final Command flywheelintake = intake.startEnd(() -> intake.spinflywheel(), () -> intake.stopspin()) //Opens and closes the intake respectivly
-      .until(() -> joystick.getLeftTriggerAxis() <= .5); //pressing the LT button
+    /** Toggles intake flywheel on/off and deploys arm (LT) */
+    private final Command intakeToggle = intake.startEnd(
+      () -> { intake.startIntake(); intake.spinflywheel(); },
+      () -> { intake.stopspin(); }
+    );
 
     /** Opens and closes intake without controller requiremets*/
     private final Command autoIntake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake());
@@ -80,9 +81,8 @@ public class RobotContainer {
     /** Spins the flywheels to shoot a ball without controller*/
     private final Command autoshoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot());
 
-    /** Intake stuff */
-    private final Command intakingOut = Commands.parallel(intake.startEnd(() -> intake.outakeIntake(), 
-    () -> intake.endIntake()), aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors()))
+    /** Reverse indexer only (left bumper) */
+    private final Command intakingOut = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
       .until(() -> joystick.leftBumper().getAsBoolean() == false);
 
     /** Locks the turret 🤯*/
@@ -91,7 +91,7 @@ public class RobotContainer {
 
     /** Resets the turret */
     public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
-      .until(() -> joystick.b().getAsBoolean() == false); //X button
+      .until(() -> joystick.b().getAsBoolean() == false); //B button
 
       /**Unlocks the turret and tartet aims */
     private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim())
@@ -128,6 +128,7 @@ public class RobotContainer {
 
     public RobotContainer() {
         drivetrain.configureAutobuilder();
+        aiming.setMcpJoystick(mcpJoystick);
         configureBindings();
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(4));
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(6));
@@ -135,6 +136,11 @@ public class RobotContainer {
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("New Auto", autoChooser);
         SmartDashboard.putData("New New Auto", autoChooser);
+        // Override "Zero Turret" to also zero the intake position
+        SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
+            aiming.zeroTurret();
+            intake.zeroPosition();
+        }).ignoringDisable(true));
     }
 
     private void configureBindings() {
@@ -159,20 +165,26 @@ public class RobotContainer {
         //Binds the commands to the buttons
         joystick.leftBumper().whileTrue(intakingOut);
         joystick.rightBumper().whileTrue(bringbackintake);
-        new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(Intake);
-        new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5).whileTrue(flywheelintake);
+        Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
+        leftTrigger.toggleOnTrue(intakeToggle);
 
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(shoot);
         joystick.x().whileTrue(locksTurret);
         joystick.b().whileTrue(resetsTurret);
         joystick.a().whileTrue(unlocksTurret);
-        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
+        joystick.start().onTrue(aiming.runOnce(() -> aiming.toggleScoringMode()));
+        joystick.back().onTrue(
+            drivetrain.runOnce(drivetrain::seedFieldCentric)
+                .alongWith(aiming.runOnce(aiming::disableAllModes))
+        );
 
-        // D-pad turret controls: left/right = manual rotate, up = auto-aim, down = zero
+        // D-pad turret controls: left/right = manual rotate, up/down = manual height
+        // MCP simulated joystick is handled directly in TurretAiming.periodic()
         joystick.povLeft().whileTrue(aiming.run(() -> aiming.manualRotate(-1)).finallyDo(() -> aiming.resetManualRamp()));
         joystick.povRight().whileTrue(aiming.run(() -> aiming.manualRotate(1)).finallyDo(() -> aiming.resetManualRamp()));
-        joystick.povUp().onTrue(aiming.runOnce(() -> aiming.enableAutoAim()));
-        joystick.povDown().onTrue(aiming.runOnce(() -> aiming.zeroTurret()));
+        joystick.povUp().whileTrue(aiming.run(() -> aiming.manualHeight(1)).finallyDo(() -> aiming.resetManualRamp()));
+        joystick.povDown().whileTrue(aiming.run(() -> aiming.manualHeight(-1)).finallyDo(() -> aiming.resetManualRamp()));
         
         //joystick.start().onTrue(aiming.runOnce(() -> {useTurretMotionMagic = !useTurretMotionMagic;}) );
 

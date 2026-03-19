@@ -1,57 +1,44 @@
 package frc.robot.subsystems;
 
+import java.util.Optional;
+
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonUtils;
-import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 
 public class Camera {
-    private final AprilTagFieldLayout aprilTagFieldLayout =
+    private static final AprilTagFieldLayout FIELD_LAYOUT =
             AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-    private Transform3d cameraToRobot;
 
-    /** Result returned from a single camera processing cycle. */
-    public record CameraResult(
-            Pose3d robotPose,
-            double distance,
-            double ambiguity,
-            PhotonPipelineResult pipelineResult) {
+    private final PhotonPoseEstimator poseEstimator;
+
+    /**
+     * Create a camera processor using PhotonPoseEstimator with multi-tag PNP on the coprocessor,
+     * falling back to the lowest-ambiguity single tag when only one tag is visible.
+     *
+     * @param camera         The PhotonCamera instance.
+     * @param robotToCamera  The robot-to-camera transform (physical position on robot).
+     */
+    public Camera(PhotonCamera camera, Transform3d robotToCamera) {
+        poseEstimator = new PhotonPoseEstimator(
+                FIELD_LAYOUT,
+                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+                robotToCamera);
+        poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     }
 
     /**
-     * Process a single camera frame and estimate the robot's field pose from the
-     * best AprilTag detection.
+     * Update the pose estimator from the latest camera frame.
      *
-     * @return CameraResult with pose (null if no valid detection), distance,
-     *         ambiguity, and raw pipeline result.
+     * @param camera The PhotonCamera to read from.
+     * @return An estimated robot pose if a valid detection exists, otherwise empty.
      */
-    public CameraResult process(PhotonCamera camera) {
-        PhotonPipelineResult result = camera.getLatestResult();
-
-        if (!result.hasTargets() || cameraToRobot == null) {
-            return new CameraResult(null, 0, 1.0, result);
-        }
-
-        PhotonTrackedTarget bestTarget = result.getBestTarget();
-        Transform3d cameraToTarget = bestTarget.getBestCameraToTarget();
-        double distance = Math.hypot(cameraToTarget.getX(), cameraToTarget.getY());
-        double ambiguity = bestTarget.getPoseAmbiguity();
-
-        Pose3d robotPose = null;
-        var tagPose = aprilTagFieldLayout.getTagPose(bestTarget.getFiducialId());
-        if (tagPose.isPresent()) {
-            robotPose = PhotonUtils.estimateFieldToRobotAprilTag(
-                    cameraToTarget, tagPose.get(), cameraToRobot);
-        }
-
-        return new CameraResult(robotPose, distance, ambiguity, result);
-    }
-
-    public void setCameraToRobot(Transform3d transform) {
-        this.cameraToRobot = transform;
+    public Optional<EstimatedRobotPose> update(PhotonCamera camera) {
+        return poseEstimator.update(camera.getLatestResult());
     }
 }

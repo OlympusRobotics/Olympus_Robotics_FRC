@@ -66,13 +66,14 @@ src/main/java/frc/robot/
 
 ### Intake
 
-Triple-motor intake with flywheel for game piece manipulation.
+Four-motor intake with dual flywheel for game piece manipulation.
 
 | Motor | Type | CAN ID | Current Limit |
 |-------|------|--------|---------------|
 | Indexer (main) | TalonFX | 16 | 40A stator |
 | Indexer (follower) | TalonFX | 17 | 40A stator |
-| Flywheel | TalonFX | 18 | 30A stator, 35A supply |
+| Flywheel (primary) | TalonFX | 18 | 30A stator, 35A supply |
+| Flywheel (follower) | TalonFX | 23 | 30A stator, 35A supply |
 
 - **Positions:** Activated 1.3 rot, resting 0 rot
 - Motion Magic for position control (300 RPS velocity, 300 RPS² accel)
@@ -97,15 +98,17 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 - **Auto-aim:** Automatically targets alliance-specific hub/field positions based on robot location
 - Ballistic trajectory calculation for automatic launch angle
 - Compensates for robot velocity while aiming (toggleable via SmartDashboard/Elastic)
-- Aiming vectors are computed from turret origin, offset 0.1524m behind robot center
+- **Height drops to 0 while moving and not shooting** to clear obstacles during driving. When stationary, the height shows the remembered setpoint so the driver can preview the aiming angle. When the shoot button (RT) is held, the height raises to the remembered setpoint regardless of robot speed. Manual height adjustments (D-pad up/down) update the remembered height, which persists across shoot/unshoot cycles.
 - Motor position in mechanism rotations (0–1 = full turret turn); converted to radians via × 2π for pose logging
 - `Turret/ActualPose` and `Turret/DesiredPose` logged continuously (even while disabled) for AdvantageScope visualization
-- **Two modes:** auto-aim (default) and manual (D-pad left/right to rotate, D-pad up to return to auto)
+- **Three modes:** auto-aim (tracks field targets), heading-hold (maintains a fixed field angle using gyro only), and manual (D-pad nudge)
+- **Heading hold** (Y button): freezes the turret's current field-relative angle; turret counter-rotates as the robot turns using only the gyro — no AprilTag field position required. Height still drops to 0 while moving unless shooting.
+- **Scoring/Passing presets** (Start button): toggles between two heading-hold presets. Each preset sets the turret to a fixed field angle, a fixed height, and a flywheel speed. Scoring: height 0, flywheel 50%, turret faces 0° (Blue) / 180° (Red). Passing: max height, flywheel 100%, turret faces 180° (Blue) / 0° (Red). Toggling heading-hold (Y) clears the active preset, and vice versa.
 - Skips motor commands while robot is disabled to prevent windup on first enable
 
 ### Vision (PhotonVision)
 
-4-camera AprilTag tracking system for field pose estimation. See [VISION.md](VISION.md) for the full pipeline design and tuning guide.
+4-camera AprilTag tracking system for field pose estimation using **multi-tag PNP on coprocessor** with single-tag fallback. See [VISION.md](VISION.md) for the full design rationale.
 
 | Camera | Position | Rotation |
 |--------|----------|----------|
@@ -115,8 +118,11 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 | CameraBR | Back-right (-0.34m, -0.33m, 0.2m) | -135° |
 
 - 2026 Rebuilt Andymark AprilTag field layout
-- All cameras feed the Kalman filter with std devs scaled by ambiguity and distance
-- Sanity gates reject ambiguity > 0.25, out-of-field poses, and > 5m jumps
+- **Primary strategy:** `MULTI_TAG_PNP_ON_COPROCESSOR` — coprocessor solves PNP with all visible tags (eliminates 180° ambiguity)
+- **Fallback strategy:** `LOWEST_AMBIGUITY` — single-tag estimate when only one tag visible
+- All cameras feed into the Kalman filter with std devs scaled by tag count and ambiguity
+- Sanity gate rejects ambiguity > 0.25 (single-tag), out-of-field poses, and > 5 m jumps from odometry
+- First 5 good readings hard-reset drivetrain pose (vision-seeded gyro initialization)
 
 ### Network Map
 
@@ -143,18 +149,20 @@ Single TalonFX (CAN ID 10) with PID position control.
 |-------|--------|
 | Left stick | Field-centric drive (translation) |
 | Right stick X | Rotation |
-| Left trigger (>50%) | Start intake + spin flywheel |
-| Left bumper | Reverse intake & indexer |
+| Left trigger (>50%) | Toggle intake flywheel (arm deploys on first press, flywheel toggles on/off) |
+| Left bumper | Reverse indexer |
 | Right bumper | Close intake |
-| Right trigger (>50%) | Shoot (flywheel + indexer feed) |
+| Right trigger (>50%) | Shoot (flywheel + indexer feed; raises turret height to remembered setpoint) |
 | A | Target aim (vision-guided) |
+| Y | Toggle heading hold (turret maintains field angle via gyro only) |
+| Start | Toggle scoring/passing preset (sets turret angle, height, flywheel speed) |
 | X | Lock turret (safe position) |
 | B | Reset turret height |
-| Back | Reset field-centric heading |
+| Back | Reset field-centric heading + disable all turret auto modes (manual mode) |
 | D-pad left | Manual turret rotate left (switches to manual mode) |
 | D-pad right | Manual turret rotate right (switches to manual mode) |
-| D-pad up | Return to auto-aim mode |
-| D-pad down | Zero/calibrate turret encoder |
+| D-pad up | Manual turret height up (updates remembered height; switches to manual mode) |
+| D-pad down | Manual turret height down (updates remembered height; switches to manual mode) |
 
 ### Operator (Xbox — Port 1)
 
@@ -191,6 +199,7 @@ Autonomous routines use **PathPlanner** with holonomic path following and allian
 | 20 | Turret feed motor |
 | 21 | Pigeon2 gyro |
 | 22 | Turret indexer R |
+| 23 | Intake flywheel follower |
 
 ## Simulator
 
