@@ -22,6 +22,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.math.MathUtil;
 import frc.robot.McpJoystick;
 import frc.robot.Constants.RobotConstants;
+import frc.robot.Constants.ScoringMode;
 import static frc.robot.Constants.TurretConfigs.*;
 
 import org.littletonrobotics.junction.Logger;
@@ -54,6 +55,7 @@ public class TurretAiming extends SubsystemBase {
     private boolean mcpShooting = false;
     private boolean mcpAutoAimWasPressed = false;
     private boolean mcpHeadingHoldWasPressed = false;
+    private ScoringMode scoringMode = null;
     private int manualHoldCycles = 0;
     private int manualHeightHoldCycles = 0;
     private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
@@ -296,7 +298,10 @@ public class TurretAiming extends SubsystemBase {
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
         isShooting = true;
-        flywheelMotor.set(MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", 1.0), 0, 1));    
+        double speed = (scoringMode != null)
+            ? scoringMode.flywheelSpeed
+            : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", 1.0), 0, 1);
+        flywheelMotor.set(speed);
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -395,6 +400,14 @@ public class TurretAiming extends SubsystemBase {
         headingHoldMode = false;
     }
 
+    /** Disable all automatic turret modes (auto-aim, heading-hold, scoring preset).
+     *  Turret stays at its current position in manual mode. */
+    public void disableAllModes() {
+        autoAimEnabled = false;
+        headingHoldMode = false;
+        scoringMode = null;
+    }
+
     /** Toggle heading-hold mode: turret maintains its current field-relative
      *  angle using only the gyro, ignoring AprilTag-corrected field position. */
     public void toggleHeadingHold() {
@@ -406,7 +419,26 @@ public class TurretAiming extends SubsystemBase {
             headingHoldMode = true;
             autoAimEnabled = false;
             turretLocked = false;
+            scoringMode = null; // clear scoring/passing preset
         }
+    }
+
+    /** Toggle between Scoring and Passing presets. Each preset activates
+     *  heading-hold at a fixed field angle and sets the height + flywheel speed. */
+    public void toggleScoringMode() {
+        if (scoringMode == null || scoringMode == ScoringMode.PASSING) {
+            scoringMode = ScoringMode.SCORING;
+        } else {
+            scoringMode = ScoringMode.PASSING;
+        }
+        // Activate heading-hold at the mode's field angle
+        boolean isRed = CommandSwerveDrivetrain.getAlliance();
+        heldFieldAngle = isRed ? scoringMode.redFieldAngle : scoringMode.blueFieldAngle;
+        headingHoldMode = true;
+        autoAimEnabled = false;
+        turretLocked = false;
+        rememberedHeight = scoringMode.height;
+        SmartDashboard.putNumber("Shoot Speed", scoringMode.flywheelSpeed);
     }
 
     /** Zero the turret rotation and height encoders at current physical position */
@@ -492,6 +524,7 @@ public class TurretAiming extends SubsystemBase {
         lastDashboardAim = autoAimEnabled;
         SmartDashboard.putBoolean("Heading Hold", headingHoldMode);
         SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled && !headingHoldMode);
+        SmartDashboard.putString("Scoring Mode", scoringMode != null ? scoringMode.name() : "NONE");
         SmartDashboard.putNumber("Turret Angle", cachedRotationPos * 360.0);
         if (turretPosition != null) {
             turretTargetPub.set(new double[] {
@@ -510,6 +543,7 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
         Logger.recordOutput("Turret/HeadingHoldMode", headingHoldMode);
+        Logger.recordOutput("Turret/ScoringMode", scoringMode != null ? scoringMode.name() : "NONE");
         if (turretPosition != null) {
             Logger.recordOutput("Turret/PositionX", turretPosition.getX());
             Logger.recordOutput("Turret/PositionY", turretPosition.getY());

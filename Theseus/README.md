@@ -103,6 +103,7 @@ Vision-guided turret with auto-aim, rotation, height adjustment, flywheel, and i
 - `Turret/ActualPose` and `Turret/DesiredPose` logged continuously (even while disabled) for AdvantageScope visualization
 - **Three modes:** auto-aim (tracks field targets), heading-hold (maintains a fixed field angle using gyro only), and manual (D-pad nudge)
 - **Heading hold** (Y button): freezes the turret's current field-relative angle; turret counter-rotates as the robot turns using only the gyro — no AprilTag field position required. Height still drops to 0 while moving unless shooting.
+- **Scoring/Passing presets** (Start button): toggles between two heading-hold presets. Each preset sets the turret to a fixed field angle, a fixed height, and a flywheel speed. Scoring: height 0, flywheel 50%, turret faces 0° (Blue) / 180° (Red). Passing: max height, flywheel 100%, turret faces 180° (Blue) / 0° (Red). Toggling heading-hold (Y) clears the active preset, and vice versa.
 - Skips motor commands while robot is disabled to prevent windup on first enable
 
 ### Vision (PhotonVision)
@@ -154,9 +155,10 @@ Single TalonFX (CAN ID 10) with PID position control.
 | Right trigger (>50%) | Shoot (flywheel + indexer feed; raises turret height to remembered setpoint) |
 | A | Target aim (vision-guided) |
 | Y | Toggle heading hold (turret maintains field angle via gyro only) |
+| Start | Toggle scoring/passing preset (sets turret angle, height, flywheel speed) |
 | X | Lock turret (safe position) |
 | B | Reset turret height |
-| Back | Reset field-centric heading |
+| Back | Reset field-centric heading + disable all turret auto modes (manual mode) |
 | D-pad left | Manual turret rotate left (switches to manual mode) |
 | D-pad right | Manual turret rotate right (switches to manual mode) |
 | D-pad up | Manual turret height up (updates remembered height; switches to manual mode) |

@@ -8,6 +8,31 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 // NOTE: Changes to CAN IDs, PID values, or hardware constants here
 // must also be reflected in Theseus/README.md (CAN ID Map, Subsystems sections).
 public final class Constants {
+
+  /** Preset turret modes toggled via the driver Start button. Each mode defines a
+   *  fixed field-relative turret angle (per alliance), a height, and a flywheel speed. */
+  public enum ScoringMode {
+    /** Low shot toward own alliance wall — height 0, flywheel 50%. */
+    SCORING(0, Math.PI, TurretConfigs.HEIGHT_REVERSE_LIMIT, 0.60),
+    /** High lob toward opposite alliance wall — max height, flywheel 100%. */
+    PASSING(Math.PI, 0, TurretConfigs.HEIGHT_FORWARD_LIMIT, 1.0);
+
+    /** Field-relative turret angle (radians) when on the Blue alliance. */
+    public final double blueFieldAngle;
+    /** Field-relative turret angle (radians) when on the Red alliance. */
+    public final double redFieldAngle;
+    /** Fixed turret height setpoint (motor rotations). */
+    public final double height;
+    /** Flywheel duty-cycle speed (0–1). */
+    public final double flywheelSpeed;
+
+    ScoringMode(double blueFieldAngle, double redFieldAngle, double height, double flywheelSpeed) {
+      this.blueFieldAngle = blueFieldAngle;
+      this.redFieldAngle = redFieldAngle;
+      this.height = height;
+      this.flywheelSpeed = flywheelSpeed;
+    }
+  }
   public static class OperatorConstants {
     //Controller Ports
     public static final int kDriverControllerPort = 0;

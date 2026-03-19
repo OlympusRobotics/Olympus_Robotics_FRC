@@ -173,7 +173,11 @@ public class RobotContainer {
         joystick.b().whileTrue(resetsTurret);
         joystick.a().whileTrue(unlocksTurret);
         joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
-        joystick.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        joystick.start().onTrue(aiming.runOnce(() -> aiming.toggleScoringMode()));
+        joystick.back().onTrue(
+            drivetrain.runOnce(drivetrain::seedFieldCentric)
+                .alongWith(aiming.runOnce(aiming::disableAllModes))
+        );
 
         // D-pad turret controls: left/right = manual rotate, up/down = manual height
         // MCP simulated joystick is handled directly in TurretAiming.periodic()
