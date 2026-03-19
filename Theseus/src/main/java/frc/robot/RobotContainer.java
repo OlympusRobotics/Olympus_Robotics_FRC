@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -92,7 +93,7 @@ public class RobotContainer {
 
     /** Resets the turret */
     public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
-      .until(() -> joystick.b().getAsBoolean() == false); //X button
+      .until(() -> joystick.b().getAsBoolean() == false); //B button
 
       /**Unlocks the turret and tartet aims */
     private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim())
@@ -137,6 +138,11 @@ public class RobotContainer {
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("New Auto", autoChooser);
         SmartDashboard.putData("New New Auto", autoChooser);
+        // Override "Zero Turret" to also zero the intake position
+        SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
+            aiming.zeroTurret();
+            intake.zeroPosition();
+        }).ignoringDisable(true));
     }
 
     private void configureBindings() {

@@ -64,6 +64,11 @@ public class Intake extends SubsystemBase {
     target = ActivatedPos;
     //intFWMot.set(-1);
   }
+  public void zeroPosition() {
+    m_inkMot.setPosition(0);
+    m_inkMotFollower.setPosition(0);
+    target = 0;
+  }
   @Override
   public void periodic() {
     m_inkMot.setControl(new MotionMagicVoltage(target));
