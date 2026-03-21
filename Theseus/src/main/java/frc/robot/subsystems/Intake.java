@@ -47,7 +47,7 @@ public class Intake extends SubsystemBase {
   // turns indexer on and sends intake out
   public void startIntake() {
     target = Constants.IntakeConstants.ActivatedPos;
-    //intFWMot.set(1);
+    intFWMot.set(.5);
   }
   public void spinflywheel() {
     intFWMot.set(.35);
@@ -58,11 +58,11 @@ public class Intake extends SubsystemBase {
   // stops indexer and returns intake to original position
   public void endIntake() {
     target = 0;
-    //intFWMot.set(0);
+    intFWMot.set(0);
   }
   public void outakeIntake() {
     target = ActivatedPos;
-    //intFWMot.set(-1);
+    intFWMot.set(-.5);
   }
   public void zeroPosition() {
     m_inkMot.setPosition(0);

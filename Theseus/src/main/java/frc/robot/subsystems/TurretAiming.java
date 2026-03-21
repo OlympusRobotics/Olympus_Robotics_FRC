@@ -408,6 +408,18 @@ public class TurretAiming extends SubsystemBase {
         scoringMode = null;
     }
 
+    public void startingaim() {
+        rotationMotor.setControl(rotationoutput.withPosition(.25));
+        flywheelMotor.set(.62);
+        feedIndexer();
+    }
+
+    public void endingaim() {
+        rotationMotor.setControl(rotationoutput.withPosition(.25));
+        flywheelMotor.set(.9);
+        feedIndexer();
+    }
+
     /** Toggle heading-hold mode: turret maintains its current field-relative
      *  angle using only the gyro, ignoring AprilTag-corrected field position. */
     public void toggleHeadingHold() {

@@ -54,7 +54,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-import com.bionanomics.refinery.mcp.RoboRioMcpServer;
 
 public class Robot extends LoggedRobot {
     private Command m_autonomousCommand;
@@ -93,7 +92,20 @@ public class Robot extends LoggedRobot {
         if (isReal()) {
             pruneOldLogs();
         }
-        RoboRioMcpServer.start();
+        // The refinery MCP library may be provided by a local composite build
+        // or external dependency. In case the library is not present in the
+        // current clone (e.g. the `refinery-roborio-mcp` folder is empty),
+        // attempt to start it via reflection so the project can compile and
+        // run without a hard dependency at compile time.
+        try {
+            Class<?> cls = Class.forName("com.bionanomics.refinery.mcp.RoboRioMcpServer");
+            java.lang.reflect.Method m = cls.getMethod("start");
+            m.invoke(null);
+        } catch (ClassNotFoundException ex) {
+            // Library not present; nothing to start.
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -171,11 +183,14 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void autonomousInit() {
-        /* m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
-        } */
+        } 
+        else {
+            System.out.println("No autonomous command found!");
+        }
     }
 
     @Override
