@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -250,7 +251,7 @@ public class TurretAiming extends SubsystemBase {
             rotationSetpoint += rotationTau * rotError;
             rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
             double hErr = effectiveHeight() - heightSetpoint;
-            if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
+            //if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
             heightSetpoint = MathUtil.clamp(heightSetpoint, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
             rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
             heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
@@ -269,7 +270,7 @@ public class TurretAiming extends SubsystemBase {
 
         if (turretLocked || !autoAimEnabled) {
             double hErr = effectiveHeight() - heightSetpoint;
-            if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
+            //if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
             heightSetpoint = MathUtil.clamp(heightSetpoint, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
             rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
             heightMotor.setControl(heightoutput.withPosition(heightSetpoint));
@@ -300,12 +301,33 @@ public class TurretAiming extends SubsystemBase {
         isShooting = true;
         double speed = (scoringMode != null)
             ? scoringMode.flywheelSpeed
-            : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", 1.0), 0, 1);
+            : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", 1), 0, 1);
+        flywheelMotor.set(speed);
+                }
+    public void index() {
+        isShooting = true;
+        double speed = (scoringMode != null)
+            ? scoringMode.flywheelSpeed
+            : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", .8), 0, 1);
         flywheelMotor.set(speed);
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
-        
+
+    }
+    public void autoshoot(){
+        isShooting = true;
+        flywheelMotor.set(.5);
+    }
+    public void autoindex(){
+        isShooting = true;
+        double speed = (scoringMode != null)
+            ? scoringMode.flywheelSpeed
+            : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", .3), 0, 1);
+        flywheelMotor.set(.5);
+        indexerLMotor.setVoltage(-12);
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));        
     }
     /* private double enc2Rad(double EncoderPosition){
         return ((EncoderPosition - 0.5) * 2 * Math.PI);
@@ -411,12 +433,18 @@ public class TurretAiming extends SubsystemBase {
     public void startingaim() {
         rotationMotor.setControl(rotationoutput.withPosition(.25));
         flywheelMotor.set(.62);
+        turretLocked = false;
+        headingHoldMode = false;
+        autoAimEnabled = false;
         feedIndexer();
     }
 
     public void endingaim() {
         rotationMotor.setControl(rotationoutput.withPosition(.25));
         flywheelMotor.set(.9);
+        turretLocked = false;
+        headingHoldMode = false;
+        autoAimEnabled = false;
         feedIndexer();
     }
 
@@ -547,6 +575,7 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/RotationPosition", cachedRotationPos);
         Logger.recordOutput("Turret/HeightPosition", cachedHeightPos);
         Logger.recordOutput("Turret/HeightSetpoint", heightSetpoint);
+        SmartDashboard.putNumber("heightstepoint", heightSetpoint);
         Logger.recordOutput("Turret/RememberedHeight", rememberedHeight);
         Logger.recordOutput("Turret/IsShooting", isShooting);
         Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);

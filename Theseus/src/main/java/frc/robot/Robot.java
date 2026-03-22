@@ -1,41 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
-/*
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣤⣤⣤⣶⣶⣶⣶⠶⢠⣤⣤⣤⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣴⣾⠛⠛⠋⠉⠉⠉⠀⠀⠀⠀⠀⠈⠉⠉⠉⠉⠉⠛⣿⣶⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣰⡿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣤⣀⠀⠀⠀⠀⠙⠻⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⡿⠁⠀⠀⠀⠀⠀⠀⠀⢀⣤⡀⠀⠀⠀⠀⣀⣀⣴⣿⠛⠉⠻⢿⣦⡀⠀⠀⠀⠘⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⣰⡿⠁⠀⣶⡶⠿⢶⢶⣶⣶⣾⠟⠋⠀⠀⠀⠘⠛⠛⠋⠀⠀⠀⠀⠈⠿⠃⠀⠀⠀⠀⠹⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⢀⣿⠇⠀⢀⠀⠀⢀⣀⡀⡀⠀⠀⠤⠀⠀⠀⠀⠀⢨⠀⠀⠀⠀⠀⠀⠀⠀⠤⠀⠀⠀⠀⠀  ⠸⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⢸⡿⠀⠀⣿⠿⠿⠟⠛⣿⣿⣿⣿⡿⠂⠀⠀⠀⠀⠺⠿⠿⣿⣿⣿⣿⡿⠿⢿⣾⠀⠀  ⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⢸⡇⠠⠀⠀⠀⠀⠀⠀⠙⠿⠿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⠿⠿⠁⠀⠀⠀⠀⠀⠀⠀   ⠸⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀     ⢀⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⢿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⣾⣿⣿⡿⢿⣦⠀⠀    ⢸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠸⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣿⠇⠀⠁⠀    ⢀⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⢻⣷⡀⠀⠀⠀⢀⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀⠀⣀⣠⣴⡾⠟⠁⠀⠀ ⠀ ⢀⣾⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣷⡀⠀⠀⠈⢿⣿⣶⣶⣶⣶⣆⣀⣀⣰⣶⣶⣶⣾⣿⢿⠿⠁⠀⠀⠀⠀⠀⢀⣾⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣷⣄⠀⠀⠀⠀⠈⠈⠉⠉⢩⣭⣉⣉⣉⣉⣠⣤⣶⡾⠃⠀⠀⠀⠀⠀⣲⡿⠛⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣷⣄⣀⠀⠀⠀⠀⠀⠀⠉⠙⠛⠋⠉⠉⠁⠀⠀⠀⠀⠀⣀⣴⣾⣟⣁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣈⣿⠿⠿⢶⣶⣤⣤⣤⣄⣀⣀⣠⣤⣤⣤⣴⣶⡶⠿⠿⠛⠋⠈⠛⠻⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⡟⠙⠀⠀⠀⠀⠈⠉⠉⠉⠋⠙⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣷⡤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣿⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣿⣆⡀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣦⣀⠀⢰⣄⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣦⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⣰⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠛⠉⢻⣶⣿⠋⠛⢿⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢻⣧⡀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⢀⣼⡿⠉⠀⠀⠀⣀⠀⠀⠀⠀⠀⠀⣠⣾⣿⣤⡶⠿⠛⠛⠛⠻⣦⡈⣿⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣷⣀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⢠⣾⠟⠀⠀⠀⠀⢰⣿⡆⠀⠀⣠⣶⠾⡟⢻⣩⣼⣧⣦⣤⣤⣀⣀⣀⣿⣿⣿⣿⣦⡄⠀⠀⠀⣀⣦⠀⠀⠀⠀⠀⢻⣷⡀⠀⠀⠀⠀
-⠀⠀⠀⢰⣿⠃⠀⠀⠀⠀⠀⠀⣿⡇⠀⣴⡿⠁⢈⣴⠟⠉⠀⢀⣀⣤⣭⣿⣭⣍⡙⠀⠀⠉⠻⣿⣴⡀⠀⣿⣿⠀⠀⠀⠀⠀⠀⠻⣷⡀⠀⠀⠀
-⠀⠀⢠⣿⠇⠀⠀⠀⠀⠀⠀⠠⣿⣅⣼⠟⠀⠀⠺⣿⣤⣴⠾⠟⠋⠉⠀⠀⠉⠙⠻⢷⣦⡀⠀⠸⣿⣧⠀⢸⣿⠀⠀⠀⠀⠀⠀⠐⢻⣿⡀⠀⠀
-⠀⠀⣼⡿⢀⠀⠀⠀⠀⠀⠀⢰⣿⣿⠟⠀⠀⠀⠀⠻⠃⠀⠀⣀⣀⣶⣤⣄⣀⠀⠀⣀⣿⡇⠀⠀⢸⣿⡆⢸⣿⠀⠀⠀⠀⠀⠀⠀⠀⢿⣧⠀⠀
-⠀⣼⡿⠁⠀⠀⠀⠀⠀⠀⢀⣼⡿⠁⠀⠀⠀⠀⠀⣠⣶⠾⠿⠛⠛⠉⠉⠙⠛⠿⠟⠛⠋⠀⠀⠀⠀⠙⣿⣼⣿⡇⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⠀
-⢠⣿⠁⠀⠀⢠⣷⣶⣶⡾⠿⠛⠁⠀⠀⠀⠀⠀⠀⣿⣧⣄⡀⢀⣠⣤⣤⣤⣤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠈⢿⣿⣧⣶⣄⣦⡀⠀⠀⠀⠘⣿⡏⠀
-⣾⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠙⠛⠛⠋⠉⠀⠈⠉⠙⢿⣦⣀⠀⠀⠀⠀⠀⠀⠀⠉⠙⠛⠙⠉⠀⠀⠀⠀⠀⢻⣷⠀
-⣿⡅⠄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⡿⠿⠿⠿⠷⣶⣦⣤⣀⣀⣹⣯⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⠄
-⢿⣿⣶⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣇⣀⡀⠀⢀⣀⣀⣀⣩⣍⣛⠋⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⠀
-*/
-
 package frc.robot;
 
 import java.io.File;
@@ -43,6 +5,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import com.ctre.phoenix6.HootAutoReplay;
+import com.ctre.phoenix6.SignalLogger;
 
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -56,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 
 public class Robot extends LoggedRobot {
-    private Command m_autonomousCommand;
+    public Command m_autonomousCommand;
 
     private final RobotContainer m_robotContainer;
     private final Field2d field;
@@ -89,6 +52,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotInit() {
+        SignalLogger.start();
         if (isReal()) {
             pruneOldLogs();
         }
@@ -170,6 +134,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void disabledInit() {
+        SignalLogger.stop();
         //m_robotContainer.intake.m_inkMot.setPosition(0);
     }
 

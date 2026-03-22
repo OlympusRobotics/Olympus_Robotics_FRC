@@ -55,6 +55,7 @@ public class RobotContainer {
     public final Intake intake = new Intake();
     private final Field2d field = new Field2d();
     private final SendableChooser<Command> autoChooser;
+    public Command m_autonomousCommand;
     //private final Climber climber = new Climber();
     public final McpJoystick mcpJoystick = new McpJoystick(0);
 
@@ -62,23 +63,31 @@ public class RobotContainer {
     //Initalize contoller commands
     /** Toggles intake flywheel on/off and deploys arm (LT) */
     private final Command intakeToggle = intake.startEnd(
-      () -> { intake.startIntake(); intake.spinflywheel(); },
+      () -> { intake.spinflywheel(); },
       () -> { intake.stopspin(); }
     );
 
     /** Opens and closes intake without controller requiremets*/
-    private final Command autoIntake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake());
+    private final Command autoIntake = intake.startEnd(() -> { intake.spinflywheel(); },
+      () -> { intake.stopspin(); });
+
+    private final Command lowerintake = intake.startEnd(() -> intake.startIntake(), () -> intake.endIntake());
 
     /** Closes intake */
-    private final Command bringbackintake = intake.startEnd(() -> intake.endIntake(), () -> intake.endIntake())
-      .until(() -> joystick.rightBumper().getAsBoolean() == false);
+    private final Command jerkIntake = intake.startEnd(() -> intake.jerkIntake(), () -> intake.endIntake());
       
     /** Spins the flywheels to shoot a ball */
     private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot())
+      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RT button
+    
+    private final Command indexshoot = aiming.startEnd(() -> aiming.index(), () -> aiming.unshoot())
       .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
 
     /** Spins the flywheels to shoot a ball without controller*/
-    private final Command autoshoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot());
+
+    private final Command autoRev = aiming.startEnd(() -> aiming.autoshoot(), () -> aiming.autoshoot());
+
+    private final Command autoshoot = aiming.startEnd(() -> aiming.autoindex(), () -> aiming.unshoot());
 
     private final Command startingaim = aiming.startEnd(() -> aiming.startingaim(), () -> aiming.unshoot());
 
@@ -130,13 +139,17 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
+      
         drivetrain.configureAutobuilder();
         aiming.setMcpJoystick(mcpJoystick);
         configureBindings();
+        NamedCommands.registerCommand("Rev", autoRev.withTimeout(3));
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(20));
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(20));
         NamedCommands.registerCommand("startaim", startingaim.withTimeout(6));
         NamedCommands.registerCommand("endaim", endingaim.withTimeout(20));
+        NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(.5));
+        NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(.5));
         SmartDashboard.putData("Field", field);
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("straight through right", autoChooser);
@@ -147,7 +160,7 @@ public class RobotContainer {
         SmartDashboard.putData("left half x2 score", autoChooser);
         SmartDashboard.putData("Bad Grab n' Go", autoChooser);
         SmartDashboard.putData("Good Grab 'n Go", autoChooser);
-        SmartDashboard.putData("New New Auto", autoChooser);
+        SmartDashboard.putData("Back up and Shoot", autoChooser);
         // Override "Zero Turret" to also zero the intake position
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
             aiming.zeroTurret();
@@ -176,11 +189,10 @@ public class RobotContainer {
         
         //Binds the commands to the buttons
         joystick.leftBumper().whileTrue(intakingOut);
-        joystick.rightBumper().whileTrue(bringbackintake);
+        new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(indexshoot);
+        joystick.rightBumper().whileTrue(shoot);
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
-        leftTrigger.toggleOnTrue(intakeToggle);
-
-        new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(shoot);
+        leftTrigger.whileTrue(intakeToggle);
         joystick.x().whileTrue(locksTurret);
         joystick.b().whileTrue(resetsTurret);
         joystick.a().whileTrue(unlocksTurret);

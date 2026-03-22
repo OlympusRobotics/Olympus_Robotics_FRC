@@ -5,9 +5,29 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Full disrupt"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "lowerintake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Full disrupt"
+                }
+              }
+            ]
           }
         }
       ]
