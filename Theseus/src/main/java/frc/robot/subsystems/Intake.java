@@ -21,6 +21,7 @@ public class Intake extends SubsystemBase {
 
   public final TalonFX m_inkMot;
   private final TalonFX intFWMot;
+  private final TalonFX intFWMotFollower;
   private final TalonFX m_inkMotFollower;
   private double target;
   public Intake() {
@@ -29,21 +30,27 @@ public class Intake extends SubsystemBase {
     m_inkMot = new TalonFX(RobotConstants.kIntakeID);
     m_inkMotFollower = new TalonFX(RobotConstants.kIntakeFollowerID);
     intFWMot = new TalonFX(RobotConstants.kIntakeFWID);
+    intFWMotFollower = new TalonFX(RobotConstants.kIntakeFWFollowerID);
 
     target = 0;
 
     m_inkMot.getConfigurator().apply(intakeConf);
     m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
     intFWMot.getConfigurator().apply(intakeFWConf);
-    m_inkMot.setPosition(0);
-    m_inkMotFollower.setPosition(0);
+    intFWMotFollower.getConfigurator().apply(intakeFWConf);
+    intFWMotFollower.setControl(new Follower(intFWMot.getDeviceID(), MotorAlignmentValue.Opposed));
 
   }
 
   // turns indexer on and sends intake out
   public void startIntake() {
-    target = Constants.IntakeConstants.ActivatedPos;
-    //intFWMot.set(1);
+    m_inkMot.set(1);
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
+    intFWMot.set(.35);
+  }
+  public void jerkIntake() {
+    m_inkMot.setVoltage(-12);
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
   }
   public void spinflywheel() {
     intFWMot.set(.35);
@@ -53,19 +60,25 @@ public class Intake extends SubsystemBase {
   }
   // stops indexer and returns intake to original position
   public void endIntake() {
-    target = 0;
-    //intFWMot.set(0);
+    m_inkMot.setVoltage(0);
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
+    m_inkMotFollower.set(0);
   }
   public void outakeIntake() {
     target = ActivatedPos;
-    //intFWMot.set(-1);
+    intFWMot.set(-.35);
+  }
+  public void zeroPosition() {
+    m_inkMot.setPosition(0);
+    m_inkMotFollower.setPosition(0);
+    target = 0;
   }
   @Override
   public void periodic() {
-    m_inkMot.setControl(new MotionMagicVoltage(target));
 
     Logger.recordOutput("Intake/TargetPosition", target);
     Logger.recordOutput("Intake/ActualPosition", m_inkMot.getPosition().getValueAsDouble());
     Logger.recordOutput("Intake/FlywheelOutput", intFWMot.get());
+    Logger.recordOutput("Intake/FlywheelFollowerOutput", intFWMotFollower.get());
   }
 }

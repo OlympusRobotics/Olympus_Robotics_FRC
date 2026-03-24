@@ -8,6 +8,31 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 // NOTE: Changes to CAN IDs, PID values, or hardware constants here
 // must also be reflected in Theseus/README.md (CAN ID Map, Subsystems sections).
 public final class Constants {
+
+  /** Preset turret modes toggled via the driver Start button. Each mode defines a
+   *  fixed field-relative turret angle (per alliance), a height, and a flywheel speed. */
+  public enum ScoringMode {
+    /** Low shot toward own alliance wall — height 0, flywheel 50%. */
+    SCORING(0, Math.PI, TurretConfigs.HEIGHT_REVERSE_LIMIT, 0.60),
+    /** High lob toward opposite alliance wall — max height, flywheel 100%. */
+    PASSING(Math.PI, 0, TurretConfigs.HEIGHT_FORWARD_LIMIT, 1.0);
+
+    /** Field-relative turret angle (radians) when on the Blue alliance. */
+    public final double blueFieldAngle;
+    /** Field-relative turret angle (radians) when on the Red alliance. */
+    public final double redFieldAngle;
+    /** Fixed turret height setpoint (motor rotations). */
+    public final double height;
+    /** Flywheel duty-cycle speed (0–1). */
+    public final double flywheelSpeed;
+
+    ScoringMode(double blueFieldAngle, double redFieldAngle, double height, double flywheelSpeed) {
+      this.blueFieldAngle = blueFieldAngle;
+      this.redFieldAngle = redFieldAngle;
+      this.height = height;
+      this.flywheelSpeed = flywheelSpeed;
+    }
+  }
   public static class OperatorConstants {
     //Controller Ports
     public static final int kDriverControllerPort = 0;
@@ -60,6 +85,7 @@ public final class Constants {
     public static final int kIntakeID = 16;
     public static final int kIntakeFollowerID = 17;
     public static final int kIntakeFWID = 18;
+    public static final int kIntakeFWFollowerID = 23;
 
     //Rotation kP
     public static final double kFrontLeftP = 0.56;
@@ -107,6 +133,7 @@ public final class Constants {
     public static final double kTrackWidth = 0.6858;
     public static final double kRobotlength = 0.6604;
     public static final double kCameraHeight = .2;
+    public static final double kTurretXOffsetMeters = -0.1524;
     
     //Turret aiming pid
     public static final double kTurretRotationP = 150; //kP ≈ 0.4–0.8 
@@ -115,11 +142,11 @@ public final class Constants {
     public static final double kTurretRotationVelocity = 3; //rps
     public static final double kTurretRotationAcceleration = 6; //rps²
 
-    public static final double kTurretHeightP = 2; //kP slightly higher than yaw
+    public static final double kTurretHeightP = 50; //kP — needs enough voltage to overcome friction at small errors
     public static final double kTurretHeightI = 0;
-    public static final double kTurretHeightD = 0.0025; //kD small
-    public static final double kTurretHeightVelocity = 1000; //rps
-    public static final double kTurretHeightAcceleration = 1000; //rps²
+    public static final double kTurretHeightD = 0.5; //kD — increased to damp overshoot
+    public static final double kTurretHeightVelocity = 6; //rps
+    public static final double kTurretHeightAcceleration = 8; //rps²
       
     //Intake PID
     public static final double kIntakeP = 1.; //bullcrap values
@@ -141,7 +168,8 @@ public final class Constants {
     public static final TalonFXConfiguration flyConfigs = new TalonFXConfiguration();
     /** Configuration for the indexer from {@link TurretConfigs} */
     public static final TalonFXConfiguration indexerConfigs = new TalonFXConfiguration();
-    public static final Double rotationRatio = 40.0;
+    // Measured: zeroed, then 180° physical reads 183.251° at 32.98 → corrected to 33.58
+    public static final Double rotationRatio = 33.58;
     public static final Double turretHeight = .508; 
     public static final Double kmaxVelocity = 4.71;
     public static final Double heightRatio = 5.0;
@@ -149,6 +177,11 @@ public final class Constants {
     public static final Double smoothHeight = 0.0;
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
+    // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
+    public static final double ROTATION_FORWARD_LIMIT = 0.4583;
+    public static final double ROTATION_REVERSE_LIMIT = -0.5556;
+    public static final double HEIGHT_FORWARD_LIMIT = 0.92;
+    public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     static {
       //This applies all the configuration
         //basic motor configurations
@@ -158,8 +191,8 @@ public final class Constants {
         rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         //motor limits
-        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold =  0.41; //130.0/360.0;
-        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -0.43; //-220.0/360.0;
+        rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ROTATION_FORWARD_LIMIT; 
+        rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ROTATION_REVERSE_LIMIT; 
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         rotationConfigs.Feedback.SensorToMechanismRatio = rotationRatio;
@@ -172,28 +205,28 @@ public final class Constants {
 
         //height motors stuff
         heightConfigs.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
-        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
+        heightConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
         heightConfigs.CurrentLimits.withStatorCurrentLimit(22);
         heightConfigs.CurrentLimits.withSupplyCurrentLimit(25);
         heightConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         heightConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
-        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = 1.5;
-        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
+        heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = HEIGHT_FORWARD_LIMIT;
+        heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = HEIGHT_REVERSE_LIMIT;
         heightConfigs.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         heightConfigs.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         heightConfigs.Feedback.SensorToMechanismRatio = heightRatio;
         heightConfigs.Slot0.kP = RobotConstants.kTurretHeightP;
         heightConfigs.Slot0.kI = RobotConstants.kTurretHeightI;
         heightConfigs.Slot0.kD = RobotConstants.kTurretHeightD;
-        heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretRotationVelocity;
+        heightConfigs.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kTurretHeightVelocity;
         heightConfigs.MotionMagic.MotionMagicAcceleration = RobotConstants.kTurretHeightAcceleration;
 
         
         //flywheel stuff
         flyConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         flyConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        flyConfigs.CurrentLimits.withStatorCurrentLimit(60);
-        flyConfigs.CurrentLimits.withSupplyCurrentLimit(60);
+        flyConfigs.CurrentLimits.withStatorCurrentLimit(30);
+        flyConfigs.CurrentLimits.withSupplyCurrentLimit(25);
         flyConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         flyConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
         flyConfigs.serialize(); //save
@@ -211,15 +244,19 @@ public final class Constants {
   public static class IntakeConstants {
     /** Configs for the intake motors from {@link IntakeConstants} */
     public static final TalonFXConfiguration intakeConf = new TalonFXConfiguration();
+    public static final TalonFXConfiguration intakeFollowerConf = new TalonFXConfiguration();
+
     /** Configs for the intakeFW motor from {@link IntakeConstants} */
     public static final TalonFXConfiguration intakeFWConf = new TalonFXConfiguration();
     public static final double ActivatedPos = 1.3;
     static {
       //
       intakeConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
-      intakeConf.MotorOutput.withNeutralMode(NeutralModeValue.Brake);
-      intakeConf.CurrentLimits.withStatorCurrentLimit(40);
+      intakeConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
+      intakeConf.CurrentLimits.withStatorCurrentLimit(30);
       intakeConf.CurrentLimits.withStatorCurrentLimitEnable(true);
+      intakeConf.CurrentLimits.withSupplyCurrentLimit(30);
+      intakeConf.CurrentLimits.withSupplyCurrentLimitEnable(true);
       //intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
       intakeConf.Slot0.kP = RobotConstants.kIntakeP;
       intakeConf.Slot0.kI = RobotConstants.kIntakeI;
@@ -230,8 +267,24 @@ public final class Constants {
       //intakeConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
       intakeConf.serialize();
 
+      intakeFollowerConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
+      intakeFollowerConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
+      intakeFollowerConf.CurrentLimits.withStatorCurrentLimit(30);
+      intakeFollowerConf.CurrentLimits.withStatorCurrentLimitEnable(true);
+      intakeFollowerConf.CurrentLimits.withSupplyCurrentLimit(30);
+      intakeFollowerConf.CurrentLimits.withSupplyCurrentLimitEnable(true);
+      //intakeOneConf.Feedback.SensorToMechanismRatio = 6.7;
+      intakeFollowerConf.Slot0.kP = RobotConstants.kIntakeP;
+      intakeFollowerConf.Slot0.kI = RobotConstants.kIntakeI;
+      intakeFollowerConf.Slot0.kD = RobotConstants.kIntakeD;
+      intakeFollowerConf.Slot0.kG = 0;
+      intakeFollowerConf.MotionMagic.MotionMagicCruiseVelocity = RobotConstants.kIntakevelocity;
+      intakeFollowerConf.MotionMagic.MotionMagicAcceleration = RobotConstants.kIntakeAcceleration;
+      //intakeFollowerConf.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+      intakeFollowerConf.serialize();
+
       //Intake FW config
-      intakeFWConf.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
+      intakeFWConf.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
       intakeFWConf.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
       intakeFWConf.CurrentLimits.withStatorCurrentLimit(30);
       intakeFWConf.CurrentLimits.withSupplyCurrentLimit(35);

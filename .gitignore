@@ -1,2 +1,4 @@
 .vscode/
 Manual test/
+.DS_Store
+.playwright-mcp

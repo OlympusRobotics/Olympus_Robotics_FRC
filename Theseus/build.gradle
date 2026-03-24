@@ -57,6 +57,14 @@ dependencies {
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
 
+    // The local refinery roborio MCP project is included via composite build but
+    // the folder is currently empty in this clone which causes Gradle to fail
+    // resolving this dependency. Commenting out the dependency so the project
+    // can build without the local subproject present. If you add the
+    // `refinery-roborio-mcp` subproject or publish this artifact, restore this
+    // implementation line (and add a version if using a remote repository).
+    // implementation 'com.bionanomics.refinery:refinery-roborio-mcp'
+
     roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)
     roborioDebug wpi.java.vendor.jniDebug(wpi.platforms.roborio)
 
@@ -110,4 +118,8 @@ wpi.java.configureTestTasks(test)
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
+    // Ensure Java compiler uses UTF-8 so source files with Unicode banners
+    // (like the ASCII art at the top of Robot.java) compile on Windows where
+    // the default platform encoding may be windows-1252.
+    options.encoding = 'UTF-8'
 }

@@ -7,10 +7,15 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
@@ -46,10 +51,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private double m_lastSimTime;
     private RobotConfig rconfig;
 
+    private static final int MODULE_COUNT = 4;
+    private final StatusSignal<Current>[] m_driveStatorCurrents;
+    private final StatusSignal<AngularVelocity>[] m_driveVelocities;
+
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
-    private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
+    private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.k180deg;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
-    private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
+    private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.kZero;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
 
@@ -137,6 +146,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
+        m_driveStatorCurrents = cacheDriveSignals();
+        m_driveVelocities = cacheDriveVelocitySignals();
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -167,6 +178,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, modules);
+        m_driveStatorCurrents = cacheDriveSignals();
+        m_driveVelocities = cacheDriveVelocitySignals();
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -199,10 +212,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
+        m_driveStatorCurrents = cacheDriveSignals();
+        m_driveVelocities = cacheDriveVelocitySignals();
         if (Utils.isSimulation()) {
             startSimThread();
         }
-        
+        try {
+            rconfig = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
     public void configureAutobuilder() {
         AutoBuilder.configure(
@@ -213,8 +232,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 // optionally outputs feedforwards if OL
                 (speeds, driveFeedforwards) -> this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds)),
                 new PPHolonomicDriveController(
-                    new PIDConstants(5, 0),
-                    new PIDConstants(.8, 0)),
+                    new PIDConstants(20, 0),
+                    new PIDConstants(5, 0)),
                 rconfig, // The robot configuration
                 () -> {
                     // Boolean supplier that controls when the path will be mirrored for the red
@@ -225,7 +244,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     if (alliance.isPresent()) {
                         return alliance.get() == DriverStation.Alliance.Red;
                     }
-                    return false;
+                    return true;
                 },
                 this // Reference to this subsystem to set requirements
         );
@@ -301,7 +320,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Logger.recordOutput("Drivetrain/Speeds", state.Speeds);
         Logger.recordOutput("Drivetrain/ModuleStates", state.ModuleStates);
         Logger.recordOutput("Drivetrain/ModuleTargets", state.ModuleTargets);
-        
+
+        // Per-module drive motor telemetry (used by slip calibration script)
+        double[] statorCurrents = new double[MODULE_COUNT];
+        double[] driveVelocitiesRps = new double[MODULE_COUNT];
+        for (int i = 0; i < MODULE_COUNT; i++) {
+            statorCurrents[i] = m_driveStatorCurrents[i].refresh().getValueAsDouble();
+            driveVelocitiesRps[i] = m_driveVelocities[i].refresh().getValueAsDouble();
+        }
+        Logger.recordOutput("Drivetrain/DriveStatorCurrents", statorCurrents);
+        Logger.recordOutput("Drivetrain/DriveVelocitiesRps", driveVelocitiesRps);
     }
     
     public static boolean getAlliance() {
@@ -314,6 +342,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 return false;
             }
         }
+
+    @SuppressWarnings("unchecked")
+    private StatusSignal<Current>[] cacheDriveSignals() {
+        StatusSignal<Current>[] signals = new StatusSignal[MODULE_COUNT];
+        for (int i = 0; i < MODULE_COUNT; i++) {
+            TalonFX motor = getModule(i).getDriveMotor();
+            signals[i] = motor.getStatorCurrent();
+        }
+        return signals;
+    }
+
+    @SuppressWarnings("unchecked")
+    private StatusSignal<AngularVelocity>[] cacheDriveVelocitySignals() {
+        StatusSignal<AngularVelocity>[] signals = new StatusSignal[MODULE_COUNT];
+        for (int i = 0; i < MODULE_COUNT; i++) {
+            TalonFX motor = getModule(i).getDriveMotor();
+            signals[i] = motor.getVelocity();
+        }
+        return signals;
+    }
 
     private void startSimThread() {
         m_lastSimTime = Utils.getCurrentTimeSeconds();
