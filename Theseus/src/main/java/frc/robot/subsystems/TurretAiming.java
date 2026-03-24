@@ -302,14 +302,14 @@ public class TurretAiming extends SubsystemBase {
         double speed = (scoringMode != null)
             ? scoringMode.flywheelSpeed
             : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", 1), 0, 1);
-        flywheelMotor.set(speed);
+        flywheelMotor.set(.8);
                 }
     public void index() {
         isShooting = true;
         double speed = (scoringMode != null)
             ? scoringMode.flywheelSpeed
             : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", .8), 0, 1);
-        flywheelMotor.set(speed);
+        flywheelMotor.set(.7);
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -317,14 +317,14 @@ public class TurretAiming extends SubsystemBase {
     }
     public void autoshoot(){
         isShooting = true;
-        flywheelMotor.set(.5);
+        flywheelMotor.set(.6);
     }
     public void autoindex(){
         isShooting = true;
         double speed = (scoringMode != null)
             ? scoringMode.flywheelSpeed
             : MathUtil.clamp(SmartDashboard.getNumber("Shoot Speed", .3), 0, 1);
-        flywheelMotor.set(.5);
+        flywheelMotor.set(.51);
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));        

@@ -144,12 +144,12 @@ public class RobotContainer {
         aiming.setMcpJoystick(mcpJoystick);
         configureBindings();
         NamedCommands.registerCommand("Rev", autoRev.withTimeout(3));
-        NamedCommands.registerCommand("shoot", autoshoot.withTimeout(20));
+        NamedCommands.registerCommand("shoot", autoshoot.withTimeout(5));
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(20));
         NamedCommands.registerCommand("startaim", startingaim.withTimeout(6));
         NamedCommands.registerCommand("endaim", endingaim.withTimeout(20));
         NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(.5));
-        NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(.5));
+        NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(1));
         SmartDashboard.putData("Field", field);
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("straight through right", autoChooser);
@@ -161,6 +161,8 @@ public class RobotContainer {
         SmartDashboard.putData("Bad Grab n' Go", autoChooser);
         SmartDashboard.putData("Good Grab 'n Go", autoChooser);
         SmartDashboard.putData("Back up and Shoot", autoChooser);
+        SmartDashboard.putData("New Auto", autoChooser);
+
         // Override "Zero Turret" to also zero the intake position
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
             aiming.zeroTurret();

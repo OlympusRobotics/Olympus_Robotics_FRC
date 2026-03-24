@@ -49,7 +49,7 @@ public class Intake extends SubsystemBase {
     intFWMot.set(.35);
   }
   public void jerkIntake() {
-    m_inkMot.setVoltage(-6);
+    m_inkMot.setVoltage(-12);
     m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
   }
   public void spinflywheel() {
@@ -60,8 +60,9 @@ public class Intake extends SubsystemBase {
   }
   // stops indexer and returns intake to original position
   public void endIntake() {
-    target = 0;
-    intFWMot.set(0);
+    m_inkMot.setVoltage(0);
+    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
+    m_inkMotFollower.set(0);
   }
   public void outakeIntake() {
     target = ActivatedPos;
