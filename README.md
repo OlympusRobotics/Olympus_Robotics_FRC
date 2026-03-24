@@ -28,4 +28,4 @@ Each folder contains the WPILib code for that season's robot. Code before 2024 u
 | [Perry](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/perry)                 | 2024 | Python | Legacy |
 | [BobTheCheezIt](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/BobTheCheezIt) | 2023 | C++    | Legacy |
 | [Marvin](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/marvin)               | 2022 | C++    | Legacy |
-| [2020 Robot, Ted](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/2020%2520Robot,%2520Ted)  |≈2020 | C++    | Legacy |
+| [2020 Robot, Ted](https://github.com/OlympusRobotics/Olympus_Robotics_FRC/tree/main/2020%20Robot%2C%20Ted)  |≈2020 | C++    | Legacy |
