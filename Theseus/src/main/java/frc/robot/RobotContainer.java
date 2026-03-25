@@ -224,10 +224,15 @@ public class RobotContainer {
         whimseystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
         whimseystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop()));
 
-        whimseystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
-        whimseystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
-        whimseystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
-        whimseystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
+        whimseystick.y().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kForward));
+        whimseystick.a().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kReverse));
+        whimseystick.b().whileTrue(TurretAiming.flySysid.dynamic(Direction.kForward));
+        whimseystick.x().whileTrue(TurretAiming.flySysid.dynamic(Direction.kReverse));
+        
+        //whimseystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
+        //whimseystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
+        //whimseystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
+        //whimseystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
         whimseystick.povDown().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kForward));
         whimseystick.povUp().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kReverse));
         whimseystick.povRight().whileTrue(drivetrain.sysIdDynamicRot(Direction.kForward));

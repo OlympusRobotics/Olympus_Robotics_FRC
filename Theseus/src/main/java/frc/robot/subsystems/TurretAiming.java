@@ -5,14 +5,17 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -23,6 +26,8 @@ import edu.wpi.first.math.MathUtil;
 import frc.robot.McpJoystick;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.ScoringMode;
+
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.TurretConfigs.*;
 
 import org.littletonrobotics.junction.Logger;
@@ -80,6 +85,8 @@ public class TurretAiming extends SubsystemBase {
         return (isShooting || isRobotStationary()) ? rememberedHeight : HEIGHT_REVERSE_LIMIT;
     }
 
+    public static final SysIdRoutine flySysid;
+
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -114,6 +121,21 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         SmartDashboard.putNumber("Shoot Speed", 1.0);
+
+        flySysid = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,        // Use default ramp rate (1 V/s)
+                Volts.of(10), // Use dynamic voltage of 7 V
+                null,        // Use default timeout (10 s)
+                // Log state with SignalLogger class
+                state -> SignalLogger.writeString("SysIdTurret_State", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                voltage -> flywheelMotor.setVoltage(voltage.in(Volts)),
+                null,
+                this
+            )
+        );
     }
 
     /** Set the MCP joystick reference for simulated input. */
