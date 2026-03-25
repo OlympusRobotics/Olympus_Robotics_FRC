@@ -97,17 +97,13 @@ public class RobotContainer {
     private final Command intakingOut = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
       .until(() -> joystick.leftBumper().getAsBoolean() == false);
 
-    /** Locks the turret 🤯*/
-    public final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors())
-      .until(() -> joystick.x().getAsBoolean() == false); //X button
-
     /** Resets the turret */
     public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
       .until(() -> joystick.b().getAsBoolean() == false); //B button
 
-      /**Unlocks the turret and tartet aims */
-    private final Command unlocksTurret = aiming.startEnd(() -> aiming.targetAim(), () -> aiming.targetAim())
-      .until(() -> joystick.a().getAsBoolean() == false); //Start button
+
+      private final Command limelightAiming = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.stopMotors())
+        .until(() -> joystick.a().getAsBoolean() == false); //Y button
 
     /*private final Command llAutoAim = new RunCommand(() -> { //stinky stinky limelight stuff
 
@@ -195,9 +191,8 @@ public class RobotContainer {
         joystick.rightBumper().whileTrue(shoot);
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
         leftTrigger.whileTrue(intakeToggle);
-        joystick.x().whileTrue(locksTurret);
         joystick.b().whileTrue(resetsTurret);
-        joystick.a().whileTrue(unlocksTurret);
+        joystick.a().onTrue(limelightAiming);
         joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
         joystick.start().onTrue(aiming.runOnce(() -> aiming.toggleScoringMode()));
         joystick.back().onTrue(

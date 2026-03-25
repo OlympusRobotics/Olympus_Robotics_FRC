@@ -82,7 +82,7 @@ public class TunerConstants {
 
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
-    public static final CANBus kCANBus = new CANBus("", "./logs/example.hoot");
+    public static final CANBus kCANBus = new CANBus("Drivetrain", "./logs/example.hoot");
 
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
@@ -94,7 +94,7 @@ public class TunerConstants {
 
     private static final double kDriveGearRatio = 5.79;
     private static final double kSteerGearRatio = 24;
-    private static final Distance kWheelRadius = Inches.of(4);
+    private static final Distance kWheelRadius = Inches.of(2);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;

@@ -182,6 +182,7 @@ public final class Constants {
     public static final double ROTATION_REVERSE_LIMIT = -0.5556;
     public static final double HEIGHT_FORWARD_LIMIT = 0.92;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
+    
     static {
       //This applies all the configuration
         //basic motor configurations
