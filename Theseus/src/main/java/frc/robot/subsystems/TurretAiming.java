@@ -295,27 +295,40 @@ public class TurretAiming extends SubsystemBase {
 
     public void limelightAim() {
         if (robotPose == null || turretPosition == null) return;
+        if (wasDisabled) {
+            rotationSetpoint = cachedRotationPos;
+            heightSetpoint = cachedHeightPos;
+            rememberedHeight = cachedHeightPos;
+            wasDisabled = false;
+        }
         limelightAiming = true;
         double TX = 0;
         double TY = 0;
         LimelightHelpers.setPriorityTagID("limelight-stinky", limelightAcceptedTagID);
         TX = LimelightHelpers.getTX("limelight-stinky");
         System.out.println(TX);
+        TY = Math.IEEEremainder(TX, 360);
         TY = TX / 360.0;
         TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-        rotationMotor.setControl(rotationoutput.withPosition(TY));
-        System.out.println(TY);
+        if (Math.abs(TY) > .001) {
+            rotationSetpoint += (.2 * TY);
+        }
+
+        System.out.println(rotationSetpoint);
+        
+    
+        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
         SmartDashboard.putNumber("desiredrotation", TY);
     }
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
         isShooting = true;
-        flywheelMotor.set(.8);
+        flywheelMotor.set(.7);
                 }
     public void index() {
         isShooting = true;
-        flywheelMotor.set(.7);
+        flywheelMotor.set(.6);
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -514,7 +527,6 @@ public class TurretAiming extends SubsystemBase {
     @Override
     public void periodic() {
         robotPose = drivetrain.getState().Pose;
-        limelightAim();
         turretPosition = robotPose.transformBy(
             new Transform2d(new Translation2d(RobotConstants.kTurretXOffsetMeters, 0), new Rotation2d()))
             .getTranslation();
@@ -529,9 +541,11 @@ public class TurretAiming extends SubsystemBase {
         cachedRotationPos = rotationMotor.getPosition().getValueAsDouble();
         cachedHeightPos = heightMotor.getPosition().getValueAsDouble();
         cachedFlywheelVel = flywheelMotor.getVelocity().getValueAsDouble();
-        cachedThroughborePos = throughbore.get();
 
-        targetAim();
+        if (limelightAiming != true) {
+            targetAim();
+        }
+        limelightAim();
 
         // Check MCP simulated joystick for height/rotation/shoot commands
         if (mcpJoystick != null && mcpJoystick.isActive() && DriverStation.isEnabled()) {
