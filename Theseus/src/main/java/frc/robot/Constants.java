@@ -178,8 +178,8 @@ public final class Constants {
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
     // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
-    public static final double ROTATION_FORWARD_LIMIT = 0.4583;
-    public static final double ROTATION_REVERSE_LIMIT = -0.5556;
+    public static final double ROTATION_FORWARD_LIMIT = 0.4228;
+    public static final double ROTATION_REVERSE_LIMIT = -0.616699;
     public static final double HEIGHT_FORWARD_LIMIT = 0.92;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     

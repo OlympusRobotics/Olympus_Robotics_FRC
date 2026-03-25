@@ -54,6 +54,7 @@ public class TurretAiming extends SubsystemBase {
     private boolean mcpShooting = false;
     private boolean mcpAutoAimWasPressed = false;
     private boolean mcpHeadingHoldWasPressed = false;
+    private boolean limelightAiming = false;
     private ScoringMode scoringMode = null;
     private int manualHoldCycles = 0;
     private int manualHeightHoldCycles = 0;
@@ -245,7 +246,6 @@ public class TurretAiming extends SubsystemBase {
             double robotRelative = Math.IEEEremainder(heldFieldAngle - heading, 2 * Math.PI);
             desiredRotation = -robotRelative / (2 * Math.PI);
             desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-            SmartDashboard.putNumber("desiredRotation", desiredRotation);
 
             double rotError = desiredRotation - rotationSetpoint;
             rotationSetpoint += rotationTau * rotError;
@@ -265,7 +265,6 @@ public class TurretAiming extends SubsystemBase {
         desiredRotation  = vectorCalculations();
         // Clamp to soft limits (±135° from front-of-robot zero)
         desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-        SmartDashboard.putNumber("desiredRotation", desiredRotation);
 
         if (turretLocked || !autoAimEnabled) {
             //if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
@@ -295,13 +294,18 @@ public class TurretAiming extends SubsystemBase {
     }
 
     public void limelightAim() {
-        if (robotPose == null || turretPosition == null || !isShooting) return;
+        if (robotPose == null || turretPosition == null) return;
+        limelightAiming = true;
+        double TX = 0;
+        double TY = 0;
         LimelightHelpers.setPriorityTagID("limelight-stinky", limelightAcceptedTagID);
-        targetAngle = LimelightHelpers.getTX("limelight-stinky");
-        targetAngle = Math.IEEEremainder(targetAngle, 360.0);
-        desiredRotation = targetAngle / 360.0;
-        desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-        rotationMotor.setControl(rotationoutput.withPosition(desiredRotation));
+        TX = LimelightHelpers.getTX("limelight-stinky");
+        System.out.println(TX);
+        TY = TX / 360.0;
+        TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        rotationMotor.setControl(rotationoutput.withPosition(TY));
+        System.out.println(TY);
+        SmartDashboard.putNumber("desiredrotation", TY);
     }
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
@@ -499,6 +503,7 @@ public class TurretAiming extends SubsystemBase {
 
     /**Stops all turret related motors, the Rotation, Height, and Indexer motors */
     public void stopMotors(){
+        limelightAiming = false;
         turretLocked = false;
         rotationMotor.stopMotor();
         heightMotor.stopMotor();
@@ -509,6 +514,7 @@ public class TurretAiming extends SubsystemBase {
     @Override
     public void periodic() {
         robotPose = drivetrain.getState().Pose;
+        limelightAim();
         turretPosition = robotPose.transformBy(
             new Transform2d(new Translation2d(RobotConstants.kTurretXOffsetMeters, 0), new Rotation2d()))
             .getTranslation();
@@ -584,6 +590,7 @@ public class TurretAiming extends SubsystemBase {
         Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
         Logger.recordOutput("Turret/HeadingHoldMode", headingHoldMode);
         Logger.recordOutput("Turret/ScoringMode", scoringMode != null ? scoringMode.name() : "NONE");
+        SmartDashboard.putNumber("desiredRotation", desiredRotation);
         
         if (turretPosition != null) {
             Logger.recordOutput("Turret/PositionX", turretPosition.getX());
