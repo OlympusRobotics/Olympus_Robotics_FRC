@@ -86,6 +86,7 @@ public final class Constants {
     public static final int kIntakeFollowerID = 17;
     public static final int kIntakeFWID = 18;
     public static final int kIntakeFWFollowerID = 23;
+    public static final int kIntakeVibratorID = 24;
 
     //Rotation kP
     public static final double kFrontLeftP = 0.56;

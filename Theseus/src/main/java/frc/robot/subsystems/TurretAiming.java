@@ -5,17 +5,14 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -24,10 +21,9 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
 import edu.wpi.first.math.MathUtil;
 import frc.robot.McpJoystick;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.ScoringMode;
-
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.TurretConfigs.*;
 
 import org.littletonrobotics.junction.Logger;
@@ -85,8 +81,6 @@ public class TurretAiming extends SubsystemBase {
         return (isShooting || isRobotStationary()) ? rememberedHeight : HEIGHT_REVERSE_LIMIT;
     }
 
-    public static final SysIdRoutine flySysid;
-
     /** Subsystem for the turret */
     public TurretAiming(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -121,21 +115,6 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         SmartDashboard.putNumber("Shoot Speed", 1.0);
-
-        flySysid = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,        // Use default ramp rate (1 V/s)
-                Volts.of(10), // Use dynamic voltage of 7 V
-                null,        // Use default timeout (10 s)
-                // Log state with SignalLogger class
-                state -> SignalLogger.writeString("SysIdTurret_State", state.toString())
-            ),
-            new SysIdRoutine.Mechanism(
-                voltage -> flywheelMotor.setVoltage(voltage.in(Volts)),
-                null,
-                this
-            )
-        );
     }
 
     /** Set the MCP joystick reference for simulated input. */
@@ -317,31 +296,50 @@ public class TurretAiming extends SubsystemBase {
 
     public void limelightAim() {
         if (robotPose == null || turretPosition == null) return;
+        if (!LimelightHelpers.getTV("limelight-stinky")) {
+            return;
+        }
+        if (wasDisabled) {
+            rotationSetpoint = cachedRotationPos;
+            heightSetpoint = cachedHeightPos;
+            rememberedHeight = cachedHeightPos;
+            wasDisabled = false;
+        }
         limelightAiming = true;
         double TX = 0;
         double TY = 0;
         LimelightHelpers.setPriorityTagID("limelight-stinky", limelightAcceptedTagID);
         TX = LimelightHelpers.getTX("limelight-stinky");
-        System.out.println(TX);
+        TY = Math.IEEEremainder(TX, 360);
         TY = TX / 360.0;
         TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-        rotationMotor.setControl(rotationoutput.withPosition(TY));
-        System.out.println(TY);
+        if (Math.abs(TY) > .001) {
+            rotationSetpoint += (.2 * TY);
+        }
+        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
         SmartDashboard.putNumber("desiredrotation", TY);
+        double ranging = Math.hypot(LimelightHelpers.getBotPose2d("limelight-stinky").getTranslation().getX(), 
+        LimelightHelpers.getBotPose2d("limelight-stinky").getTranslation().getY());
+        double g = 9.80665;
+        double speed = ranging / Math.cos(70) * Math.sqrt(g / (2 * (Math.abs((ranging * Math.tan(70)) - (1.8288 - turretHeight)))));
+        System.out.println(speed / (Math.PI * 4));
+        flywheelMotor.set(speed / (Math.PI * 4));
+        indexerLMotor.setVoltage(-12);
+        feedMotor.setVoltage(-12);
+        indexerRMotor.setVoltage(-12);
     }
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
-        isShooting = true;
-        flywheelMotor.set(.8);
-                }
+        flywheelMotor.set(.7);
+    }
     public void index() {
         isShooting = true;
-        flywheelMotor.set(.7);
+        if (limelightAiming) {limelightAim();}
+        else {flywheelMotor.set(.6);}
         indexerLMotor.setVoltage(-12);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
-
     }
     public void autoshoot(){
         isShooting = true;
@@ -360,6 +358,7 @@ public class TurretAiming extends SubsystemBase {
     /** Stops shooting */
     public void unshoot(){
         isShooting = false;
+        limelightAiming = true;
         flywheelMotor.stopMotor();
         indexerLMotor.stopMotor();
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -418,6 +417,7 @@ public class TurretAiming extends SubsystemBase {
     public void manualHeight(double direction) {
         autoAimEnabled = false;
         headingHoldMode = false;
+        limelightAiming = false;
         manualHeightHoldCycles++;
         double t = Math.min(1.0, (double) manualHeightHoldCycles / MANUAL_RAMP_CYCLES);
         double step = HEIGHT_STEP_SLOW + (HEIGHT_STEP_FAST - HEIGHT_STEP_SLOW) * t;
@@ -444,6 +444,7 @@ public class TurretAiming extends SubsystemBase {
     /** Switch back to auto-aim mode */
     public void enableAutoAim() {
         autoAimEnabled = true;
+        limelightAiming = true;
         headingHoldMode = false;
     }
 
@@ -536,7 +537,6 @@ public class TurretAiming extends SubsystemBase {
     @Override
     public void periodic() {
         robotPose = drivetrain.getState().Pose;
-        limelightAim();
         turretPosition = robotPose.transformBy(
             new Transform2d(new Translation2d(RobotConstants.kTurretXOffsetMeters, 0), new Rotation2d()))
             .getTranslation();
@@ -551,10 +551,13 @@ public class TurretAiming extends SubsystemBase {
         cachedRotationPos = rotationMotor.getPosition().getValueAsDouble();
         cachedHeightPos = heightMotor.getPosition().getValueAsDouble();
         cachedFlywheelVel = flywheelMotor.getVelocity().getValueAsDouble();
-        cachedThroughborePos = throughbore.get();
 
-        targetAim();
-
+        if (limelightAiming != true) {
+            targetAim();
+        }
+        if (limelightAiming == true) {
+            limelightAim();
+        }
         // Check MCP simulated joystick for height/rotation/shoot commands
         if (mcpJoystick != null && mcpJoystick.isActive() && DriverStation.isEnabled()) {
             int mcpPov = mcpJoystick.getPOV();
