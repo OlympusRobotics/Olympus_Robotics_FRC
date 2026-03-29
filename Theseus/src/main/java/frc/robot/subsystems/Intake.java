@@ -21,6 +21,7 @@ public class Intake extends SubsystemBase {
   private final TalonFX intFWMot;
   private final TalonFX intFWMotFollower;
   private final TalonFX m_inkMotFollower;
+  private final TalonFX vibratorMot;
   private double target;
   public Intake() {
 
@@ -29,6 +30,7 @@ public class Intake extends SubsystemBase {
     m_inkMotFollower = new TalonFX(RobotConstants.kIntakeFollowerID);
     intFWMot = new TalonFX(RobotConstants.kIntakeFWID);
     intFWMotFollower = new TalonFX(RobotConstants.kIntakeFWFollowerID);
+    vibratorMot = new TalonFX(RobotConstants.kIntakeVibratorID);
 
     target = 0;
 
@@ -37,24 +39,32 @@ public class Intake extends SubsystemBase {
     intFWMot.getConfigurator().apply(intakeFWConf);
     intFWMotFollower.getConfigurator().apply(intakeFWConf);
     intFWMotFollower.setControl(new Follower(intFWMot.getDeviceID(), MotorAlignmentValue.Opposed));
-
+    vibratorMot.getConfigurator().apply(intakeFWConf);
   }
 
   // turns indexer on and sends intake out
   public void startIntake() {
     m_inkMot.set(1);
     m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
-    intFWMot.set(.35);
+    intFWMot.set(.4);
+    intFWMotFollower.set(-.4);
+    vibratorMot.set(.35);
   }
   public void jerkIntake() {
-    m_inkMot.setVoltage(-12);
-    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
+    vibratorMot.set(.35);
   }
   public void spinflywheel() {
-    intFWMot.set(.35);
+    intFWMot.set(.4);
+    vibratorMot.set(.35);
+    intFWMotFollower.set(-.4);
+
+
   }
   public void stopspin() {
-    intFWMot.set(0);
+    intFWMot.stopMotor();;
+    vibratorMot.stopMotor();
+    intFWMotFollower.stopMotor();
+
   }
   // stops indexer and returns intake to original position
   public void endIntake() {

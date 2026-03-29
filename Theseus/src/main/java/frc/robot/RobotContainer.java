@@ -13,6 +13,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -44,7 +45,7 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt(); */
 
     //initalize controllers (joy and whimsey lmao im so funny :3)
-    private final CommandXboxController joystick = new CommandXboxController(0);
+    public final CommandXboxController joystick = new CommandXboxController(0);
     private final CommandXboxController whimseystick = new CommandXboxController(1);
 
     //initalize the subsystems
@@ -89,7 +90,7 @@ public class RobotContainer {
 
     private final Command autoshoot = aiming.startEnd(() -> aiming.autoindex(), () -> aiming.unshoot());
 
-    private final Command startingaim = aiming.startEnd(() -> aiming.startingaim(), () -> aiming.unshoot());
+    //private final Command startingaim = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.unshoot());
 
     private final Command endingaim = aiming.startEnd(() -> aiming.startingaim(), () -> aiming.unshoot());
 
@@ -101,9 +102,13 @@ public class RobotContainer {
     public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
       .until(() -> joystick.b().getAsBoolean() == false); //B button
 
+    private final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the turret 🤯
+    .until(() -> joystick.x().getAsBoolean() == false); //X button
 
-      private final Command limelightAiming = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.stopMotors())
-        .until(() -> joystick.a().getAsBoolean() == false); //Y button
+      //private final Command autoaim = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.stopMotors());
+
+
+      private final Command limelightAiming = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.unshoot());
 
     /*private final Command llAutoAim = new RunCommand(() -> { //stinky stinky limelight stuff
 
@@ -136,32 +141,29 @@ public class RobotContainer {
 
     public RobotContainer() {
       
+      //DriverStation.JoystickConnectionWarningSilenced(true);
+        //DriverStation.silenceJoystickConnectionWarning(true);
         drivetrain.configureAutobuilder();
         aiming.setMcpJoystick(mcpJoystick);
         configureBindings();
         NamedCommands.registerCommand("Rev", autoRev.withTimeout(3));
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(5));
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(20));
-        NamedCommands.registerCommand("startaim", startingaim.withTimeout(6));
+        //NamedCommands.registerCommand("startaim", autoaim.withTimeout(6));
         NamedCommands.registerCommand("endaim", endingaim.withTimeout(20));
         NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(.5));
         NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(1));
         SmartDashboard.putData("Field", field);
         autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("straight through right", autoChooser);
-        SmartDashboard.putData("straight through left", autoChooser);
-        SmartDashboard.putData("steal right ", autoChooser);
-        SmartDashboard.putData("steal left", autoChooser);
-        SmartDashboard.putData("right half x2 score", autoChooser);
-        SmartDashboard.putData("left half x2 score", autoChooser);
-        SmartDashboard.putData("Bad Grab n' Go", autoChooser);
-        SmartDashboard.putData("Good Grab 'n Go", autoChooser);
         SmartDashboard.putData("Back up and Shoot", autoChooser);
-        SmartDashboard.putData("New Auto", autoChooser);
+        SmartDashboard.putData("Disrupt", autoChooser);
+        SmartDashboard.putData("Full disrupt", autoChooser);
+        SmartDashboard.putData("Full Disrupt Right", autoChooser);
+        SmartDashboard.putData("Disrupt Right", autoChooser);
 
         // Override "Zero Turret" to also zero the intake position
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
-            aiming.zeroTurret();
+            aiming.zeroTurret/*  */();
             intake.zeroPosition();
         }).ignoringDisable(true));
     }
@@ -193,6 +195,8 @@ public class RobotContainer {
         leftTrigger.whileTrue(intakeToggle);
         joystick.b().whileTrue(resetsTurret);
         joystick.a().onTrue(limelightAiming);
+        joystick.x().whileTrue(locksTurret);
+        joystick.a().onTrue(intakeToggle);
         joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
         joystick.start().onTrue(aiming.runOnce(() -> aiming.toggleScoringMode()));
         joystick.back().onTrue(
@@ -224,10 +228,15 @@ public class RobotContainer {
         whimseystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
         whimseystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop()));
 
-        whimseystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
-        whimseystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
-        whimseystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
-        whimseystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
+        /* whimseystick.y().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kForward));
+        whimseystick.a().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kReverse));
+        whimseystick.b().whileTrue(TurretAiming.flySysid.dynamic(Direction.kForward));
+        whimseystick.x().whileTrue(TurretAiming.flySysid.dynamic(Direction.kReverse)); */
+        
+        //whimseystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
+        //whimseystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
+        //whimseystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
+        //whimseystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
         whimseystick.povDown().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kForward));
         whimseystick.povUp().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kReverse));
         whimseystick.povRight().whileTrue(drivetrain.sysIdDynamicRot(Direction.kForward));
