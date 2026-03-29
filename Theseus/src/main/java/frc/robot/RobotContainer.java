@@ -13,6 +13,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -101,6 +102,9 @@ public class RobotContainer {
     public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
       .until(() -> joystick.b().getAsBoolean() == false); //B button
 
+    private final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the turret 🤯
+    .until(() -> joystick.x().getAsBoolean() == false); //X button
+
       //private final Command autoaim = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.stopMotors());
 
 
@@ -137,6 +141,8 @@ public class RobotContainer {
 
     public RobotContainer() {
       
+      //DriverStation.JoystickConnectionWarningSilenced(true);
+        //DriverStation.silenceJoystickConnectionWarning(true);
         drivetrain.configureAutobuilder();
         aiming.setMcpJoystick(mcpJoystick);
         configureBindings();
@@ -149,16 +155,11 @@ public class RobotContainer {
         NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(1));
         SmartDashboard.putData("Field", field);
         autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("straight through right", autoChooser);
-        SmartDashboard.putData("straight through left", autoChooser);
-        SmartDashboard.putData("steal right ", autoChooser);
-        SmartDashboard.putData("steal left", autoChooser);
-        SmartDashboard.putData("right half x2 score", autoChooser);
-        SmartDashboard.putData("left half x2 score", autoChooser);
-        SmartDashboard.putData("Bad Grab n' Go", autoChooser);
-        //kSmartDashboard.putData("Good Grab 'n Go", autoChooser);
         SmartDashboard.putData("Back up and Shoot", autoChooser);
-        SmartDashboard.putData("New Auto", autoChooser);
+        SmartDashboard.putData("Disrupt", autoChooser);
+        SmartDashboard.putData("Full disrupt", autoChooser);
+        SmartDashboard.putData("Full Disrupt Right", autoChooser);
+        SmartDashboard.putData("Disrupt Right", autoChooser);
 
         // Override "Zero Turret" to also zero the intake position
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
@@ -194,6 +195,8 @@ public class RobotContainer {
         leftTrigger.whileTrue(intakeToggle);
         joystick.b().whileTrue(resetsTurret);
         joystick.a().onTrue(limelightAiming);
+        joystick.x().whileTrue(locksTurret);
+        joystick.a().onTrue(intakeToggle);
         joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
         joystick.start().onTrue(aiming.runOnce(() -> aiming.toggleScoringMode()));
         joystick.back().onTrue(

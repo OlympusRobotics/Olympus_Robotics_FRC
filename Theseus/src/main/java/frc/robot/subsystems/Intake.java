@@ -40,24 +40,31 @@ public class Intake extends SubsystemBase {
     intFWMotFollower.getConfigurator().apply(intakeFWConf);
     intFWMotFollower.setControl(new Follower(intFWMot.getDeviceID(), MotorAlignmentValue.Opposed));
     vibratorMot.getConfigurator().apply(intakeFWConf);
-
   }
 
   // turns indexer on and sends intake out
   public void startIntake() {
     m_inkMot.set(1);
     m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
-    intFWMot.set(.35);
+    intFWMot.set(.4);
+    intFWMotFollower.set(-.4);
     vibratorMot.set(.35);
   }
   public void jerkIntake() {
     vibratorMot.set(.35);
   }
   public void spinflywheel() {
-    intFWMot.set(.35);
+    intFWMot.set(.4);
+    vibratorMot.set(.35);
+    intFWMotFollower.set(-.4);
+
+
   }
   public void stopspin() {
-    intFWMot.set(0);
+    intFWMot.stopMotor();;
+    vibratorMot.stopMotor();
+    intFWMotFollower.stopMotor();
+
   }
   // stops indexer and returns intake to original position
   public void endIntake() {
