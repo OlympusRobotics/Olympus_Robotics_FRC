@@ -141,7 +141,7 @@ public final class Constants {
     public static final double kTurretRotationI = 0;
     public static final double kTurretRotationD = 0.0; // kD ≈ 0.001–0.01
     public static final double kTurretRotationVelocity = 3; //rps
-    public static final double kTurretRotationAcceleration = 6; //rps²
+    public static final double kTurretRotationAcceleration = 120; //rps²
 
     public static final double kTurretHeightP = 50; //kP — needs enough voltage to overcome friction at small errors
     public static final double kTurretHeightI = 0;
