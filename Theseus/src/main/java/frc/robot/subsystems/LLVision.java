@@ -4,13 +4,22 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.PoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-/** @Deprecated We shouldn't be using this */
 public class LLVision extends SubsystemBase {
+  //private static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+  private final CommandSwerveDrivetrain m_drivetrain;
+  private final TurretAiming m_turret;
 
-  /**@Deprecated We shouldnt be using this */
-  public LLVision() {}
+  public LLVision(CommandSwerveDrivetrain drivetrain, TurretAiming turret) {
+    this.m_drivetrain = drivetrain;
+    this.m_turret = turret;
+  }
 
   /**
    *  Gets the coordinates and angle of current Apriltag
@@ -45,6 +54,24 @@ public class LLVision extends SubsystemBase {
     };
 
 
+  }
+
+  /** Estimates the robot's pose using MegaTag1 */
+  public void estimateRobotPose(){
+    //TODO these need updated, the offsets, especially the turret rotation may need to be corrected
+    //Updates the limelights position as the turret rotates
+    LimelightHelpers.setCameraPose_RobotSpace("limelight-stinky", 0, 0, 1.5, 30, 0, m_turret.getCurRotation() + 0);
+    //gets the MegaTag1 pose estimation from the limelight
+     LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-stinky");
+      
+      if(mt1.tagCount == 0) return;
+      if(mt1.tagCount == 1 && mt1.rawFiducials.length == 1) {
+        if(mt1.rawFiducials[0].ambiguity > .7) return;
+        if(mt1.rawFiducials[0].distToCamera > 3) return;
+      }
+      //Applies the estimated pose
+      m_drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.5,.5,9999999));
+      m_drivetrain.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);
   }
 
   //@Override

@@ -396,6 +396,12 @@ public class TurretAiming extends SubsystemBase {
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         
     }
+    /** Roughly gets the curret rotation of the turret 
+     * @return The rotation of the motor in degrees
+    */
+    public Double getCurRotation() {
+        return rotationMotor.getPosition().getValueAsDouble() * 360.0;
+    }
     /**Starts moving the Indexer */
     public void feedIndexer() {
         indexerLMotor.set(-1);

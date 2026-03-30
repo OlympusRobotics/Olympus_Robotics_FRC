@@ -40,7 +40,7 @@ src/main/java/frc/robot/
     ├── CameraUsing.java               # PhotonVision multi-camera vision
     ├── Camera.java                    # Single-camera utility
     ├── LLVision.java                  # (deprecated — Limelight, unused)
-    └── LimelightHelpers.java          # (deprecated — Limelight helper)
+    └── LimelightHelpers.java          # Limelight helper library
 ```
 
 ## Subsystems
