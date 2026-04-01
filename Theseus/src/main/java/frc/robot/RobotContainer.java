@@ -89,10 +89,6 @@ public class RobotContainer {
 
     private final Command autoshoot = aiming.startEnd(() -> aiming.autoindex(), () -> aiming.unshoot());
 
-    //private final Command startingaim = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.unshoot());
-
-    private final Command endingaim = aiming.startEnd(() -> aiming.startingaim(), () -> aiming.unshoot());
-
     /** Reverse indexer only (left bumper) */
     private final Command intakingOut = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
       .until(() -> joystick.leftBumper().getAsBoolean() == false);
@@ -148,8 +144,6 @@ public class RobotContainer {
         NamedCommands.registerCommand("Rev", autoRev.withTimeout(3));
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(5));
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(20));
-        //NamedCommands.registerCommand("startaim", autoaim.withTimeout(6));
-        NamedCommands.registerCommand("endaim", endingaim.withTimeout(20));
         NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(.5));
         NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(1));
         SmartDashboard.putData("Field", field);

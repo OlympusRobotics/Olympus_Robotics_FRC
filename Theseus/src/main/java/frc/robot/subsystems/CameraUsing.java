@@ -242,6 +242,6 @@ public class CameraUsing extends SubsystemBase {
 
     @Override
     public void periodic() {
-        processCamera();
+        //processCamera();
     }
 }

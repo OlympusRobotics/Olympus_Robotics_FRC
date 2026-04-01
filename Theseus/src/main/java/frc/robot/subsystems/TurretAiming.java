@@ -31,7 +31,7 @@ public class TurretAiming extends SubsystemBase {
     private Translation2d turretPosition;
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, rotationSetpoint, heightSetpoint, rotationTau, heightTau, desiredRotation, 
-    cachedTargetHeight;
+    cachedTargetHeight, desiredHeight, rotationsPerDegree, desiredHeightAngle;
     public static double cachedRotationPos;
     private double cachedHeightPos;
     private double cachedFlywheelVel;
@@ -102,6 +102,7 @@ public class TurretAiming extends SubsystemBase {
         heightTau = 1.0;
         rotationTau = .15;
         desiredRotation = 0;
+        rotationsPerDegree = 1.45 / (26 - 67);
         turretTargetPub = NetworkTableInstance.getDefault()
             .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
         //Set up motors
@@ -190,7 +191,7 @@ public class TurretAiming extends SubsystemBase {
         targetAngle = (Math.atan2(targety, targetx));
         boolean velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
         if (velocityCompensation) {
-            double shootingXSpeed = kmaxVelocity*Math.cos(maxFormula());
+            double shootingXSpeed = kmaxVelocity*Math.cos(Math.toRadians(65));
             // Add robot velocity so the projectile leads the target
             double actualX = (shootingXSpeed * Math.cos(targetAngle));
             double actualY = (shootingXSpeed * Math.sin(targetAngle)) + (drivetrain.getChassisSpeeds().vyMetersPerSecond);
@@ -219,10 +220,10 @@ public class TurretAiming extends SubsystemBase {
         double h = cachedTargetHeight;
         double discriminant = d2 - (2 * g * targetDistance) * ((h / v2) + ((g * d2) / (2 * v4)));
         if (discriminant >= 0) {
-            return 90 - Math.atan2((targetDistance + Math.sqrt(discriminant)), (g * d2 / v2)) / (2 * Math.PI);
+            return Math.atan2((targetDistance + Math.sqrt(discriminant)), (g * d2 / v2)) / (2 * Math.PI);
         }
         else {
-            return 80;
+            return 67;
         }
     }
     /**Moves the turret to the wanted spots*/
@@ -268,7 +269,9 @@ public class TurretAiming extends SubsystemBase {
         // Compute target once per cycle — used by vectorCalculations() and maxFormula()
         cachedTarget = targetpose();
         cachedTargetHeight = getTargetHeight();
-        double desiredHeight = maxFormula();
+        desiredHeightAngle = 90 - maxFormula();
+        desiredHeight = (desiredHeightAngle - 23) * rotationsPerDegree; // 23 is empirically determined "zero" height angle
+        System.out.println(desiredHeight);
         desiredRotation  = vectorCalculations();
         // Clamp to soft limits (±135° from front-of-robot zero)
         desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
@@ -333,7 +336,7 @@ public class TurretAiming extends SubsystemBase {
         indexerLMotor.setVoltage(-10);
         feedMotor.setVoltage(-10);
         indexerRMotor.setVoltage(-10);
-        vibratorMotor.set(.35);
+        vibratorMotor.set(.4);
     }
 
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
@@ -347,10 +350,15 @@ public class TurretAiming extends SubsystemBase {
         isShooting = true;
         if (scoringMode == ScoringMode.PASSING) {flywheelMotor.set(1); heightMotor.setControl(heightoutput.withPosition(1.45));}
         else {flywheelMotor.set(.6); heightMotor.setControl(heightoutput.withPosition(0));}
+        if (autoAimEnabled) {
+            double g = 9.80665;
+            double speed = Math.sqrt((targetDistance * g) / (Math.sin(Math.toRadians(67) * 2)));
+            flywheelMotor.set(speed);
+        }
         indexerLMotor.setVoltage(-10);
         feedMotor.setVoltage(-10); 
         indexerRMotor.setVoltage(-10);
-        vibratorMotor.set(.35);
+        vibratorMotor.set(.4);
     }
     public void autoshoot(){
         isShooting = true;
@@ -364,9 +372,6 @@ public class TurretAiming extends SubsystemBase {
         indexerRMotor.setVoltage(-8);
         vibratorMotor.set(.4);
     }
-    /* private double enc2Rad(double EncoderPosition){
-        return ((EncoderPosition - 0.5) * 2 * Math.PI);
-    } */
     /** Stops shooting */
     public void unshoot(){
         isShooting = false;
@@ -402,12 +407,6 @@ public class TurretAiming extends SubsystemBase {
     */
     public Double getCurRotation() {
         return rotationMotor.getPosition().getValueAsDouble() * 360.0;
-    }
-    /**Starts moving the Indexer */
-    public void feedIndexer() {
-        indexerLMotor.set(-1);
-        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
-        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
     }
     /** Nudge the turret manually. Automatically switches to manual mode.
      * Starts slow for precision, ramps up after holding ~1 second.
@@ -473,25 +472,6 @@ public class TurretAiming extends SubsystemBase {
         headingHoldMode = false;
         scoringMode = null;
     }
-
-    public void startingaim() {
-        rotationMotor.setControl(rotationoutput.withPosition(.25));
-        flywheelMotor.set(.62);
-        turretLocked = false;
-        headingHoldMode = false;
-        autoAimEnabled = false;
-        feedIndexer();
-    }
-
-    public void endingaim() {
-        rotationMotor.setControl(rotationoutput.withPosition(.25));
-        flywheelMotor.set(.9);
-        turretLocked = false;
-        headingHoldMode = false;
-        autoAimEnabled = false;
-        feedIndexer();
-    }
-
     /** Toggle heading-hold mode: turret maintains its current field-relative
      *  angle using only the gyro, ignoring AprilTag-corrected field position. */
     public void toggleHeadingHold() {
