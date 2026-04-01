@@ -9,19 +9,17 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.MathUtil;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
-import edu.wpi.first.math.MathUtil;
 import frc.robot.McpJoystick;
-import frc.robot.RobotContainer;
 import frc.robot.Constants.RobotConstants;
 import frc.robot.Constants.ScoringMode;
 import static frc.robot.Constants.TurretConfigs.*;
@@ -33,7 +31,11 @@ public class TurretAiming extends SubsystemBase {
     private Translation2d turretPosition;
     private Translation2d targetPose;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, rotationSetpoint, heightSetpoint, rotationTau, heightTau, desiredRotation, 
-    cachedTargetHeight, cachedRotationPos, cachedHeightPos, cachedFlywheelVel, cachedThroughborePos;
+    cachedTargetHeight;
+    public static double cachedRotationPos;
+    private double cachedHeightPos;
+    private double cachedFlywheelVel;
+    private double cachedThroughborePos;
     private int limelightAcceptedTagID;
     // Per-cycle cached values to avoid redundant computation
     private Translation2d cachedTarget;
@@ -255,7 +257,7 @@ public class TurretAiming extends SubsystemBase {
             rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
             //if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
             heightSetpoint = MathUtil.clamp(heightSetpoint, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
-            if (scoringMode == scoringMode.PASSING) {heightMotor.setControl(heightoutput.withPosition(1.45));}
+            if (scoringMode == ScoringMode.PASSING) {heightMotor.setControl(heightoutput.withPosition(1.45));}
             else {heightMotor.setControl(heightoutput.withPosition(0));}
             if (dontchangeheight == true) {heightMotor.stopMotor();}
             rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
@@ -297,10 +299,9 @@ public class TurretAiming extends SubsystemBase {
     }
 
     public void limelightAim() {
+        LimelightHelpers.setPipelineIndex("limelight-stinky", 0);
         if (robotPose == null || turretPosition == null) return;
-        if (!LimelightHelpers.getTV("limelight-stinky")) {
-            return;
-        }
+        if (!LimelightHelpers.getTV("limelight-stinky")) {return;}
         if (wasDisabled) {
             rotationSetpoint = cachedRotationPos;
             heightSetpoint = cachedHeightPos;
@@ -344,7 +345,7 @@ public class TurretAiming extends SubsystemBase {
     public void index() {
         limelightAiming = false;
         isShooting = true;
-        if (scoringMode == scoringMode.PASSING) {flywheelMotor.set(1); heightMotor.setControl(heightoutput.withPosition(1.45));}
+        if (scoringMode == ScoringMode.PASSING) {flywheelMotor.set(1); heightMotor.setControl(heightoutput.withPosition(1.45));}
         else {flywheelMotor.set(.6); heightMotor.setControl(heightoutput.withPosition(0));}
         indexerLMotor.setVoltage(-10);
         feedMotor.setVoltage(-10); 
@@ -574,9 +575,11 @@ public class TurretAiming extends SubsystemBase {
         cachedFlywheelVel = flywheelMotor.getVelocity().getValueAsDouble();
 
         if (limelightAiming != true) {
+            LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
             targetAim();
         }
         if (limelightAiming == true) {
+            LimelightHelpers.setPipelineIndex("limelight-stinky", 0);
             limelightAim();
         }
         // Check MCP simulated joystick for height/rotation/shoot commands
