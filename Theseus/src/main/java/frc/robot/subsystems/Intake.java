@@ -74,7 +74,9 @@ public class Intake extends SubsystemBase {
   }
   public void outakeIntake() {
     target = ActivatedPos;
-    intFWMot.set(-.35);
+    intFWMot.set(-.5);
+    intFWMotFollower.set(.5);
+    vibratorMot.set(.35);
   }
   public void zeroPosition() {
     m_inkMot.setPosition(0);
@@ -83,7 +85,6 @@ public class Intake extends SubsystemBase {
   }
   @Override
   public void periodic() {
-
     Logger.recordOutput("Intake/TargetPosition", target);
     Logger.recordOutput("Intake/ActualPosition", m_inkMot.getPosition().getValueAsDouble());
     Logger.recordOutput("Intake/FlywheelOutput", intFWMot.get());

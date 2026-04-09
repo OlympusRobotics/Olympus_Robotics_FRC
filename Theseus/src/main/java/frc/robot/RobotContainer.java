@@ -13,6 +13,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.LLVision;
 import frc.robot.subsystems.CameraUsing;
 //import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.TurretAiming;
@@ -35,6 +37,9 @@ import frc.robot.subsystems.TurretAiming;
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(2).in(RadiansPerSecond); // 1 rotation per second max angular velocity
+    /* private final SlewRateLimiter xLimiter = new SlewRateLimiter(8);  
+    private final SlewRateLimiter yLimiter = new SlewRateLimiter(8); 
+    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(RotationsPerSecond.of(4).in(RadiansPerSecond));  */
     
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -54,6 +59,7 @@ public class RobotContainer {
     public final TurretAiming aiming = new TurretAiming(drivetrain);
     public final Intake intake = new Intake();
     private final Field2d field = new Field2d();
+    private final LLVision limelight = new LLVision(drivetrain, aiming);
     private final SendableChooser<Command> autoChooser;
     public Command m_autonomousCommand;
     //private final Climber climber = new Climber();
@@ -90,8 +96,11 @@ public class RobotContainer {
     private final Command autoshoot = aiming.startEnd(() -> aiming.autoindex(), () -> aiming.unshoot());
 
     /** Reverse indexer only (left bumper) */
-    private final Command intakingOut = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
-      .until(() -> joystick.leftBumper().getAsBoolean() == false);
+    /* private final Command intakingOut = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
+      .until(() -> joystick.leftBumper().getAsBoolean() == false); */
+
+    private final Command intakeOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.stopspin())
+      .until(() -> joystick.leftBumper().getAsBoolean() ==false);
 
     /** Resets the turret */
     public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
@@ -106,6 +115,7 @@ public class RobotContainer {
       private final Command limelightAiming = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.unshoot());
 
     /*private final Command llAutoAim = new RunCommand(() -> { //stinky stinky limelight stuff
+
 
         double forwardVal = applyDeadband(limes.aimAndRange()[0]);
         double strafeVal = applyDeadband((-joystick.getLeftX())); // Negate to match joystick direction
@@ -153,6 +163,8 @@ public class RobotContainer {
         SmartDashboard.putData("Full disrupt", autoChooser);
         SmartDashboard.putData("Full Disrupt Right", autoChooser);
         SmartDashboard.putData("Disrupt Right", autoChooser);
+        SmartDashboard.putData("New Auto", autoChooser);
+        SmartDashboard.putData("Grab 'n Go", autoChooser);
 
         // Override "Zero Turret" to also zero the intake position
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
@@ -181,7 +193,8 @@ public class RobotContainer {
         );
         
         //Binds the commands to the buttons
-        joystick.leftBumper().whileTrue(intakingOut);
+        //joystick.leftBumper().whileTrue(intakingOut);
+        joystick.leftBumper().whileTrue(intakeOut);
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(indexshoot);
         joystick.rightBumper().whileTrue(shoot);
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
@@ -250,7 +263,7 @@ public class RobotContainer {
           if (selectedAuto != null) {
               return selectedAuto;
           }
-        return new PathPlannerAuto("New New Auto");
+        return new PathPlannerAuto("New Auto");
     } 
     public void periodic() {
       SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());

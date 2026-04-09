@@ -232,8 +232,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 // optionally outputs feedforwards if OL
                 (speeds, driveFeedforwards) -> this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(speeds)),
                 new PPHolonomicDriveController(
-                    new PIDConstants(20, 0),
-                    new PIDConstants(5, 0)),
+                    new PIDConstants(3.7, 0),
+                    new PIDConstants(4.0, 0)),
                 rconfig, // The robot configuration
                 () -> {
                     // Boolean supplier that controls when the path will be mirrored for the red
@@ -387,6 +387,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
+        //System.out.println("penis: " + visionRobotPoseMeters);
         super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
     }
 

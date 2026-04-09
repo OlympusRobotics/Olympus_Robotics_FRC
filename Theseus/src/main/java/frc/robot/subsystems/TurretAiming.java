@@ -271,7 +271,7 @@ public class TurretAiming extends SubsystemBase {
         cachedTargetHeight = getTargetHeight();
         desiredHeightAngle = 90 - maxFormula();
         desiredHeight = (desiredHeightAngle - 23) * rotationsPerDegree; // 23 is empirically determined "zero" height angle
-        System.out.println(desiredHeight);
+        //System.out.println(desiredHeight);
         desiredRotation  = vectorCalculations();
         // Clamp to soft limits (±135° from front-of-robot zero)
         desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);

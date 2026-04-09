@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LLVision extends SubsystemBase {
@@ -58,45 +59,37 @@ public class LLVision extends SubsystemBase {
   } */
 
   /** Estimates the robot's pose using MegaTag1 */
-  public Pose2d estimateRobotPose(){
+  public void estimateRobotPose(){
     //Updates the limelights position as the turret rotates
+    LimelightHelpers.SetRobotOrientation("limelight-still", m_drivetrain.getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
     LimelightHelpers.setCameraPose_RobotSpace("limelight-stinky", -.105 + .21 * Math.cos(m_turret.getCurRotation()), 
     .21 * Math.sin(m_turret.getCurRotation()), .485, 0, 18, m_turret.getCurRotation());
-    //updates the stationary limelights position
-    LimelightHelpers.setCameraPose_RobotSpace("limelight-stationary", -.245, .295, .23, 0, 10, 90);
+    //updates the still limelights position
+    LimelightHelpers.setCameraPose_RobotSpace("limelight-still", -.245, .295, .23, 2, 10, 90);
     //gets the MegaTag1 pose estimation from the limelight
     LimelightHelpers.PoseEstimate LL4Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-stinky");
-    LimelightHelpers.PoseEstimate LL2Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-stationary");
+    LimelightHelpers.PoseEstimate LL2Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-still");
+      //System.out.println(LL2Pose.avgTagDist);
+      if (!LimelightHelpers.getTV("limelight-still")) return; //if neither limelight sees a tag, return null
       
-      if (LL4Pose.tagCount == 0 && LL2Pose.tagCount == 0) return null; //if neither limelight sees a tag, return null
-      if ((LL4Pose.tagCount >= 1 && LL4Pose.rawFiducials.length >= 1) || (LL2Pose.tagCount >= 1 && LL2Pose.rawFiducials.length >= 1)) {
-        if (LL4Pose.rawFiducials[0].ambiguity > .7 && LL2Pose.rawFiducials[0].ambiguity > .7) return null; //if both limelights have high ambiguity, return null
-        if (LL4Pose.rawFiducials[0].distToCamera > 3 && LL2Pose.rawFiducials[0].distToCamera > 3) return null; //if all visible targets are far away, return null
-        if (LL4Pose.tagCount >= 1 && LL4Pose.rawFiducials.length >= 1) {
-          validtargets += 1;
-          averageTimeStamp += LL4Pose.timestampSeconds;
-        }
-        if (LL2Pose.tagCount >= 1 && LL2Pose.rawFiducials.length >= 1) {
-          validtargets += 1;
-          averageTimeStamp += LL2Pose.timestampSeconds;
-        }
-      };
       
-      //combine the poses
-      averageTimeStamp /= validtargets;
-      averagePose2d = new Pose2d((LL4Pose.pose.getX() + LL2Pose.pose.getX()) / validtargets, (LL4Pose.pose.getY() + LL2Pose.pose.getY()) / validtargets,
-      new Rotation2d((LL4Pose.pose.getRotation().getRadians() + LL2Pose.pose.getRotation().getRadians()) / validtargets));
-      System.out.println("timestamp: " + averageTimeStamp);
-      System.out.println("Posex: " + averagePose2d.getX());
+      System.out.println(LL2Pose.pose);
+      //m_drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.01,.01,999999999));
+      //m_drivetrain.addVisionMeasurement(LL2Pose.pose, LL2Pose.timestampSeconds);
+      if (LL2Pose.pose.getX() != 0) {
+        /* averagePose2d = new Pose2d(( LL2Pose.pose.getX()), (LL2Pose.pose.getY()),
+        new Rotation2d((LL2Pose.pose.getRotation().getRadians()))); */
+        m_drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.01,.01,999999999));
+        m_drivetrain.addVisionMeasurement(LL2Pose.pose, Timer.getFPGATimestamp());
+      }
       validtargets = 0;
       averageTimeStamp = 0;
-      return averagePose2d;
+
       
   }
 
   //@Override
   public void periodic() {
-    m_drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.5,.5,10));
-    m_drivetrain.addVisionMeasurement(estimateRobotPose(), averageTimeStamp);
+    estimateRobotPose();
   }
 }
