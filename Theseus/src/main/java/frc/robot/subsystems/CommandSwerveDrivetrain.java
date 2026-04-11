@@ -35,10 +35,13 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.subsystems.LimelightHelpers.IMUData;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.ConsoleSource.RoboRIO;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -58,12 +61,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final StatusSignal<AngularVelocity>[] m_driveVelocities;
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
-    private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.k180deg;
+    private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
-    private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.kZero;
+    private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
 
+    Pose2d averaged = new Pose2d();
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
@@ -189,38 +193,35 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void estimateRobotPose(){
     double posex = 0;
     double posey = 0;
+    double valid = 0;
 
     //Updates the limelights position as the turret rotates
     LimelightHelpers.SetRobotOrientation("limelight-still", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
-    /* LimelightHelpers.setCameraPose_RobotSpace("limelight-stinky", -.105 + .21 * Math.cos(turret.getCurRotation()), 
-    .21 * Math.sin(m_turret.getCurRotation()), .485, 0, 18, m_turret.getCurRotation()); */
+    
     //updates the still limelights position
-    LimelightHelpers.setCameraPose_RobotSpace("limelight-still", -.245, .295, .23, 2, 10, 90);
+    LimelightHelpers.setCameraPose_RobotSpace("limelight-still", -.245, .295, .23, 2, 10, -90);
     //gets the MegaTag1 pose estimation from the limelight
-    LimelightHelpers.PoseEstimate LL4Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-stinky");
     LimelightHelpers.PoseEstimate LL2Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-still");
       //System.out.println(LL2Pose.avgTagDist);
-      if (!LimelightHelpers.getTV("limelight-still") && !LimelightHelpers.getTV("limelight-stinky")) return; //if neither limelight sees a tag, return null
+      if (!LimelightHelpers.getTV("limelight-still")) return; //if neither limelight sees a tag, return null
       
       //m_drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.01,.01,999999999));
       //m_drivetrain.addVisionMeasurement(LL2Pose.pose, LL2Pose.timestampSeconds);
-      if ((LL2Pose.pose.getX() != 0) || (LL4Pose.pose.getX() != 0)) {
+      //if ((LL2Pose.pose.getX() != 0) || (LL4Pose.pose.getX() != 0)) {
         /* averagePose2d = new Pose2d(( LL2Pose.pose.getX()), (LL2Pose.pose.getY()),
         new Rotation2d((LL2Pose.pose.getRotation().getRadians()))); */
         if (LimelightHelpers.getTV("limelight-still")) {
-            if (LL2Pose.avgTagDist < 3){
+            if (LL2Pose.avgTagDist < 7){
                 posex += LL2Pose.pose.getX();
                 posey += LL2Pose.pose.getY();
+                valid += 1;
             }
         }
-        if (LimelightHelpers.getTV("limelight-stinky")){
-            if (LL4Pose.avgTagDist < 3) {
-                
-            }
-        }
-        System.out.println(Utils.fpgaToCurrentTime(Timer.getFPGATimestamp() - ((LimelightHelpers.getLatency_Pipeline("limelight-still") + LimelightHelpers.getLatency_Capture("limelight-still"))/ 1000)));
-        addVisionMeasurement(LL2Pose.pose, Utils.fpgaToCurrentTime(Timer.getFPGATimestamp() - ((LimelightHelpers.getLatency_Pipeline("limelight-still") + LimelightHelpers.getLatency_Capture("limelight-still"))/ 1000)) );
-      }
+            posex /= valid;
+            posey /= valid;
+        double time = Utils.fpgaToCurrentTime(Timer.getFPGATimestamp() - ((LimelightHelpers.getLatency_Pipeline("limelight-still") + LimelightHelpers.getLatency_Capture("limelight-still"))/ 1000));
+        addVisionMeasurement(LL2Pose.pose, time);
+      //}
 
       
   }
@@ -428,8 +429,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-        System.out.println(visionRobotPoseMeters);
-        System.out.println(timestampSeconds);
         super.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
     }
 

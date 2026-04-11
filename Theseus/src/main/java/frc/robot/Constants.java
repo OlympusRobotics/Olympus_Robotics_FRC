@@ -77,6 +77,7 @@ public final class Constants {
     public static final int kTurretRotationID = (13);
     public static final int kTurretHeightID = (14);
     public static final int kTurretFlywheelID = (15);
+    public static final int kTurretFlywheelFolID = (25);
     public static final int kTurretIndexerID = (19);
     public static final int kTurretFeedID = (20);
     public static final int kTurretRIndexerID = (22);
@@ -171,7 +172,6 @@ public final class Constants {
     public static final TalonFXConfiguration indexerConfigs = new TalonFXConfiguration();
     // Measured: zeroed, then 180° physical reads 183.251° at 32.98 → corrected to 33.58
     public static final Double rotationRatio = 33.58;
-    public static final Double turretHeight = .508; 
     public static final Double kmaxVelocity = 4.71;
     public static final Double heightRatio = 5.0;
     public static final Double smoothRotation = 0.0;
@@ -179,8 +179,8 @@ public final class Constants {
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
     // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
-    public static final double ROTATION_FORWARD_LIMIT = 0.4228;
-    public static final double ROTATION_REVERSE_LIMIT = -0.616699;
+    public static final double ROTATION_FORWARD_LIMIT = 0.57;
+    public static final double ROTATION_REVERSE_LIMIT = -0.43;
     public static final double HEIGHT_FORWARD_LIMIT = 0.92;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     

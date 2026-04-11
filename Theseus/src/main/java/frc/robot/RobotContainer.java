@@ -108,6 +108,7 @@ public class RobotContainer {
 
     private final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the turret 🤯
     .until(() -> joystick.x().getAsBoolean() == false); //X button
+    //private final Command move = aiming.startEnd(() -> aiming.manualRotate(), () -> aiming.stopMotors());
 
       //private final Command autoaim = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.stopMotors());
 
@@ -136,7 +137,7 @@ public class RobotContainer {
      * @return the value after the deadband
     */
     private double applyDeadband(double value) {
-        final double deadband = 0.05;
+        final double deadband = 0.08;
         if (Math.abs(value) <= deadband) {
             return 0.0;
         }
@@ -212,6 +213,7 @@ public class RobotContainer {
 
         // D-pad turret controls: left/right = manual rotate, up/down = manual height
         // MCP simulated joystick is handled directly in TurretAiming.periodic()
+       
         joystick.povLeft().whileTrue(aiming.run(() -> aiming.manualRotate(-1)).finallyDo(() -> aiming.resetManualRamp()));
         joystick.povRight().whileTrue(aiming.run(() -> aiming.manualRotate(1)).finallyDo(() -> aiming.resetManualRamp()));
         joystick.povUp().whileTrue(aiming.run(() -> aiming.manualHeight(1)).finallyDo(() -> aiming.resetManualRamp()));
@@ -231,26 +233,26 @@ public class RobotContainer {
         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse)); */
 
-        whimseystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
-        whimseystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop()));
+        /* joystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
+        joystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop())); */
 
-        /* whimseystick.y().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kForward));
-        whimseystick.a().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kReverse));
-        whimseystick.b().whileTrue(TurretAiming.flySysid.dynamic(Direction.kForward));
-        whimseystick.x().whileTrue(TurretAiming.flySysid.dynamic(Direction.kReverse)); */
+        /* joystick.y().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kForward));
+        joystick.a().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kReverse));
+        joystick.b().whileTrue(TurretAiming.flySysid.dynamic(Direction.kForward));
+        joystick.x().whileTrue(TurretAiming.flySysid.dynamic(Direction.kReverse)); */
         
-        //whimseystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
-        //whimseystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
-        //whimseystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
-        //whimseystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
-        whimseystick.povDown().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kForward));
-        whimseystick.povUp().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kReverse));
-        whimseystick.povRight().whileTrue(drivetrain.sysIdDynamicRot(Direction.kForward));
-        whimseystick.povLeft().whileTrue(drivetrain.sysIdDynamicRot(Direction.kReverse));
-        whimseystick.leftTrigger().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kForward));
-        whimseystick.leftBumper().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kReverse));
-        whimseystick.rightTrigger().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kForward));
-        whimseystick.rightBumper().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kReverse));
+        //joystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
+        //joystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
+        //joystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
+        //joystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
+        /* joystick.povDown().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kForward));
+        joystick.povUp().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kReverse));
+        joystick.povRight().whileTrue(drivetrain.sysIdDynamicRot(Direction.kForward));
+        joystick.povLeft().whileTrue(drivetrain.sysIdDynamicRot(Direction.kReverse));
+        joystick.leftTrigger().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kForward));
+        joystick.leftBumper().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kReverse));
+        joystick.rightTrigger().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kForward));
+        joystick.rightBumper().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kReverse)); */
 
 
         // Reset the field-centric heading on left bumper press.

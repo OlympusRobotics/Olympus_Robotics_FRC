@@ -79,8 +79,7 @@ public class LLVision extends SubsystemBase {
       if (LL2Pose.pose.getX() != 0) {
         /* averagePose2d = new Pose2d(( LL2Pose.pose.getX()), (LL2Pose.pose.getY()),
         new Rotation2d((LL2Pose.pose.getRotation().getRadians()))); */
-        m_drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.01,.01,999999999));
-        m_drivetrain.addVisionMeasurement(LL2Pose.pose, Timer.getFPGATimestamp());
+        //m_drivetrain.addVisionMeasurement(LL2Pose.pose, LL2Pose.timestampSeconds);
       }
       validtargets = 0;
       averageTimeStamp = 0;
@@ -90,6 +89,6 @@ public class LLVision extends SubsystemBase {
 
   //@Override
   public void periodic() {
-    estimateRobotPose();
+    //estimateRobotPose();
   }
 }

@@ -2,18 +2,25 @@ package frc.robot.subsystems;
 // NOTE: Changes to motors, CAN IDs, or aiming logic must be reflected in Theseus/README.md (Turret Aiming section).
 
 //import edu.wpi.first.math.controller.PIDController;
+import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.math.MathUtil;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -30,8 +37,11 @@ public class TurretAiming extends SubsystemBase {
     private Pose2d robotPose;
     private Translation2d turretPosition;
     private Translation2d targetPose;
+    private Translation3d turretOffset, limelight2TurretOffset;
+    private Rotation3d limelightRotation;
+    private Transform3d turret2Robot, limelight2Turret, limelight2Robot;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, rotationSetpoint, heightSetpoint, rotationTau, heightTau, desiredRotation, 
-    cachedTargetHeight, desiredHeight, rotationsPerDegree, desiredHeightAngle;
+    cachedTargetHeight, desiredHeight, rotationsPerDegree, desiredHeightAngle, turretOffsetX, turretOffsetZ, limelightOffsetX;
     public static double cachedRotationPos;
     private double cachedHeightPos;
     private double cachedFlywheelVel;
@@ -39,7 +49,7 @@ public class TurretAiming extends SubsystemBase {
     private int limelightAcceptedTagID;
     // Per-cycle cached values to avoid redundant computation
     private Translation2d cachedTarget;
-    private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor, vibratorMotor;
+    private final TalonFX rotationMotor, heightMotor, flywheelMotor, flywheelFolMotor, indexerLMotor, indexerRMotor, feedMotor, vibratorMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleArrayPublisher turretTargetPub;
@@ -89,6 +99,7 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor = new TalonFX(RobotConstants.kTurretRotationID);
         heightMotor =   new TalonFX(RobotConstants.kTurretHeightID);
         flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
+        flywheelFolMotor = new TalonFX(RobotConstants.kTurretFlywheelFolID);
         indexerLMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
         indexerRMotor =  new TalonFX(RobotConstants.kTurretRIndexerID);
         feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
@@ -103,6 +114,9 @@ public class TurretAiming extends SubsystemBase {
         rotationTau = .15;
         desiredRotation = 0;
         rotationsPerDegree = 1.45 / (26 - 67);
+        turretOffsetZ = .402;
+        turretOffsetX = -.105;
+        limelightOffsetX = .2;
         turretTargetPub = NetworkTableInstance.getDefault()
             .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
         //Set up motors
@@ -111,6 +125,7 @@ public class TurretAiming extends SubsystemBase {
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
         indexerLMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        flywheelFolMotor.getConfigurator().apply(flyConfigs);
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
 
         LimelightHelpers.setFiducial3DOffset("limelight-stinky", 0, -.15, -.58);
@@ -329,10 +344,11 @@ public class TurretAiming extends SubsystemBase {
         double g = 9.80665;
         System.out.println(LimelightHelpers.getCameraPose3d_TargetSpace("limelight-stinky").getZ());
         //double speed = ranging / Math.cos(Math.toRadians(70)) * Math.sqrt(g / (2 * (Math.abs((ranging * Math.tan(Math.toRadians(70))) - (1.8288 - turretHeight)))));
-        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(65) * 2)));
+        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(67) * 2)));
         //System.out.println(ranging);
         //System.out.println(speed / (Math.PI * 2.8));
-        flywheelMotor.set(speed / (Math.PI * 2.8));
+        flywheelMotor.set(speed / (Math.PI * .9));
+        flywheelFolMotor.set(speed / (Math.PI * .9));
         indexerLMotor.setVoltage(-10);
         feedMotor.setVoltage(-10);
         indexerRMotor.setVoltage(-10);
@@ -342,18 +358,20 @@ public class TurretAiming extends SubsystemBase {
     /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
     public void shoot(){
         flywheelMotor.set(.7);
+        flywheelFolMotor.set(.7);
         limelightAiming = false;
         isShooting = true;
     }
     public void index() {
         limelightAiming = false;
         isShooting = true;
-        if (scoringMode == ScoringMode.PASSING) {flywheelMotor.set(1); heightMotor.setControl(heightoutput.withPosition(1.45));}
-        else {flywheelMotor.set(.6); heightMotor.setControl(heightoutput.withPosition(0));}
+        if (scoringMode == ScoringMode.PASSING) {flywheelMotor.set(1);flywheelFolMotor.set(1); heightMotor.setControl(heightoutput.withPosition(1.45));}
+        else {flywheelMotor.set(.6);flywheelFolMotor.set(.6); heightMotor.setControl(heightoutput.withPosition(0));}
         if (autoAimEnabled) {
             double g = 9.80665;
             double speed = Math.sqrt((targetDistance * g) / (Math.sin(Math.toRadians(67) * 2)));
             flywheelMotor.set(speed);
+            flywheelFolMotor.set(speed);
         }
         indexerLMotor.setVoltage(-10);
         feedMotor.setVoltage(-10); 
@@ -363,10 +381,12 @@ public class TurretAiming extends SubsystemBase {
     public void autoshoot(){
         isShooting = true;
         flywheelMotor.set(.6);
+        flywheelFolMotor.set(.6);
     }
     public void autoindex(){
         isShooting = true;
         flywheelMotor.set(.51);
+        flywheelFolMotor.set(.51);
         indexerLMotor.setVoltage(-8);
         feedMotor.setVoltage(-8);
         indexerRMotor.setVoltage(-8);
@@ -377,6 +397,7 @@ public class TurretAiming extends SubsystemBase {
         isShooting = false;
         limelightAiming = false;
         flywheelMotor.stopMotor();
+        flywheelFolMotor.stopMotor();
         indexerLMotor.stopMotor();
         feedMotor.stopMotor();
         indexerRMotor.stopMotor();
@@ -593,6 +614,29 @@ public class TurretAiming extends SubsystemBase {
         } else if (mcpShooting) {
             unshoot(); mcpShooting = false;
         }
+       /*  try {
+        turretOffset = new Translation3d(turretOffsetX, 0, turretOffsetZ);
+        limelight2TurretOffset = new Translation3d(limelightOffsetX, 0, 0);
+        limelightRotation = new Rotation3d(0, Math.toRadians(18), Math.toRadians(getCurRotation()));
+        turret2Robot = new Transform3d(turretOffset, new Rotation3d());
+        limelight2Turret = new Transform3d(limelight2TurretOffset, limelightRotation);
+        if (!Double.isNaN(getCurRotation())) {
+            limelight2Robot = turret2Robot.plus(limelight2Robot);
+        }
+    } catch (Exception e) {
+    }
+        if (limelight2Robot != null) {
+            LimelightHelpers.setCameraPose_RobotSpace(
+                "limelight-stinky",
+                limelight2Robot.getX(),
+                limelight2Robot.getY(),
+                limelight2Robot.getZ(),
+                Math.toDegrees(limelight2Robot.getRotation().getX()),
+                Math.toDegrees(limelight2Robot.getRotation().getY()),
+                Math.toDegrees(limelight2Robot.getRotation().getZ())
+            );
+        }
+        System.out.println(LimelightHelpers.getCameraPose3d_RobotSpace("limelight-stinky")); */
 
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         lastDashboardAim = autoAimEnabled;
