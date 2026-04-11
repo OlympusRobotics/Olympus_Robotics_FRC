@@ -53,6 +53,7 @@ public class TurretAiming extends SubsystemBase {
     private final MotionMagicVoltage rotationoutput, heightoutput;
     private final CommandSwerveDrivetrain drivetrain;
     private final DoubleArrayPublisher turretTargetPub;
+    public final SysIdRoutine flysisid;
     //private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
     private McpJoystick mcpJoystick;
     private boolean turretLocked = false;
@@ -135,6 +136,20 @@ public class TurretAiming extends SubsystemBase {
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         SmartDashboard.putNumber("Shoot Speed", 1.0);
+
+        flysisid = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                state -> SignalLogger.writeString("SysIdFlywheels_State", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                volts -> {flywheelMotor.setVoltage(volts.in(Volts)); flywheelFolMotor.setVoltage(volts.in(Volts));},
+                null,
+                this
+            )
+        );
     }
 
     /** Set the MCP joystick reference for simulated input. */
