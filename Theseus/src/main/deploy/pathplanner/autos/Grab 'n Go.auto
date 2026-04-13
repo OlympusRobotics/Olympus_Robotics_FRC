@@ -15,9 +15,34 @@
                 }
               },
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "Better Grab"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Better Grab"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.5
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Better Grab 2"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "limelight aim"
+                      }
+                    }
+                  ]
                 }
               }
             ]

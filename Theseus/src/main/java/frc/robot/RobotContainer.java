@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.fasterxml.jackson.databind.util.Named;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -35,8 +36,8 @@ import frc.robot.subsystems.TurretAiming;
 // NOTE: Changes to controller bindings, subsystem wiring, or auto commands here
 // must also be reflected in Theseus/README.md (Controller Bindings, Autonomous sections).
 public class RobotContainer {
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(2).in(RadiansPerSecond); // 1 rotation per second max angular velocity
+    public double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    public double MaxAngularRate = RotationsPerSecond.of(2).in(RadiansPerSecond); // 1 rotation per second max angular velocity
     /* private final SlewRateLimiter xLimiter = new SlewRateLimiter(8);  
     private final SlewRateLimiter yLimiter = new SlewRateLimiter(8); 
     private final SlewRateLimiter rotLimiter = new SlewRateLimiter(RotationsPerSecond.of(4).in(RadiansPerSecond));  */
@@ -64,6 +65,8 @@ public class RobotContainer {
     public Command m_autonomousCommand;
     //private final Climber climber = new Climber();
     public final McpJoystick mcpJoystick = new McpJoystick(0);
+
+    public Boolean maybeHenryDidItWrong = false;
 
 
     //Initalize contoller commands
@@ -157,6 +160,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(20));
         NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(.5));
         NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(1));
+        NamedCommands.registerCommand("limelight aim", limelightAiming);
         SmartDashboard.putData("Field", field);
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Back up and Shoot", autoChooser);
@@ -201,9 +205,8 @@ public class RobotContainer {
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
         leftTrigger.whileTrue(intakeToggle);
         joystick.b().whileTrue(resetsTurret);
-        joystick.a().onTrue(limelightAiming);
+        joystick.a().toggleOnTrue(limelightAiming);
         joystick.x().whileTrue(locksTurret);
-        joystick.a().onTrue(intakeToggle);
         joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
         joystick.start().onTrue(aiming.runOnce(() -> aiming.toggleScoringMode()));
         joystick.back().onTrue(

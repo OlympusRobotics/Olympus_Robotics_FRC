@@ -73,7 +73,6 @@ public class Intake extends SubsystemBase {
     m_inkMotFollower.set(0);
   }
   public void outakeIntake() {
-
     intFWMot.set(-.4);
     vibratorMot.set(.35);
     intFWMotFollower.set(.4);

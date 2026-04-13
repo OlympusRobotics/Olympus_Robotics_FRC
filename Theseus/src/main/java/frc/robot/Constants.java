@@ -15,7 +15,7 @@ public final class Constants {
     /** Low shot toward own alliance wall — height 0, flywheel 50%. */
     SCORING(0, Math.PI, TurretConfigs.HEIGHT_REVERSE_LIMIT, 0.60),
     /** High lob toward opposite alliance wall — max height, flywheel 100%. */
-    PASSING(Math.PI, 0, TurretConfigs.HEIGHT_FORWARD_LIMIT, 1.0);
+    PASSING(0, 0, TurretConfigs.HEIGHT_FORWARD_LIMIT, 1.0);
 
     /** Field-relative turret angle (radians) when on the Blue alliance. */
     public final double blueFieldAngle;
@@ -179,8 +179,8 @@ public final class Constants {
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
     // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
-    public static final double ROTATION_FORWARD_LIMIT = 0.57;
-    public static final double ROTATION_REVERSE_LIMIT = -0.43;
+    public static final double ROTATION_FORWARD_LIMIT = 0.5;//0.57
+    public static final double ROTATION_REVERSE_LIMIT = -0.5;//-0.43
     public static final double HEIGHT_FORWARD_LIMIT = 0.92;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     
