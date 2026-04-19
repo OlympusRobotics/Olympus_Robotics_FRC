@@ -60,13 +60,15 @@ public class RobotContainer {
     public final TurretAiming aiming = new TurretAiming(drivetrain);
     public final Intake intake = new Intake();
     private final Field2d field = new Field2d();
-    private final LLVision limelight = new LLVision(drivetrain, aiming);
+    //private final LLVision limelight = new LLVision(drivetrain, aiming);
     private final SendableChooser<Command> autoChooser;
     public Command m_autonomousCommand;
     //private final Climber climber = new Climber();
     public final McpJoystick mcpJoystick = new McpJoystick(0);
 
     public Boolean maybeHenryDidItWrong = false;
+    public double speedMulti = 1.0;
+    public double rotMulti = .8;
 
 
     //Initalize contoller commands
@@ -86,11 +88,14 @@ public class RobotContainer {
     private final Command jerkIntake = intake.startEnd(() -> intake.jerkIntake(), () -> intake.endIntake());
       
     /** Spins the flywheels to shoot a ball */
-    private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot())
-      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RT button
+    /* private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot())
+      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RT button */
     
     private final Command indexshoot = aiming.startEnd(() -> aiming.index(), () -> aiming.unshoot())
       .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
+    
+    private final Command reverseIndexer = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
+    .until(() -> joystick.rightBumper().getAsBoolean() == false);
 
     /** Spins the flywheels to shoot a ball without controller*/
 
@@ -116,8 +121,10 @@ public class RobotContainer {
       //private final Command autoaim = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.stopMotors());
 
 
-      private final Command limelightAiming = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.unshoot());
+      private final Command limelightAiming = aiming.startEnd(() -> {aiming.limelightAim(); speedMulti = 1; rotMulti = 1;}, () -> {aiming.unshoot(); speedMulti = 1.0; rotMulti = 1.0;});
 
+
+      private final Command autolimelight = aiming.startEnd(() -> {aiming.autolimelightAim();}, () -> {aiming.unshoot();});
     /*private final Command llAutoAim = new RunCommand(() -> { //stinky stinky limelight stuff
 
 
@@ -157,10 +164,10 @@ public class RobotContainer {
         configureBindings();
         NamedCommands.registerCommand("Rev", autoRev.withTimeout(3));
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(5));
-        NamedCommands.registerCommand("intake", autoIntake.withTimeout(20));
-        NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(.5));
-        NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(1));
-        NamedCommands.registerCommand("limelight aim", limelightAiming);
+        NamedCommands.registerCommand("intake", autoIntake.withTimeout(7));
+        NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(1));
+        NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(.35));
+        NamedCommands.registerCommand("limelight aim", autolimelight.withTimeout(5));
         SmartDashboard.putData("Field", field);
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Back up and Shoot", autoChooser);
@@ -170,7 +177,9 @@ public class RobotContainer {
         SmartDashboard.putData("Disrupt Right", autoChooser);
         SmartDashboard.putData("New Auto", autoChooser);
         SmartDashboard.putData("Grab 'n Go", autoChooser);
-
+        SmartDashboard.putData("Shoot then Depot", autoChooser);
+        SmartDashboard.putData("Block Left", autoChooser);
+        SmartDashboard.putData("Block Right", autoChooser);
         // Override "Zero Turret" to also zero the intake position
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
             aiming.zeroTurret/*  */();
@@ -184,9 +193,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-this.applyDeadband(-joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-this.applyDeadband(-joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(this.applyDeadband(-(RobotBase.isSimulation() ? joystick.getRawAxis(2) : joystick.getRightX())) * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-this.applyDeadband(-joystick.getLeftY()) * MaxSpeed * speedMulti) // Drive forward with negative Y (forward)
+                    .withVelocityY(-this.applyDeadband(-joystick.getLeftX()) * MaxSpeed * speedMulti) // Drive left with negative X (left)
+                    .withRotationalRate(this.applyDeadband(-(RobotBase.isSimulation() ? joystick.getRawAxis(2) : joystick.getRightX())) * MaxAngularRate * rotMulti) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -201,7 +210,7 @@ public class RobotContainer {
         //joystick.leftBumper().whileTrue(intakingOut);
         joystick.leftBumper().whileTrue(intakeOut);
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(indexshoot);
-        joystick.rightBumper().whileTrue(shoot);
+        joystick.rightBumper().whileTrue(reverseIndexer);
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
         leftTrigger.whileTrue(intakeToggle);
         joystick.b().whileTrue(resetsTurret);

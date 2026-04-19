@@ -72,8 +72,8 @@ public class TurretAiming extends SubsystemBase {
     private ScoringMode scoringMode = null;
     private int manualHoldCycles = 0;
     private int manualHeightHoldCycles = 0;
-    private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
-    private static final double MANUAL_STEP_FAST = 0.008; // fast rotation step after holding ~1s
+    private static final double MANUAL_STEP_SLOW = 0.1; // fine rotation step for short presses
+    private static final double MANUAL_STEP_FAST = 0.5; // fast rotation step after holding ~1s
     private static final double HEIGHT_STEP_SLOW = 0.04;  // fine height step (5:1 ratio needs bigger steps)
     private static final double HEIGHT_STEP_FAST = 0.16;  // fast height step after holding ~1s
     private static final int MANUAL_RAMP_CYCLES = 50;     // cycles before ramping up (~1s at 50Hz)
@@ -352,6 +352,56 @@ public class TurretAiming extends SubsystemBase {
         TY = Math.IEEEremainder(TX, 360);
         TY = TX / 360.0;
         TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        if (Math.abs(TY) > .0){
+            rotationSetpoint += (.1 * TY);
+        }
+
+        if (rotationSetpoint > ROTATION_FORWARD_LIMIT) {
+            rotationSetpoint = ROTATION_REVERSE_LIMIT;
+        }
+        if (rotationSetpoint < ROTATION_REVERSE_LIMIT) {
+            rotationSetpoint = ROTATION_FORWARD_LIMIT;
+        }
+        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
+        SmartDashboard.putNumber("desiredrotation", TY);
+        double ranging = Math.hypot(LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getX(), 
+        LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getZ() - .5);
+        double g = 9.80665;
+        System.out.println(LimelightHelpers.getCameraPose3d_TargetSpace("limelight-stinky").getZ());
+        //double speed = ranging / Math.cos(Math.toRadians(70)) * Math.sqrt(g / (2 * (Math.abs((ranging * Math.tan(Math.toRadians(70))) - (1.8288 - turretHeight)))));
+        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(66) * 2)));
+        //System.out.println(ranging);
+        //System.out.println(speed / (Math.PI * 2.8));
+        flywheelMotor.set(speed / (Math.PI * 2.4));
+        flywheelFolMotor.set(speed / (Math.PI * 2.4));
+        if (speed > .1) {
+            indexerLMotor.setVoltage(-12);
+            feedMotor.setVoltage(-12);
+            indexerRMotor.setVoltage(12);
+            vibratorMotor.set(.4);
+        }
+    }
+
+    public void autolimelightAim() {
+        //isLimelightAiming = !isLimelightAiming;
+        //if (isLimelightAiming == false) return;
+        LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
+        if (robotPose == null || turretPosition == null) return;
+        if (!LimelightHelpers.getTV("limelight-stinky")) {return;}
+        if (wasDisabled) {
+            rotationSetpoint = cachedRotationPos;
+            heightSetpoint = cachedHeightPos;
+            rememberedHeight = cachedHeightPos;
+            wasDisabled = false;
+        }
+        limelightAiming = true;
+        double TX = 0;
+        double TY = 0;
+        LimelightHelpers.setPriorityTagID("limelight-stinky", limelightAcceptedTagID);
+        TX = LimelightHelpers.getTX("limelight-stinky");
+        TY = Math.IEEEremainder(TX, 360);
+        TY = TX / 360.0;
+        TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         if (Math.abs(TY) > .001) {
             rotationSetpoint += (.2 * TY);
         }
@@ -375,10 +425,10 @@ public class TurretAiming extends SubsystemBase {
         flywheelMotor.set(speed / (Math.PI * 2.4));
         flywheelFolMotor.set(speed / (Math.PI * 2.4));
         if (speed > .1) {
-        indexerLMotor.setVoltage(-12);
-        feedMotor.setVoltage(-12);
-        indexerRMotor.setVoltage(12);
-        vibratorMotor.set(.4);
+            indexerLMotor.setVoltage(-12);
+            feedMotor.setVoltage(-12);
+            indexerRMotor.setVoltage(12);
+            vibratorMotor.set(.4);
         }
     }
 
@@ -463,8 +513,8 @@ public class TurretAiming extends SubsystemBase {
         autoAimEnabled = false;
         headingHoldMode = false;
         manualHoldCycles++;
-        double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
-        double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
+        double t = Math.min(5.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
+        double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t * 10;
         double desired = rotationSetpoint + step * direction;
         desired = MathUtil.clamp(desired, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         // Don't let the setpoint outrun the actual motor position

@@ -13,7 +13,7 @@ public final class Constants {
    *  fixed field-relative turret angle (per alliance), a height, and a flywheel speed. */
   public enum ScoringMode {
     /** Low shot toward own alliance wall — height 0, flywheel 50%. */
-    SCORING(0, Math.PI, TurretConfigs.HEIGHT_REVERSE_LIMIT, 0.60),
+    SCORING(0, Math.PI, TurretConfigs.HEIGHT_FORWARD_LIMIT, 0.60),
     /** High lob toward opposite alliance wall — max height, flywheel 100%. */
     PASSING(0, 0, TurretConfigs.HEIGHT_FORWARD_LIMIT, 1.0);
 
@@ -138,10 +138,10 @@ public final class Constants {
     public static final double kTurretXOffsetMeters = -0.1524;
     
     //Turret aiming pid
-    public static final double kTurretRotationP = 150; //kP ≈ 0.4–0.8 
+    public static final double kTurretRotationP = 20; //kP ≈ 0.4–0.8 
     public static final double kTurretRotationI = 0;
     public static final double kTurretRotationD = 0.0; // kD ≈ 0.001–0.01
-    public static final double kTurretRotationVelocity = 3; //rps
+    public static final double kTurretRotationVelocity = 10; //rps
     public static final double kTurretRotationAcceleration = 120; //rps²
 
     public static final double kTurretHeightP = 50; //kP — needs enough voltage to overcome friction at small errors
@@ -171,7 +171,7 @@ public final class Constants {
     /** Configuration for the indexer from {@link TurretConfigs} */
     public static final TalonFXConfiguration indexerConfigs = new TalonFXConfiguration();
     // Measured: zeroed, then 180° physical reads 183.251° at 32.98 → corrected to 33.58
-    public static final Double rotationRatio = 33.58;
+    public static final Double rotationRatio = 22.96;
     public static final Double kmaxVelocity = 4.71;
     public static final Double heightRatio = 5.0;
     public static final Double smoothRotation = 0.0;
@@ -179,8 +179,8 @@ public final class Constants {
     public static final Double rotationTao = .05;
     public static final Double heightTao = .1;
     // Soft limits (mechanism rotations) — ±135° from front-of-robot zero
-    public static final double ROTATION_FORWARD_LIMIT = 0.5;//0.57
-    public static final double ROTATION_REVERSE_LIMIT = -0.5;//-0.43
+    public static final double ROTATION_FORWARD_LIMIT = 0.622;//0.57
+    public static final double ROTATION_REVERSE_LIMIT = -0.382;//-0.43
     public static final double HEIGHT_FORWARD_LIMIT = 0.92;
     public static final double HEIGHT_REVERSE_LIMIT = 0.0;
     
@@ -190,8 +190,10 @@ public final class Constants {
         rotationConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         rotationConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
         //current limits
-        rotationConfigs.CurrentLimits.withStatorCurrentLimit(40);
+        rotationConfigs.CurrentLimits.withStatorCurrentLimit(58);
         rotationConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
+        rotationConfigs.CurrentLimits.withSupplyCurrentLimit(60);
+        rotationConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
         //motor limits
         rotationConfigs.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ROTATION_FORWARD_LIMIT; 
         rotationConfigs.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ROTATION_REVERSE_LIMIT; 
@@ -236,8 +238,8 @@ public final class Constants {
         //indexer stuff
         indexerConfigs.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         indexerConfigs.MotorOutput.withNeutralMode(NeutralModeValue.Coast);
-        indexerConfigs.CurrentLimits.withStatorCurrentLimit(18);
-        indexerConfigs.CurrentLimits.withSupplyCurrentLimit(19);
+        indexerConfigs.CurrentLimits.withStatorCurrentLimit(60);
+        indexerConfigs.CurrentLimits.withSupplyCurrentLimit(69);
         indexerConfigs.CurrentLimits.withSupplyCurrentLimitEnable(true);
         indexerConfigs.CurrentLimits.withStatorCurrentLimitEnable(true);
         indexerConfigs.serialize(); //save

@@ -212,7 +212,7 @@ public class TunerConstants {
         return new CommandSwerveDrivetrain(
             DrivetrainConstants, 0,
             VecBuilder.fill(4, 4, 0.01),
-            VecBuilder.fill(0.01, 0.01, 9999999999.0),
+            VecBuilder.fill(100000, 100000, 9999999999.0),
             FrontLeft, FrontRight, BackLeft, BackRight
         );
     }

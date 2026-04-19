@@ -3,45 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5646332737030413,
-        "y": 6.00638640429338
+        "x": 1.8771914132379246,
+        "y": 4.659677996422182
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6538899127158078,
-        "y": 6.016962311186607
+        "x": 1.618188785751782,
+        "y": 4.744335588039922
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "depot 1"
     },
     {
       "anchor": {
-        "x": 3.5646332737030413,
-        "y": 6.00638640429338
+        "x": 0.20597495527728038,
+        "y": 4.903059033989266
       },
       "prevControl": {
-        "x": 4.1970215674117926,
-        "y": 5.966862135936582
-      },
-      "nextControl": {
-        "x": 3.3050268336314845,
-        "y": 6.022611806797853
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 1.065921288014311,
-        "y": 6.00638640429338
-      },
-      "prevControl": {
-        "x": 1.5086722866266769,
-        "y": 5.990135045900899
+        "x": 1.277627263426833,
+        "y": 4.77641406188083
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "grab 1"
+      "linkedName": "Depot 2"
     }
   ],
   "rotationTargets": [],
@@ -57,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.25,
-    "rotation": 180.0
+    "velocity": 0,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -17.987334652061488
   },
   "useDefaultConstraints": true
 }

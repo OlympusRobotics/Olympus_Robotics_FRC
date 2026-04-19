@@ -1,0 +1,132 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "lowerintake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot then Depot 1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "limelight aim"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "intake"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Shoot then Depot 2"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Shoot then Depot 3"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Shoot then Depot 4"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "limelight aim"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "limelight aim"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "limelight aim"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "limelight aim"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "limelight aim"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intake"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "intake"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
