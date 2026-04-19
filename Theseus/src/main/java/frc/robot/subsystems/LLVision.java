@@ -4,20 +4,22 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.VecBuilder;
+//import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.Timer;
+//import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/** @deprecated */
 public class LLVision extends SubsystemBase {
   //private static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
-  private final CommandSwerveDrivetrain m_drivetrain;
-  private final TurretAiming m_turret;
+  private final Drivetrain m_drivetrain;
+  private final Shooting m_turret;
   private Pose2d averagePose2d = new Pose2d(0, 0, new Rotation2d(0));
   public double validtargets, averageTimeStamp;
 
-  public LLVision(CommandSwerveDrivetrain drivetrain, TurretAiming turret) {
+  /** @deprecated */
+  public LLVision(Drivetrain drivetrain, Shooting turret) {
     this.m_drivetrain = drivetrain;
     this.m_turret = turret;
     validtargets = 0;
