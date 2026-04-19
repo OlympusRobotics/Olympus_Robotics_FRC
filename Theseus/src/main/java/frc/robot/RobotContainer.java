@@ -7,12 +7,14 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.SignalLogger;
+//import com.fasterxml.jackson.databind.util.Named;
+//import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
+//import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -23,18 +25,21 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
+//import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.CameraUsing;
+//import frc.robot.subsystems.LLVision;
 //import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.TurretAiming;
+import frc.robot.subsystems.Shooting;
 
 // NOTE: Changes to controller bindings, subsystem wiring, or auto commands here
 // must also be reflected in Theseus/README.md (Controller Bindings, Autonomous sections).
 public class RobotContainer {
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(2).in(RadiansPerSecond); // 1 rotation per second max angular velocity
+    public double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    public double MaxAngularRate = RotationsPerSecond.of(2).in(RadiansPerSecond); // 1 rotation per second max angular velocity
+    /* private final SlewRateLimiter xLimiter = new SlewRateLimiter(8);  
+    private final SlewRateLimiter yLimiter = new SlewRateLimiter(8); 
+    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(RotationsPerSecond.of(4).in(RadiansPerSecond));  */
     
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -45,19 +50,24 @@ public class RobotContainer {
 
     //initalize controllers (joy and whimsey lmao im so funny :3)
     public final CommandXboxController joystick = new CommandXboxController(0);
-    private final CommandXboxController whimseystick = new CommandXboxController(1);
+    //private final CommandXboxController whimseystick = new CommandXboxController(1);
 
     //initalize the subsystems
     private final Telemetry logger = new Telemetry(MaxSpeed);
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    public final CameraUsing visioningit = new CameraUsing(drivetrain);
-    public final TurretAiming aiming = new TurretAiming(drivetrain);
+    public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
+    //public final CameraUsing visioningit = new CameraUsing(drivetrain);
+    public final Shooting turret = new Shooting(drivetrain);
     public final Intake intake = new Intake();
     private final Field2d field = new Field2d();
+    //private final LLVision limelight = new LLVision(drivetrain, turret);
     private final SendableChooser<Command> autoChooser;
     public Command m_autonomousCommand;
     //private final Climber climber = new Climber();
     public final McpJoystick mcpJoystick = new McpJoystick(0);
+
+    public Boolean maybeHenryDidItWrong = false;
+    public double speedMulti = 1.0;
+    public double rotMulti = .8;
 
 
     //Initalize contoller commands
@@ -77,35 +87,45 @@ public class RobotContainer {
     private final Command jerkIntake = intake.startEnd(() -> intake.jerkIntake(), () -> intake.endIntake());
       
     /** Spins the flywheels to shoot a ball */
-    private final Command shoot = aiming.startEnd(() -> aiming.shoot(), () -> aiming.unshoot())
-      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RT button
+    /* private final Command shoot = turret.startEnd(() -> turret.shoot(), () -> turret.unshoot())
+      .until(() -> joystick.rightBumper().getAsBoolean() == false); //RT button */
     
-    private final Command indexshoot = aiming.startEnd(() -> aiming.index(), () -> aiming.unshoot())
+    private final Command indexshoot = turret.startEnd(() -> turret.index(), () -> turret.unshoot())
       .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
+    
+    private final Command reverseIndexer = turret.startEnd(() -> turret.reverseIndexer(), () -> turret.stopMotors())
+    .until(() -> joystick.rightBumper().getAsBoolean() == false);
 
     /** Spins the flywheels to shoot a ball without controller*/
 
-    private final Command autoRev = aiming.startEnd(() -> aiming.autoshoot(), () -> aiming.autoshoot());
+    private final Command autoRev = turret.startEnd(() -> turret.autoshoot(), () -> turret.autoshoot());
 
-    private final Command autoshoot = aiming.startEnd(() -> aiming.autoindex(), () -> aiming.unshoot());
+    private final Command autoshoot = turret.startEnd(() -> turret.autoindex(), () -> turret.unshoot());
 
     /** Reverse indexer only (left bumper) */
-    private final Command intakingOut = aiming.startEnd(() -> aiming.reverseIndexer(), () -> aiming.stopMotors())
-      .until(() -> joystick.leftBumper().getAsBoolean() == false);
+    /* private final Command intakingOut = turret.startEnd(() -> turret.reverseIndexer(), () -> turret.stopMotors())
+      .until(() -> joystick.leftBumper().getAsBoolean() == false); */
+
+    private final Command intakeOut = intake.startEnd(() -> intake.outakeIntake(), () -> intake.stopspin())
+      .until(() -> joystick.leftBumper().getAsBoolean() ==false);
 
     /** Resets the turret */
-    public final Command resetsTurret = aiming.startEnd(() -> aiming.resetTurret(), () -> aiming.stopMotors())
+    public final Command resetsTurret = turret.startEnd(() -> turret.resetTurret(), () -> turret.stopMotors())
       .until(() -> joystick.b().getAsBoolean() == false); //B button
 
-    private final Command locksTurret = aiming.startEnd(() -> aiming.lockTurret(), () -> aiming.stopMotors()) //locks the turret 🤯
+    private final Command locksTurret = turret.startEnd(() -> turret.lockTurret(), () -> turret.stopMotors()) //locks the turret 🤯
     .until(() -> joystick.x().getAsBoolean() == false); //X button
+    //private final Command move = turret.startEnd(() -> turret.manualRotate(), () -> turret.stopMotors());
 
-      //private final Command autoaim = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.stopMotors());
+      //private final Command autoaim = turret.startEnd(() -> turret.limelightAim(), () -> turret.stopMotors());
 
 
-      private final Command limelightAiming = aiming.startEnd(() -> aiming.limelightAim(), () -> aiming.unshoot());
+      private final Command limelightAiming = turret.startEnd(() -> {turret.limelightAim(); speedMulti = 1; rotMulti = 1;}, () -> {turret.unshoot(); speedMulti = 1.0; rotMulti = 1.0;});
 
+
+      private final Command autolimelight = turret.startEnd(() -> {turret.autolimelightAim();}, () -> {turret.unshoot();});
     /*private final Command llAutoAim = new RunCommand(() -> { //stinky stinky limelight stuff
+
 
         double forwardVal = applyDeadband(limes.aimAndRange()[0]);
         double strafeVal = applyDeadband((-joystick.getLeftX())); // Negate to match joystick direction
@@ -126,7 +146,7 @@ public class RobotContainer {
      * @return the value after the deadband
     */
     private double applyDeadband(double value) {
-        final double deadband = 0.05;
+        final double deadband = 0.08;
         if (Math.abs(value) <= deadband) {
             return 0.0;
         }
@@ -139,24 +159,33 @@ public class RobotContainer {
       //DriverStation.JoystickConnectionWarningSilenced(true);
         //DriverStation.silenceJoystickConnectionWarning(true);
         drivetrain.configureAutobuilder();
-        aiming.setMcpJoystick(mcpJoystick);
+        turret.setMcpJoystick(mcpJoystick);
         configureBindings();
+
+        //Initalize Operator Stuff
         NamedCommands.registerCommand("Rev", autoRev.withTimeout(3));
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(5));
-        NamedCommands.registerCommand("intake", autoIntake.withTimeout(20));
-        NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(.5));
-        NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(1));
+        NamedCommands.registerCommand("intake", autoIntake.withTimeout(7));
+        NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(1));
+        NamedCommands.registerCommand("Jerk", jerkIntake.withTimeout(.35));
+        NamedCommands.registerCommand("limelight aim", autolimelight.withTimeout(5));
         SmartDashboard.putData("Field", field);
+
+        //Select Auto
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Back up and Shoot", autoChooser);
         SmartDashboard.putData("Disrupt", autoChooser);
         SmartDashboard.putData("Full disrupt", autoChooser);
         SmartDashboard.putData("Full Disrupt Right", autoChooser);
         SmartDashboard.putData("Disrupt Right", autoChooser);
-
+        SmartDashboard.putData("New Auto", autoChooser);
+        SmartDashboard.putData("Grab 'n Go", autoChooser);
+        SmartDashboard.putData("Shoot then Depot", autoChooser);
+        SmartDashboard.putData("Block Left", autoChooser);
+        SmartDashboard.putData("Block Right", autoChooser);
         // Override "Zero Turret" to also zero the intake position
         SmartDashboard.putData("Zero Turret", new InstantCommand(() -> {
-            aiming.zeroTurret/*  */();
+            turret.zeroTurret/*  */();
             intake.zeroPosition();
         }).ignoringDisable(true));
     }
@@ -167,9 +196,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-this.applyDeadband(-joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-this.applyDeadband(-joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(this.applyDeadband(-(RobotBase.isSimulation() ? joystick.getRawAxis(2) : joystick.getRightX())) * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-this.applyDeadband(-joystick.getLeftY()) * MaxSpeed * speedMulti) // Drive forward with negative Y (forward)
+                    .withVelocityY(-this.applyDeadband(-joystick.getLeftX()) * MaxSpeed * speedMulti) // Drive left with negative X (left)
+                    .withRotationalRate(this.applyDeadband(-(RobotBase.isSimulation() ? joystick.getRawAxis(2) : joystick.getRightX())) * MaxAngularRate * rotMulti) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -180,31 +209,33 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
         
-        //Binds the commands to the buttons
-        joystick.leftBumper().whileTrue(intakingOut);
+        //Binds the commands to the controlelr buttons
+
+        //joystick.leftBumper().whileTrue(intakingOut);
+        joystick.leftBumper().whileTrue(intakeOut);
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(indexshoot);
-        joystick.rightBumper().whileTrue(shoot);
+        joystick.rightBumper().whileTrue(reverseIndexer);
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
         leftTrigger.whileTrue(intakeToggle);
         joystick.b().whileTrue(resetsTurret);
-        joystick.a().onTrue(limelightAiming);
+        joystick.a().toggleOnTrue(limelightAiming);
         joystick.x().whileTrue(locksTurret);
-        joystick.a().onTrue(intakeToggle);
-        joystick.y().onTrue(aiming.runOnce(() -> aiming.toggleHeadingHold()));
-        joystick.start().onTrue(aiming.runOnce(() -> aiming.toggleScoringMode()));
+        joystick.y().onTrue(turret.runOnce(() -> turret.toggleHeadingHold()));
+        joystick.start().onTrue(turret.runOnce(() -> turret.toggleScoringMode()));
         joystick.back().onTrue(
             drivetrain.runOnce(drivetrain::seedFieldCentric)
-                .alongWith(aiming.runOnce(aiming::disableAllModes))
+                .alongWith(turret.runOnce(turret::disableAllModes))
         );
 
         // D-pad turret controls: left/right = manual rotate, up/down = manual height
         // MCP simulated joystick is handled directly in TurretAiming.periodic()
-        joystick.povLeft().whileTrue(aiming.run(() -> aiming.manualRotate(-1)).finallyDo(() -> aiming.resetManualRamp()));
-        joystick.povRight().whileTrue(aiming.run(() -> aiming.manualRotate(1)).finallyDo(() -> aiming.resetManualRamp()));
-        joystick.povUp().whileTrue(aiming.run(() -> aiming.manualHeight(1)).finallyDo(() -> aiming.resetManualRamp()));
-        joystick.povDown().whileTrue(aiming.run(() -> aiming.manualHeight(-1)).finallyDo(() -> aiming.resetManualRamp()));
+       
+        joystick.povLeft().whileTrue(turret.run(() -> turret.manualRotate(-1)).finallyDo(() -> turret.resetManualRamp()));
+        joystick.povRight().whileTrue(turret.run(() -> turret.manualRotate(1)).finallyDo(() -> turret.resetManualRamp()));
+        joystick.povUp().whileTrue(turret.run(() -> turret.manualHeight(1)).finallyDo(() -> turret.resetManualRamp()));
+        joystick.povDown().whileTrue(turret.run(() -> turret.manualHeight(-1)).finallyDo(() -> turret.resetManualRamp()));
         
-        //joystick.start().onTrue(aiming.runOnce(() -> {useTurretMotionMagic = !useTurretMotionMagic;}) );
+        //joystick.start().onTrue(turret.runOnce(() -> {useTurretMotionMagic = !useTurretMotionMagic;}) );
 
         /* joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
@@ -218,26 +249,26 @@ public class RobotContainer {
         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse)); */
 
-        whimseystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
-        whimseystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop()));
+        /* joystick.leftBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.start()));
+        joystick.rightBumper().onTrue(drivetrain.runOnce(() -> SignalLogger.stop())); */
 
-        /* whimseystick.y().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kForward));
-        whimseystick.a().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kReverse));
-        whimseystick.b().whileTrue(TurretAiming.flySysid.dynamic(Direction.kForward));
-        whimseystick.x().whileTrue(TurretAiming.flySysid.dynamic(Direction.kReverse)); */
+        /* joystick.y().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kForward));
+        joystick.a().whileTrue(TurretAiming.flySysid.quasistatic(Direction.kReverse));
+        joystick.b().whileTrue(TurretAiming.flySysid.dynamic(Direction.kForward));
+        joystick.x().whileTrue(TurretAiming.flySysid.dynamic(Direction.kReverse)); */
         
-        //whimseystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
-        //whimseystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
-        //whimseystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
-        //whimseystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
-        whimseystick.povDown().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kForward));
-        whimseystick.povUp().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kReverse));
-        whimseystick.povRight().whileTrue(drivetrain.sysIdDynamicRot(Direction.kForward));
-        whimseystick.povLeft().whileTrue(drivetrain.sysIdDynamicRot(Direction.kReverse));
-        whimseystick.leftTrigger().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kForward));
-        whimseystick.leftBumper().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kReverse));
-        whimseystick.rightTrigger().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kForward));
-        whimseystick.rightBumper().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kReverse));
+        //joystick.y().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kForward));
+        //joystick.a().whileTrue(drivetrain.sysIdQuasistaticTrans(Direction.kReverse));
+        //joystick.b().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kForward));
+        //joystick.x().whileTrue(drivetrain.sysIdDynamicTrans(Direction.kReverse));
+        /* joystick.povDown().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kForward));
+        joystick.povUp().whileTrue(drivetrain.sysIdQuasistaticRot(Direction.kReverse));
+        joystick.povRight().whileTrue(drivetrain.sysIdDynamicRot(Direction.kForward));
+        joystick.povLeft().whileTrue(drivetrain.sysIdDynamicRot(Direction.kReverse));
+        joystick.leftTrigger().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kForward));
+        joystick.leftBumper().whileTrue(drivetrain.sysIdDynamicSteer(Direction.kReverse));
+        joystick.rightTrigger().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kForward));
+        joystick.rightBumper().whileTrue(drivetrain.sysIdQuasistaticSteer(Direction.kReverse)); */
 
 
         // Reset the field-centric heading on left bumper press.
@@ -250,7 +281,7 @@ public class RobotContainer {
           if (selectedAuto != null) {
               return selectedAuto;
           }
-        return new PathPlannerAuto("New New Auto");
+        return new PathPlannerAuto("New Auto");
     } 
     public void periodic() {
       SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());

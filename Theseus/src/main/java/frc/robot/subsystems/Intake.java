@@ -45,13 +45,15 @@ public class Intake extends SubsystemBase {
   // turns indexer on and sends intake out
   public void startIntake() {
     m_inkMot.set(1);
-    m_inkMotFollower.setControl(new Follower(m_inkMot.getDeviceID(), MotorAlignmentValue.Opposed));
-    intFWMot.set(.4);
-    intFWMotFollower.set(-.4);
-    vibratorMot.set(.35);
+    m_inkMotFollower.set(1);
   }
   public void jerkIntake() {
+    m_inkMot.set(-1);
+    m_inkMotFollower.set(1);
+    intFWMot.set(.4);
     vibratorMot.set(.35);
+    intFWMotFollower.set(-.4);
+
   }
   public void spinflywheel() {
     intFWMot.set(.4);
@@ -73,8 +75,9 @@ public class Intake extends SubsystemBase {
     m_inkMotFollower.set(0);
   }
   public void outakeIntake() {
-    target = ActivatedPos;
-    intFWMot.set(-.35);
+    intFWMot.set(-.4);
+    vibratorMot.set(.35);
+    intFWMotFollower.set(.4);
   }
   public void zeroPosition() {
     m_inkMot.setPosition(0);
@@ -83,7 +86,6 @@ public class Intake extends SubsystemBase {
   }
   @Override
   public void periodic() {
-
     Logger.recordOutput("Intake/TargetPosition", target);
     Logger.recordOutput("Intake/ActualPosition", m_inkMot.getPosition().getValueAsDouble());
     Logger.recordOutput("Intake/FlywheelOutput", intFWMot.get());

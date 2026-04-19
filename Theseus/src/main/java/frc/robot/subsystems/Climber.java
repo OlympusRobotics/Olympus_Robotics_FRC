@@ -67,7 +67,7 @@ public class Climber extends SubsystemBase {
 
   @Override
   public void periodic() {
-    Logger.recordOutput("Climber/Position", m_Climber.getPosition().getValueAsDouble());
-    Logger.recordOutput("Climber/Temperature", m_Climber.getDeviceTemp().getValueAsDouble());
+    //Logger.recordOutput("Climber/Position", m_Climber.getPosition().getValueAsDouble());
+    //Logger.recordOutput("Climber/Temperature", m_Climber.getDeviceTemp().getValueAsDouble());
   }
 }

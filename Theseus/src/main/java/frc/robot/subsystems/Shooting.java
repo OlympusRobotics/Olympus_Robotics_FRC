@@ -2,18 +2,25 @@ package frc.robot.subsystems;
 // NOTE: Changes to motors, CAN IDs, or aiming logic must be reflected in Theseus/README.md (Turret Aiming section).
 
 //import edu.wpi.first.math.controller.PIDController;
+import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.math.MathUtil;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -26,12 +33,15 @@ import static frc.robot.Constants.TurretConfigs.*;
 
 import org.littletonrobotics.junction.Logger;
 
-public class TurretAiming extends SubsystemBase {
+public class Shooting extends SubsystemBase {
     private Pose2d robotPose;
     private Translation2d turretPosition;
     private Translation2d targetPose;
+    private Translation3d turretOffset, limelight2TurretOffset;
+    private Rotation3d limelightRotation;
+    private Transform3d turret2Robot, limelight2Turret, limelight2Robot;
     private double targetx, targety, targetAngle, turretHeight, targetDistance, kmaxVelocity, rotationSetpoint, heightSetpoint, rotationTau, heightTau, desiredRotation, 
-    cachedTargetHeight, desiredHeight, rotationsPerDegree, desiredHeightAngle;
+    cachedTargetHeight, desiredHeight, rotationsPerDegree, desiredHeightAngle, turretOffsetX, turretOffsetZ, limelightOffsetX;
     public static double cachedRotationPos;
     private double cachedHeightPos;
     private double cachedFlywheelVel;
@@ -39,10 +49,11 @@ public class TurretAiming extends SubsystemBase {
     private int limelightAcceptedTagID;
     // Per-cycle cached values to avoid redundant computation
     private Translation2d cachedTarget;
-    private final TalonFX rotationMotor, heightMotor, flywheelMotor, indexerLMotor, indexerRMotor, feedMotor, vibratorMotor;
+    private final TalonFX rotationMotor, heightMotor, flywheelMotor, flywheelFolMotor, indexerLMotor, indexerRMotor, feedMotor, vibratorMotor;
     private final MotionMagicVoltage rotationoutput, heightoutput;
-    private final CommandSwerveDrivetrain drivetrain;
+    private final Drivetrain drivetrain;
     private final DoubleArrayPublisher turretTargetPub;
+    public final SysIdRoutine flysisid;
     //private final PIDController stinkyPIDcontrollerthatmayormaynotwork;
     private McpJoystick mcpJoystick;
     private boolean turretLocked = false;
@@ -61,8 +72,8 @@ public class TurretAiming extends SubsystemBase {
     private ScoringMode scoringMode = null;
     private int manualHoldCycles = 0;
     private int manualHeightHoldCycles = 0;
-    private static final double MANUAL_STEP_SLOW = 0.002; // fine rotation step for short presses
-    private static final double MANUAL_STEP_FAST = 0.008; // fast rotation step after holding ~1s
+    private static final double MANUAL_STEP_SLOW = 0.1; // fine rotation step for short presses
+    private static final double MANUAL_STEP_FAST = 0.5; // fast rotation step after holding ~1s
     private static final double HEIGHT_STEP_SLOW = 0.04;  // fine height step (5:1 ratio needs bigger steps)
     private static final double HEIGHT_STEP_FAST = 0.16;  // fast height step after holding ~1s
     private static final int MANUAL_RAMP_CYCLES = 50;     // cycles before ramping up (~1s at 50Hz)
@@ -84,42 +95,197 @@ public class TurretAiming extends SubsystemBase {
     }
 
     /** Subsystem for the turret */
-    public TurretAiming(CommandSwerveDrivetrain drivetrain) {
-        this.drivetrain = drivetrain;
+    public Shooting(Drivetrain drivetrain) {
+        this.drivetrain = drivetrain; // initalize drivetrain
+        // Initalize talons
         rotationMotor = new TalonFX(RobotConstants.kTurretRotationID);
         heightMotor =   new TalonFX(RobotConstants.kTurretHeightID);
         flywheelMotor = new TalonFX(RobotConstants.kTurretFlywheelID);
+        flywheelFolMotor = new TalonFX(RobotConstants.kTurretFlywheelFolID);
         indexerLMotor =  new TalonFX(RobotConstants.kTurretIndexerID);
         indexerRMotor =  new TalonFX(RobotConstants.kTurretRIndexerID);
         feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         vibratorMotor = new TalonFX(RobotConstants.kIntakeVibratorID);
+        // Turret motionmagic
         rotationoutput = new MotionMagicVoltage(0);
         heightoutput =   new MotionMagicVoltage(0);
-        targetAngle = 0;
-        robotPose = new Pose2d();
-        turretPosition = robotPose.getTranslation();
-        kmaxVelocity = 2;
-        heightTau = 1.0;
-        rotationTau = .15;
-        desiredRotation = 0;
-        rotationsPerDegree = 1.45 / (26 - 67);
-        turretTargetPub = NetworkTableInstance.getDefault()
-            .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
+        targetAngle = 0; //target turret angle
+        
         //Set up motors
         rotationMotor.getConfigurator().apply(rotationConfigs);
         heightMotor.getConfigurator().apply(heightConfigs); //apply to the motor
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
         indexerLMotor.getConfigurator().apply(indexerConfigs);
+        indexerRMotor.getConfigurator().apply(indexerConfigs);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        flywheelFolMotor.getConfigurator().apply(flyConfigs);
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
 
-        LimelightHelpers.setFiducial3DOffset("limelight-stinky", 0, -.15, -.58);
-        //stinkyPIDcontrollerthatmayormaynotwork = new PIDController(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
+        robotPose = new Pose2d();
+        turretPosition = robotPose.getTranslation();
+        
+        // Constants
+        kmaxVelocity = 2;
+        heightTau = 1.0;
+        rotationTau = .15;
+        desiredRotation = 0;
+        rotationsPerDegree = 1.45 / (26 - 67);
+        turretOffsetZ = .402;
+        turretOffsetX = -.105;
+        limelightOffsetX = .2;
 
+        //Set offsets for the limelight
+        LimelightHelpers.setFiducial3DOffset("limelight-stinky", 0, -.15, -.58);
+
+        // Operator Stuff
+        turretTargetPub = NetworkTableInstance.getDefault()
+            .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
         SmartDashboard.putData("Zero Turret", new InstantCommand(this::zeroTurret).ignoringDisable(true));
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         SmartDashboard.putNumber("Shoot Speed", 1.0);
+
+        // Currently usused sysid rougine for the flywheels
+        //lowkey not even gonna try to explain how this works lol
+        flysisid = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                state -> SignalLogger.writeString("SysIdFlywheels_State", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                volts -> {flywheelMotor.setVoltage(volts.in(Volts)); flywheelFolMotor.setVoltage(volts.in(Volts));},
+                null,
+                this
+            )
+        );
+    }
+
+    //Function that runs peridocaly while the Subsystem is active
+    @Override
+    public void periodic() {
+        robotPose = drivetrain.getState().Pose;
+        turretPosition = robotPose.transformBy(
+            new Transform2d(new Translation2d(RobotConstants.kTurretXOffsetMeters, 0), new Rotation2d()))
+            .getTranslation();
+        // Only react to the dashboard toggle when the operator actually
+        // clicked it (value differs from what we last wrote).
+        boolean dashboardAim = SmartDashboard.getBoolean("Auto Aim", autoAimEnabled);
+        if (dashboardAim != lastDashboardAim) {
+            autoAimEnabled = dashboardAim;
+        }
+
+        // Cache CAN reads once per cycle
+        cachedRotationPos = rotationMotor.getPosition().getValueAsDouble();
+        cachedHeightPos = heightMotor.getPosition().getValueAsDouble();
+        cachedFlywheelVel = flywheelMotor.getVelocity().getValueAsDouble();
+
+        if (limelightAiming != true) {
+            LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
+            targetAim();
+        }
+        if (limelightAiming == true) {
+            LimelightHelpers.setPipelineIndex("limelight-stinky", 0);
+            limelightAim();
+        }
+        // Check MCP simulated joystick for height/rotation/shoot commands
+        if (mcpJoystick != null && mcpJoystick.isActive() && DriverStation.isEnabled()) {
+            int mcpPov = mcpJoystick.getPOV();
+            if (mcpPov == 0) manualHeight(1);        // D-pad up
+            else if (mcpPov == 180) manualHeight(-1); // D-pad down
+            else if (mcpPov == 270) manualRotate(-1); // D-pad left
+            else if (mcpPov == 90) manualRotate(1);   // D-pad right
+
+            // Button 1 (A) toggles auto-aim on rising edge
+            boolean mcpAPressed = mcpJoystick.getButton(1);
+            if (mcpAPressed && !mcpAutoAimWasPressed) {
+                if (autoAimEnabled) { autoAimEnabled = false; } else { enableAutoAim(); }
+            }
+            mcpAutoAimWasPressed = mcpAPressed;
+
+            // Button 2 (B) toggles heading-hold on rising edge
+            boolean mcpBPressed = mcpJoystick.getButton(2);
+            if (mcpBPressed && !mcpHeadingHoldWasPressed) {
+                toggleHeadingHold();
+            }
+            mcpHeadingHoldWasPressed = mcpBPressed;
+
+            // Right trigger (axis 3) > 0.5 = shoot
+            if (mcpJoystick.getAxis(3) > 0.5) {
+                if (!mcpShooting) { shoot(); mcpShooting = true; }
+            } else if (mcpShooting) {
+                unshoot(); mcpShooting = false;
+            }
+        } else if (mcpShooting) {
+            unshoot(); mcpShooting = false;
+        }
+       /*  try {
+        turretOffset = new Translation3d(turretOffsetX, 0, turretOffsetZ);
+        limelight2TurretOffset = new Translation3d(limelightOffsetX, 0, 0);
+        limelightRotation = new Rotation3d(0, Math.toRadians(18), Math.toRadians(getCurRotation()));
+        turret2Robot = new Transform3d(turretOffset, new Rotation3d());
+        limelight2Turret = new Transform3d(limelight2TurretOffset, limelightRotation);
+        if (!Double.isNaN(getCurRotation())) {
+            limelight2Robot = turret2Robot.plus(limelight2Robot);
+        }
+    } catch (Exception e) {
+    }
+        if (limelight2Robot != null) {
+            LimelightHelpers.setCameraPose_RobotSpace(
+                "limelight-stinky",
+                limelight2Robot.getX(),
+                limelight2Robot.getY(),
+                limelight2Robot.getZ(),
+                Math.toDegrees(limelight2Robot.getRotation().getX()),
+                Math.toDegrees(limelight2Robot.getRotation().getY()),
+                Math.toDegrees(limelight2Robot.getRotation().getZ())
+            );
+        }
+        System.out.println(LimelightHelpers.getCameraPose3d_RobotSpace("limelight-stinky")); */
+
+        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
+        lastDashboardAim = autoAimEnabled;
+        SmartDashboard.putBoolean("Heading Hold", headingHoldMode);
+        SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled && !headingHoldMode);
+        SmartDashboard.putString("Scoring Mode", scoringMode != null ? scoringMode.name() : "NONE");
+        SmartDashboard.putNumber("Turret Angle", cachedRotationPos * 360.0);
+        //if (Math.abs(cachedRotationPos * 360.0) < rotationSetpoint - .1) {feedMotor.stopMotor(); flywheelMotor.stopMotor(); indexerLMotor.stopMotor(); indexerRMotor.stopMotor();}
+        if (turretPosition != null) {
+            turretTargetPub.set(new double[] {
+                targetPose != null ? targetPose.getX() : 0,
+                targetPose != null ? targetPose.getY() : 0, 0 });
+        }
+
+        Logger.recordOutput("Turret/RotationPosition", cachedRotationPos);
+        Logger.recordOutput("Turret/HeightPosition", cachedHeightPos);
+        Logger.recordOutput("Turret/HeightSetpoint", heightSetpoint);
+        SmartDashboard.putNumber("heightstepoint", heightSetpoint);
+        Logger.recordOutput("Turret/RememberedHeight", rememberedHeight);
+        Logger.recordOutput("Turret/IsShooting", isShooting);
+        Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);
+        Logger.recordOutput("Turret/FlywheelVelocity", cachedFlywheelVel);
+        Logger.recordOutput("Turret/ThroughborePosition", cachedThroughborePos);
+        Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
+        Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
+        Logger.recordOutput("Turret/HeadingHoldMode", headingHoldMode);
+        Logger.recordOutput("Turret/ScoringMode", scoringMode != null ? scoringMode.name() : "NONE");
+        SmartDashboard.putNumber("desiredRotation", desiredRotation);
+        
+        if (turretPosition != null) {
+            Logger.recordOutput("Turret/PositionX", turretPosition.getX());
+            Logger.recordOutput("Turret/PositionY", turretPosition.getY());
+        }
+
+        if (robotPose != null && turretPosition != null) {
+            double robotHeading = robotPose.getRotation().getRadians();
+
+            double actualFieldAngle = robotHeading - cachedRotationPos * 2 * Math.PI;
+            Logger.recordOutput("Turret/ActualPose", new Pose2d(turretPosition, new Rotation2d(actualFieldAngle)));
+
+            double desiredFieldAngle = robotHeading - targetAngle;
+            Logger.recordOutput("Turret/DesiredPose", new Pose2d(turretPosition, new Rotation2d(desiredFieldAngle)));
+        }
     }
 
     /** Set the MCP joystick reference for simulated input. */
@@ -134,7 +300,7 @@ public class TurretAiming extends SubsystemBase {
     public Translation2d targetpose() {
         targetPose = new Translation2d(0, 0);
         //if on red alliance
-        if (CommandSwerveDrivetrain.getAlliance()) {
+        if (Drivetrain.getAlliance()) {
             limelightAcceptedTagID = 10;
             //red alliance hub area
             if (robotPose.getX() > 12.5) {
@@ -153,7 +319,7 @@ public class TurretAiming extends SubsystemBase {
             }
         }
         //if on blue alliance
-        else if (!CommandSwerveDrivetrain.getAlliance()) {
+        else if (!Drivetrain.getAlliance()) {
             limelightAcceptedTagID = 26;
             //blue alliance hub area
             if (robotPose.getX() < 4.425) {
@@ -271,7 +437,7 @@ public class TurretAiming extends SubsystemBase {
         cachedTargetHeight = getTargetHeight();
         desiredHeightAngle = 90 - maxFormula();
         desiredHeight = (desiredHeightAngle - 23) * rotationsPerDegree; // 23 is empirically determined "zero" height angle
-        System.out.println(desiredHeight);
+        //System.out.println(desiredHeight);
         desiredRotation  = vectorCalculations();
         // Clamp to soft limits (±135° from front-of-robot zero)
         desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
@@ -301,8 +467,62 @@ public class TurretAiming extends SubsystemBase {
         rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
     }
 
+    /** Makes use of the LimeLight 4 mounted to the turret to aim at the correct apriltag */
     public void limelightAim() {
-        LimelightHelpers.setPipelineIndex("limelight-stinky", 0);
+        //isLimelightAiming = !isLimelightAiming;
+        //if (isLimelightAiming == false) return;
+        LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
+        if (robotPose == null || turretPosition == null) return;
+        if (!LimelightHelpers.getTV("limelight-stinky")) {return;}
+        if (wasDisabled) {
+            rotationSetpoint = cachedRotationPos;
+            heightSetpoint = cachedHeightPos;
+            rememberedHeight = cachedHeightPos;
+            wasDisabled = false;
+        }
+        limelightAiming = true;
+        double TX = 0;
+        double TY = 0;
+        LimelightHelpers.setPriorityTagID("limelight-stinky", limelightAcceptedTagID);
+        TX = LimelightHelpers.getTX("limelight-stinky");
+        TY = Math.IEEEremainder(TX, 360);
+        TY = TX / 360.0;
+        TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        if (Math.abs(TY) > .0){
+            rotationSetpoint += (.1 * TY);
+        }
+
+        if (rotationSetpoint > ROTATION_FORWARD_LIMIT) {
+            rotationSetpoint = ROTATION_REVERSE_LIMIT;
+        }
+        if (rotationSetpoint < ROTATION_REVERSE_LIMIT) {
+            rotationSetpoint = ROTATION_FORWARD_LIMIT;
+        }
+        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
+        SmartDashboard.putNumber("desiredrotation", TY);
+        double ranging = Math.hypot(LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getX(), 
+        LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getZ() - .5);
+        double g = 9.80665;
+        System.out.println(LimelightHelpers.getCameraPose3d_TargetSpace("limelight-stinky").getZ());
+        //double speed = ranging / Math.cos(Math.toRadians(70)) * Math.sqrt(g / (2 * (Math.abs((ranging * Math.tan(Math.toRadians(70))) - (1.8288 - turretHeight)))));
+        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(66) * 2)));
+        //System.out.println(ranging);
+        //System.out.println(speed / (Math.PI * 2.8));
+        flywheelMotor.set(speed / (Math.PI * 2.4));
+        flywheelFolMotor.set(speed / (Math.PI * 2.4));
+        if (speed > .1) {
+            indexerLMotor.setVoltage(-12);
+            feedMotor.setVoltage(-12);
+            indexerRMotor.setVoltage(12);
+            vibratorMotor.set(.4);
+        }
+    }
+
+    /** Duplicate of the {@code limelightAim()} function, however altered to be better suited for use in Autonomous mode */
+    public void autolimelightAim() {
+        //isLimelightAiming = !isLimelightAiming;
+        //if (isLimelightAiming == false) return;
+        LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
         if (robotPose == null || turretPosition == null) return;
         if (!LimelightHelpers.getTV("limelight-stinky")) {return;}
         if (wasDisabled) {
@@ -322,54 +542,71 @@ public class TurretAiming extends SubsystemBase {
         if (Math.abs(TY) > .001) {
             rotationSetpoint += (.2 * TY);
         }
+
+        if (rotationSetpoint > ROTATION_FORWARD_LIMIT) {
+            rotationSetpoint = ROTATION_REVERSE_LIMIT;
+        }
+        if (rotationSetpoint < ROTATION_REVERSE_LIMIT) {
+            rotationSetpoint = ROTATION_FORWARD_LIMIT;
+        }
         rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
         SmartDashboard.putNumber("desiredrotation", TY);
         double ranging = Math.hypot(LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getX(), 
-        LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getZ() - .25);
+        LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getZ() - .5);
         double g = 9.80665;
         System.out.println(LimelightHelpers.getCameraPose3d_TargetSpace("limelight-stinky").getZ());
         //double speed = ranging / Math.cos(Math.toRadians(70)) * Math.sqrt(g / (2 * (Math.abs((ranging * Math.tan(Math.toRadians(70))) - (1.8288 - turretHeight)))));
-        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(65) * 2)));
+        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(66) * 2)));
         //System.out.println(ranging);
         //System.out.println(speed / (Math.PI * 2.8));
-        flywheelMotor.set(speed / (Math.PI * 2.8));
-        indexerLMotor.setVoltage(-10);
-        feedMotor.setVoltage(-10);
-        indexerRMotor.setVoltage(-10);
-        vibratorMotor.set(.4);
+        flywheelMotor.set(speed / (Math.PI * 2.4));
+        flywheelFolMotor.set(speed / (Math.PI * 2.4));
+        if (speed > .1) {
+            indexerLMotor.setVoltage(-12);
+            feedMotor.setVoltage(-12);
+            indexerRMotor.setVoltage(12);
+            vibratorMotor.set(.4);
+        }
     }
 
-    /**The shoot function makes the robot shoot wow crazy right? never would have expected that */
+    /**The shoot function makes the robot shoot. */
     public void shoot(){
         flywheelMotor.set(.7);
+        flywheelFolMotor.set(.7);
         limelightAiming = false;
         isShooting = true;
     }
+    /** Beings to intake Fuel towards the flywheel*/
     public void index() {
         limelightAiming = false;
         isShooting = true;
-        if (scoringMode == ScoringMode.PASSING) {flywheelMotor.set(1); heightMotor.setControl(heightoutput.withPosition(1.45));}
-        else {flywheelMotor.set(.6); heightMotor.setControl(heightoutput.withPosition(0));}
+        if (scoringMode == ScoringMode.PASSING) {flywheelMotor.setVoltage(12);flywheelFolMotor.setVoltage(12); heightMotor.setControl(heightoutput.withPosition(1.45));}
+        else {flywheelMotor.set(.6);flywheelFolMotor.set(.6); heightMotor.setControl(heightoutput.withPosition(0));}
         if (autoAimEnabled) {
             double g = 9.80665;
             double speed = Math.sqrt((targetDistance * g) / (Math.sin(Math.toRadians(67) * 2)));
             flywheelMotor.set(speed);
+            flywheelFolMotor.set(speed);
         }
         indexerLMotor.setVoltage(-10);
         feedMotor.setVoltage(-10); 
-        indexerRMotor.setVoltage(-10);
+        indexerRMotor.setVoltage(10);
         vibratorMotor.set(.4);
     }
+    /** {@code shoot()} but for Autonomous */
     public void autoshoot(){
         isShooting = true;
         flywheelMotor.set(.6);
+        flywheelFolMotor.set(.6);
     }
+    /** {@code index()} but for Autonomous */
     public void autoindex(){
         isShooting = true;
         flywheelMotor.set(.51);
+        flywheelFolMotor.set(.51);
         indexerLMotor.setVoltage(-8);
         feedMotor.setVoltage(-8);
-        indexerRMotor.setVoltage(-8);
+        indexerRMotor.setVoltage(8);
         vibratorMotor.set(.4);
     }
     /** Stops shooting */
@@ -377,6 +614,7 @@ public class TurretAiming extends SubsystemBase {
         isShooting = false;
         limelightAiming = false;
         flywheelMotor.stopMotor();
+        flywheelFolMotor.stopMotor();
         indexerLMotor.stopMotor();
         feedMotor.stopMotor();
         indexerRMotor.stopMotor();
@@ -387,7 +625,7 @@ public class TurretAiming extends SubsystemBase {
      public void lockTurret(){
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
-        rotationMotor.setControl(rotationoutput.withPosition(0));
+        //rotationMotor.setControl(rotationoutput.withPosition(0));
         heightMotor.setControl(heightoutput.withPosition(1.2));
     }
    
@@ -399,7 +637,7 @@ public class TurretAiming extends SubsystemBase {
     public void reverseIndexer() {
         indexerLMotor.set(1);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
-        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         
     }
     /** Roughly gets the curret rotation of the turret 
@@ -415,8 +653,8 @@ public class TurretAiming extends SubsystemBase {
         autoAimEnabled = false;
         headingHoldMode = false;
         manualHoldCycles++;
-        double t = Math.min(1.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
-        double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t;
+        double t = Math.min(5.0, (double) manualHoldCycles / MANUAL_RAMP_CYCLES);
+        double step = MANUAL_STEP_SLOW + (MANUAL_STEP_FAST - MANUAL_STEP_SLOW) * t * 10;
         double desired = rotationSetpoint + step * direction;
         desired = MathUtil.clamp(desired, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
         // Don't let the setpoint outrun the actual motor position
@@ -499,7 +737,7 @@ public class TurretAiming extends SubsystemBase {
             dontchangeheight = false;
         }
         // Activate heading-hold at the mode's field angle
-        boolean isRed = CommandSwerveDrivetrain.getAlliance();
+        boolean isRed = Drivetrain.getAlliance();
         heldFieldAngle = isRed ? scoringMode.redFieldAngle : scoringMode.blueFieldAngle;
         headingHoldMode = true;
         autoAimEnabled = false;
@@ -535,106 +773,5 @@ public class TurretAiming extends SubsystemBase {
         indexerRMotor.stopMotor();
         feedMotor.stopMotor();
         vibratorMotor.stopMotor();
-    }
-    @Override
-    public void periodic() {
-        robotPose = drivetrain.getState().Pose;
-        turretPosition = robotPose.transformBy(
-            new Transform2d(new Translation2d(RobotConstants.kTurretXOffsetMeters, 0), new Rotation2d()))
-            .getTranslation();
-        // Only react to the dashboard toggle when the operator actually
-        // clicked it (value differs from what we last wrote).
-        boolean dashboardAim = SmartDashboard.getBoolean("Auto Aim", autoAimEnabled);
-        if (dashboardAim != lastDashboardAim) {
-            autoAimEnabled = dashboardAim;
-        }
-
-        // Cache CAN reads once per cycle
-        cachedRotationPos = rotationMotor.getPosition().getValueAsDouble();
-        cachedHeightPos = heightMotor.getPosition().getValueAsDouble();
-        cachedFlywheelVel = flywheelMotor.getVelocity().getValueAsDouble();
-
-        if (limelightAiming != true) {
-            LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
-            targetAim();
-        }
-        if (limelightAiming == true) {
-            LimelightHelpers.setPipelineIndex("limelight-stinky", 0);
-            limelightAim();
-        }
-        // Check MCP simulated joystick for height/rotation/shoot commands
-        if (mcpJoystick != null && mcpJoystick.isActive() && DriverStation.isEnabled()) {
-            int mcpPov = mcpJoystick.getPOV();
-            if (mcpPov == 0) manualHeight(1);        // D-pad up
-            else if (mcpPov == 180) manualHeight(-1); // D-pad down
-            else if (mcpPov == 270) manualRotate(-1); // D-pad left
-            else if (mcpPov == 90) manualRotate(1);   // D-pad right
-
-            // Button 1 (A) toggles auto-aim on rising edge
-            boolean mcpAPressed = mcpJoystick.getButton(1);
-            if (mcpAPressed && !mcpAutoAimWasPressed) {
-                if (autoAimEnabled) { autoAimEnabled = false; } else { enableAutoAim(); }
-            }
-            mcpAutoAimWasPressed = mcpAPressed;
-
-            // Button 2 (B) toggles heading-hold on rising edge
-            boolean mcpBPressed = mcpJoystick.getButton(2);
-            if (mcpBPressed && !mcpHeadingHoldWasPressed) {
-                toggleHeadingHold();
-            }
-            mcpHeadingHoldWasPressed = mcpBPressed;
-
-            // Right trigger (axis 3) > 0.5 = shoot
-            if (mcpJoystick.getAxis(3) > 0.5) {
-                if (!mcpShooting) { shoot(); mcpShooting = true; }
-            } else if (mcpShooting) {
-                unshoot(); mcpShooting = false;
-            }
-        } else if (mcpShooting) {
-            unshoot(); mcpShooting = false;
-        }
-
-        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
-        lastDashboardAim = autoAimEnabled;
-        SmartDashboard.putBoolean("Heading Hold", headingHoldMode);
-        SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled && !headingHoldMode);
-        SmartDashboard.putString("Scoring Mode", scoringMode != null ? scoringMode.name() : "NONE");
-        SmartDashboard.putNumber("Turret Angle", cachedRotationPos * 360.0);
-        //if (Math.abs(cachedRotationPos * 360.0) < rotationSetpoint - .1) {feedMotor.stopMotor(); flywheelMotor.stopMotor(); indexerLMotor.stopMotor(); indexerRMotor.stopMotor();}
-        if (turretPosition != null) {
-            turretTargetPub.set(new double[] {
-                targetPose != null ? targetPose.getX() : 0,
-                targetPose != null ? targetPose.getY() : 0, 0 });
-        }
-
-        Logger.recordOutput("Turret/RotationPosition", cachedRotationPos);
-        Logger.recordOutput("Turret/HeightPosition", cachedHeightPos);
-        Logger.recordOutput("Turret/HeightSetpoint", heightSetpoint);
-        SmartDashboard.putNumber("heightstepoint", heightSetpoint);
-        Logger.recordOutput("Turret/RememberedHeight", rememberedHeight);
-        Logger.recordOutput("Turret/IsShooting", isShooting);
-        Logger.recordOutput("Turret/RotationSetpoint", rotationSetpoint);
-        Logger.recordOutput("Turret/FlywheelVelocity", cachedFlywheelVel);
-        Logger.recordOutput("Turret/ThroughborePosition", cachedThroughborePos);
-        Logger.recordOutput("Turret/TargetAngle", Math.toDegrees(targetAngle));
-        Logger.recordOutput("Turret/DesiredMotorRotation", desiredRotation);
-        Logger.recordOutput("Turret/HeadingHoldMode", headingHoldMode);
-        Logger.recordOutput("Turret/ScoringMode", scoringMode != null ? scoringMode.name() : "NONE");
-        SmartDashboard.putNumber("desiredRotation", desiredRotation);
-        
-        if (turretPosition != null) {
-            Logger.recordOutput("Turret/PositionX", turretPosition.getX());
-            Logger.recordOutput("Turret/PositionY", turretPosition.getY());
-        }
-
-        if (robotPose != null && turretPosition != null) {
-            double robotHeading = robotPose.getRotation().getRadians();
-
-            double actualFieldAngle = robotHeading - cachedRotationPos * 2 * Math.PI;
-            Logger.recordOutput("Turret/ActualPose", new Pose2d(turretPosition, new Rotation2d(actualFieldAngle)));
-
-            double desiredFieldAngle = robotHeading - targetAngle;
-            Logger.recordOutput("Turret/DesiredPose", new Pose2d(turretPosition, new Rotation2d(desiredFieldAngle)));
-        }
     }
 }

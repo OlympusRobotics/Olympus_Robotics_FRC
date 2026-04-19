@@ -22,8 +22,12 @@ import edu.wpi.first.math.util.Units;
 
 import org.littletonrobotics.junction.Logger;
 
+/** @deprecated 
+ * Program that made use of TriftyCams and OrangePis to do field localization.
+ * No longer used in favor of Limelights
+*/
 public class CameraUsing extends SubsystemBase {
-    private final CommandSwerveDrivetrain drivetrain;
+    private final Drivetrain drivetrain;
     private boolean hasSeededPose = false;
     private static final int SEED_READING_COUNT = 5;
     private static final double SEED_TIMEOUT_SECONDS = 5.0;
@@ -51,7 +55,8 @@ public class CameraUsing extends SubsystemBase {
         "Red3",  new Pose2d(FIELD_LENGTH - START_INSET, 1.0, Rotation2d.k180deg)
     );
 
-    public CameraUsing(CommandSwerveDrivetrain drivetrain) {
+    /** @deprecated */
+    public CameraUsing(Drivetrain drivetrain) {
         this.drivetrain = drivetrain;
         SmartDashboard.putBoolean(ENABLE_VISION_KEY, enableVision);
         SmartDashboard.putBoolean(USE_APRIL_ROTATION_KEY, false);
