@@ -11,9 +11,9 @@ GitHub repo for code and documentation for FRC Team 4982 — Olympus Robotics.
 **Theseus** is the active robot for the 2026 season, written in Java with GradleRIO 2026.2.1.
 
 - **Architecture**: WPILib Command-Based (`TimedCommandRobot`, subsystems, commands)
-- **Drive**: Swerve (CTRE TalonFX drive + REV Spark Max rotation + absolute encoders)
+- **Drive**: Swerve (KrakenX60 Drive + KrakenX44 Rotation)
 - **Gyro**: CTRE Pigeon2
-- **Vision**: PhotonVision
+- **Vision**: Limelight 4
 - **Autonomous**: PathPlanner
 - **Build**: `./gradlew build` · **Deploy**: `./gradlew deploy`
 
