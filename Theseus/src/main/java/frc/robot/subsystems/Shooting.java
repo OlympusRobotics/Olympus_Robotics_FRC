@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 // NOTE: Changes to motors, CAN IDs, or aiming logic must be reflected in Theseus/README.md (Turret Aiming section).
 
+//as you may be able to tell, this file was the one that the most time was spent on
+
 //import edu.wpi.first.math.controller.PIDController;
 import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -106,7 +108,7 @@ public class Shooting extends SubsystemBase {
         indexerRMotor =  new TalonFX(RobotConstants.kTurretRIndexerID);
         feedMotor =  new TalonFX(RobotConstants.kTurretFeedID);
         vibratorMotor = new TalonFX(RobotConstants.kIntakeVibratorID);
-        // Turret motionmagic
+        // Turret motionmagic, a motion profiling that allows for movement from one position to another to be a lot more smooth and seamless
         rotationoutput = new MotionMagicVoltage(0);
         heightoutput =   new MotionMagicVoltage(0);
         targetAngle = 0; //target turret angle
@@ -117,7 +119,7 @@ public class Shooting extends SubsystemBase {
         flywheelMotor.getConfigurator().apply(flyConfigs); //apply
         indexerLMotor.getConfigurator().apply(indexerConfigs);
         indexerRMotor.getConfigurator().apply(indexerConfigs);
-        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
+        feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned)); //this does nothing as these commands must be run periodically or alongside the commands that move their master motor otherwise they will do nothing when the master is moving
         flywheelFolMotor.getConfigurator().apply(flyConfigs);
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
 
@@ -135,18 +137,18 @@ public class Shooting extends SubsystemBase {
         limelightOffsetX = .2;
 
         //Set offsets for the limelight
-        LimelightHelpers.setFiducial3DOffset("limelight-stinky", 0, -.15, -.58);
+        LimelightHelpers.setFiducial3DOffset("limelight-stinky", 0, -.15, -.58); //so the limelight knows where it is initially on the robot
 
         // Operator Stuff
         turretTargetPub = NetworkTableInstance.getDefault()
-            .getTable("Pose").getDoubleArrayTopic("turretTarget").publish();
+            .getTable("Pose").getDoubleArrayTopic("turretTarget").publish(); 
         SmartDashboard.putData("Zero Turret", new InstantCommand(this::zeroTurret).ignoringDisable(true));
         SmartDashboard.putBoolean("Velocity Compensation", false);
         SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
         SmartDashboard.putNumber("Shoot Speed", 1.0);
 
         // Currently usused sysid rougine for the flywheels
-        //lowkey not even gonna try to explain how this works lol
+        //This moves the motor which is called in the function as a specific voltage and (I could be wrong) uses the measured resistances to generate the feedback and feedforward values with internal math that allow the motors to move the smoothest and most accurate
         flysisid = new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,
@@ -165,31 +167,31 @@ public class Shooting extends SubsystemBase {
     //Function that runs peridocaly while the Subsystem is active
     @Override
     public void periodic() {
-        robotPose = drivetrain.getState().Pose;
+        robotPose = drivetrain.getState().Pose; //updates a variable in this file to equal a nonstatic variable in another file, could have been done more efficiently most likely but this was easiest
         turretPosition = robotPose.transformBy(
             new Transform2d(new Translation2d(RobotConstants.kTurretXOffsetMeters, 0), new Rotation2d()))
             .getTranslation();
         // Only react to the dashboard toggle when the operator actually
         // clicked it (value differs from what we last wrote).
-        boolean dashboardAim = SmartDashboard.getBoolean("Auto Aim", autoAimEnabled);
+        boolean dashboardAim = SmartDashboard.getBoolean("Auto Aim", autoAimEnabled); //checks if the button has been clicked on Smartdashboard/Elastic
         if (dashboardAim != lastDashboardAim) {
             autoAimEnabled = dashboardAim;
         }
 
         // Cache CAN reads once per cycle
-        cachedRotationPos = rotationMotor.getPosition().getValueAsDouble();
+        cachedRotationPos = rotationMotor.getPosition().getValueAsDouble(); //stores the positions of the motors
         cachedHeightPos = heightMotor.getPosition().getValueAsDouble();
         cachedFlywheelVel = flywheelMotor.getVelocity().getValueAsDouble();
 
-        if (limelightAiming != true) {
-            LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
+        if (limelightAiming != true) { //this was for if we got localization working and never got used
+            LimelightHelpers.setPipelineIndex("limelight-stinky", 1); //changes the settings of the camera, for localization I wanted the limelight to record fromt the apriltag while for limelight autoaim I wanted it to record from half a meter behidn the apriltag
             targetAim();
         }
-        if (limelightAiming == true) {
+        if (limelightAiming == true) { //could have been an else statement
             LimelightHelpers.setPipelineIndex("limelight-stinky", 0);
             limelightAim();
         }
-        // Check MCP simulated joystick for height/rotation/shoot commands
+        // Check MCP simulated joystick for height/rotation/shoot commands, the mcpJoystick is part of why manual aiming never got better as the head technician did not understand it
         if (mcpJoystick != null && mcpJoystick.isActive() && DriverStation.isEnabled()) {
             int mcpPov = mcpJoystick.getPOV();
             if (mcpPov == 0) manualHeight(1);        // D-pad up
@@ -197,7 +199,7 @@ public class Shooting extends SubsystemBase {
             else if (mcpPov == 270) manualRotate(-1); // D-pad left
             else if (mcpPov == 90) manualRotate(1);   // D-pad right
 
-            // Button 1 (A) toggles auto-aim on rising edge
+            // Button 1 (A) toggles auto-aim on rising edge AKA when pressed not when released
             boolean mcpAPressed = mcpJoystick.getButton(1);
             if (mcpAPressed && !mcpAutoAimWasPressed) {
                 if (autoAimEnabled) { autoAimEnabled = false; } else { enableAutoAim(); }
@@ -220,6 +222,8 @@ public class Shooting extends SubsystemBase {
         } else if (mcpShooting) {
             unshoot(); mcpShooting = false;
         }
+
+        //its commented out for a reason, basically tried to have a dynamic limelight position for localization, did not work
        /*  try {
         turretOffset = new Translation3d(turretOffsetX, 0, turretOffsetZ);
         limelight2TurretOffset = new Translation3d(limelightOffsetX, 0, 0);
@@ -244,7 +248,7 @@ public class Shooting extends SubsystemBase {
         }
         System.out.println(LimelightHelpers.getCameraPose3d_RobotSpace("limelight-stinky")); */
 
-        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled);
+        SmartDashboard.putBoolean("Auto Aim", autoAimEnabled); //logging
         lastDashboardAim = autoAimEnabled;
         SmartDashboard.putBoolean("Heading Hold", headingHoldMode);
         SmartDashboard.putBoolean("Turret Manual", !autoAimEnabled && !headingHoldMode);
@@ -297,7 +301,7 @@ public class Shooting extends SubsystemBase {
      * Gets the target field position based on the alliance and current position
      * @return The Translation2d of where it should be
     */
-    public Translation2d targetpose() {
+    public Translation2d targetpose() { //this entire function was not used but uses field coordinates pulled from pathplanner as to where the fuel should land based on where the robot is on the field
         targetPose = new Translation2d(0, 0);
         //if on red alliance
         if (Drivetrain.getAlliance()) {
@@ -350,24 +354,24 @@ public class Shooting extends SubsystemBase {
         }
     }
 
-    /**Calculating the actual angle while the robot is moving*/
+    /**Calculating the actual angle while the robot is moving*/ //This always ended up adjusting way more than it needed to and was never tuned or fixed so the math is likely wrong
     public double vectorCalculations() {
         targetx = (cachedTarget.getX() - turretPosition.getX()); 
         targety = (cachedTarget.getY() - turretPosition.getY());
         targetAngle = (Math.atan2(targety, targetx));
         boolean velocityCompensation = SmartDashboard.getBoolean("Velocity Compensation", false);
         if (velocityCompensation) {
-            double shootingXSpeed = kmaxVelocity*Math.cos(Math.toRadians(65));
+            double shootingXSpeed = kmaxVelocity*Math.cos(Math.toRadians(65)); //basic vectors and trigonometry
             // Add robot velocity so the projectile leads the target
             double actualX = (shootingXSpeed * Math.cos(targetAngle));
             double actualY = (shootingXSpeed * Math.sin(targetAngle)) + (drivetrain.getChassisSpeeds().vyMetersPerSecond);
             targetAngle = Math.atan2(actualY, actualX);
         }
         // Convert from field-relative to robot-relative
-        targetAngle -= drivetrain.getState().Pose.getRotation().getRadians();
+        targetAngle -= drivetrain.getState().Pose.getRotation().getRadians(); //adjust the angle that is needed to be robot relative
         // Normalize to [-π, π) so 0 = front of robot
         targetAngle = -Math.IEEEremainder(targetAngle, 2 * Math.PI);
-        double smartdashboardangle = Math.toDegrees(targetAngle);
+        double smartdashboardangle = Math.toDegrees(targetAngle); //this is just because very few people can read radians as a decimal and know what angle that is
         SmartDashboard.putNumber("turret expected angle", smartdashboardangle);
         return (targetAngle) / (2 * Math.PI);
     }
@@ -375,21 +379,21 @@ public class Shooting extends SubsystemBase {
      * Kinematics used to figure out the angle
      * Max definetly wrote it trust
     */
-    public double maxFormula(){
-        targetx = (cachedTarget.getX() - turretPosition.getX()); 
-        targety = (cachedTarget.getY() - turretPosition.getY());
-        targetDistance = Math.hypot(targetx, targety);
-        double v2 = kmaxVelocity * kmaxVelocity;
-        double v4 = v2 * v2;
-        double d2 = targetDistance * targetDistance;
-        double g = 9.80665;
-        double h = cachedTargetHeight;
-        double discriminant = d2 - (2 * g * targetDistance) * ((h / v2) + ((g * d2) / (2 * v4)));
+    public double maxFormula(){ //Doug's AI made everything into shortened variables, the numbers is just the power to which that variable is
+        targetx = (cachedTarget.getX() - turretPosition.getX()); //error between current and wanted x position
+        targety = (cachedTarget.getY() - turretPosition.getY()); // error between current and wanted y position
+        targetDistance = Math.hypot(targetx, targety); //find the error between current and wanted 2D coordinate
+        double v2 = kmaxVelocity * kmaxVelocity; //velocity squared as the localization was supposed to only adjust turret angle and keep speed the same
+        double v4 = v2 * v2; //velocity to the 4th
+        double d2 = targetDistance * targetDistance; //distance squared
+        double g = 9.80665; //the acceleration due to gravity, should probably be negative I don't know
+        double h = cachedTargetHeight; //height
+        double discriminant = d2 - (2 * g * targetDistance) * ((h / v2) + ((g * d2) / (2 * v4))); //for those who don't know a discriminant is just whatever goes inside the square root, if this is negative then the square root will return with an error as we have no use for imaginary numbers
         if (discriminant >= 0) {
-            return Math.atan2((targetDistance + Math.sqrt(discriminant)), (g * d2 / v2)) / (2 * Math.PI);
+            return Math.atan2((targetDistance + Math.sqrt(discriminant)), (g * d2 / v2)) / (2 * Math.PI); //its just some advanced kinematics which substitutes time and finds an angle for a specific spot on a 2D plane
         }
         else {
-            return 67;
+            return 67; //this is not a joke, this is the initial angle that the turret rests at measured with the measure app on my Iphone
         }
     }
     /**Moves the turret to the wanted spots*/
@@ -410,29 +414,29 @@ public class Shooting extends SubsystemBase {
             heightSetpoint = cachedHeightPos;
             rememberedHeight = cachedHeightPos;
             wasDisabled = false;
-        }
+        } 
 
         // --- Heading-hold mode: maintain the captured field angle using only gyro ---
         if (headingHoldMode) {
             double heading = robotPose.getRotation().getRadians();
-            double robotRelative = Math.IEEEremainder(heldFieldAngle - heading, 2 * Math.PI);
-            desiredRotation = -robotRelative / (2 * Math.PI);
-            desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+            double robotRelative = Math.IEEEremainder(heldFieldAngle - heading, 2 * Math.PI); //adjusts the angle so that 0 is always the front of the robot and not the front of the field
+            desiredRotation = -robotRelative / (2 * Math.PI); //rotation in amount of rotations
+            desiredRotation = MathUtil.clamp(desiredRotation, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT); //stops the value from exceeding thresholds that would snap either a wire or a 3D printed part
 
             double rotError = desiredRotation - rotationSetpoint;
-            rotationSetpoint += rotationTau * rotError;
+            rotationSetpoint += rotationTau * rotError; //rotationTau is just an arbitrary small number
             rotationSetpoint = MathUtil.clamp(rotationSetpoint, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
-            //if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr;
+            //if (Math.abs(hErr) > 0.01) heightSetpoint += heightTau * hErr; I think this line made a lot of errors
             heightSetpoint = MathUtil.clamp(heightSetpoint, HEIGHT_REVERSE_LIMIT, HEIGHT_FORWARD_LIMIT);
-            if (scoringMode == ScoringMode.PASSING) {heightMotor.setControl(heightoutput.withPosition(1.45));}
-            else {heightMotor.setControl(heightoutput.withPosition(0));}
-            if (dontchangeheight == true) {heightMotor.stopMotor();}
+            if (scoringMode == ScoringMode.PASSING) {heightMotor.setControl(heightoutput.withPosition(1.45));} //since this stuff didn't actually move the hood, this sets the hood all the way up if we are passing
+            else {heightMotor.setControl(heightoutput.withPosition(0));} //hood all the way down if shooting
+            if (dontchangeheight == true) {heightMotor.stopMotor();} //this stops the hood from moving if we want it to hold
             rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
-            return;
+            return; //don't do any auto aiming
         }
 
         // --- Normal auto-aim path ---
-        // Compute target once per cycle — used by vectorCalculations() and maxFormula()
+        // Compute target once per cycle — used by vectorCalculations() and maxFormula(), this never worked
         cachedTarget = targetpose();
         cachedTargetHeight = getTargetHeight();
         desiredHeightAngle = 90 - maxFormula();
@@ -468,12 +472,12 @@ public class Shooting extends SubsystemBase {
     }
 
     /** Makes use of the LimeLight 4 mounted to the turret to aim at the correct apriltag */
-    public void limelightAim() {
+    public void limelightAim() { //this worked so well it could knock your socks off
         //isLimelightAiming = !isLimelightAiming;
         //if (isLimelightAiming == false) return;
         LimelightHelpers.setPipelineIndex("limelight-stinky", 1);
-        if (robotPose == null || turretPosition == null) return;
-        if (!LimelightHelpers.getTV("limelight-stinky")) {return;}
+        if (robotPose == null || turretPosition == null) return; //ignore if the position of the turret was unknown or if the robot has no location
+        if (!LimelightHelpers.getTV("limelight-stinky")) {return;} //ignore if there is no valid targets to aim at
         if (wasDisabled) {
             rotationSetpoint = cachedRotationPos;
             heightSetpoint = cachedHeightPos;
@@ -483,34 +487,34 @@ public class Shooting extends SubsystemBase {
         limelightAiming = true;
         double TX = 0;
         double TY = 0;
-        LimelightHelpers.setPriorityTagID("limelight-stinky", limelightAcceptedTagID);
-        TX = LimelightHelpers.getTX("limelight-stinky");
-        TY = Math.IEEEremainder(TX, 360);
-        TY = TX / 360.0;
-        TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT);
+        LimelightHelpers.setPriorityTagID("limelight-stinky", limelightAcceptedTagID); //basically if this tag is in frame then aim for it and ignore any other apriltag in frame
+        TX = LimelightHelpers.getTX("limelight-stinky"); //the distance between the crosshare and the apriltag in degrees
+        TY = Math.IEEEremainder(TX, 360); //no full revolutions
+        TY = TX / 360.0; //put it in terms of turret rotations
+        TY = MathUtil.clamp(TY, ROTATION_REVERSE_LIMIT, ROTATION_FORWARD_LIMIT); //don't break stuff by exceeding these thresholds
         if (Math.abs(TY) > .0){
-            rotationSetpoint += (.1 * TY);
+            rotationSetpoint += (.1 * TY); //step up towards the target, basically a manual P in PID
         }
 
         if (rotationSetpoint > ROTATION_FORWARD_LIMIT) {
             rotationSetpoint = ROTATION_REVERSE_LIMIT;
-        }
+        } //loop around so that it is still continuous with its tracking
         if (rotationSetpoint < ROTATION_REVERSE_LIMIT) {
             rotationSetpoint = ROTATION_FORWARD_LIMIT;
         }
-        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint));
-        SmartDashboard.putNumber("desiredrotation", TY);
+        rotationMotor.setControl(rotationoutput.withPosition(rotationSetpoint)); //move the motor to the target
+        SmartDashboard.putNumber("desiredrotation", TY); //debugging
         double ranging = Math.hypot(LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getX(), 
-        LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getZ() - .5);
-        double g = 9.80665;
-        System.out.println(LimelightHelpers.getCameraPose3d_TargetSpace("limelight-stinky").getZ());
+        LimelightHelpers.getBotPose3d_TargetSpace("limelight-stinky").getZ() - .5); //gets the distance from the robot to half a meter behind the apriltag using coordinates where the apriltag is (0, 0)
+        double g = 9.80665; //gravity constant
+        System.out.println(LimelightHelpers.getCameraPose3d_TargetSpace("limelight-stinky").getZ()); //debugging
         //double speed = ranging / Math.cos(Math.toRadians(70)) * Math.sqrt(g / (2 * (Math.abs((ranging * Math.tan(Math.toRadians(70))) - (1.8288 - turretHeight)))));
-        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(66) * 2)));
+        double speed = Math.sqrt((ranging * g) / (Math.sin(Math.toRadians(66) * 2))); //kinematics substituting for time
         //System.out.println(ranging);
         //System.out.println(speed / (Math.PI * 2.8));
-        flywheelMotor.set(speed / (Math.PI * 2.4));
+        flywheelMotor.set(speed / (Math.PI * 2.4)); //supposed to divide by the circumferance of the wheel but this value was a lot more accurate even though the diameter of the wheel is 4 inches
         flywheelFolMotor.set(speed / (Math.PI * 2.4));
-        if (speed > .1) {
+        if (speed > .1) { //shoot if it is actually going to be able to spit out a fuel
             indexerLMotor.setVoltage(-12);
             feedMotor.setVoltage(-12);
             indexerRMotor.setVoltage(12);
@@ -518,7 +522,7 @@ public class Shooting extends SubsystemBase {
         }
     }
 
-    /** Duplicate of the {@code limelightAim()} function, however altered to be better suited for use in Autonomous mode */
+    /** Duplicate of the {@code limelightAim()} function, however altered to be better suited for use in Autonomous mode */ //see above for what it does
     public void autolimelightAim() {
         //isLimelightAiming = !isLimelightAiming;
         //if (isLimelightAiming == false) return;
@@ -576,7 +580,7 @@ public class Shooting extends SubsystemBase {
         limelightAiming = false;
         isShooting = true;
     }
-    /** Beings to intake Fuel towards the flywheel*/
+    /** Begins to intake Fuel towards the flywheel*/
     public void index() {
         limelightAiming = false;
         isShooting = true;
@@ -593,7 +597,7 @@ public class Shooting extends SubsystemBase {
         indexerRMotor.setVoltage(10);
         vibratorMotor.set(.4);
     }
-    /** {@code shoot()} but for Autonomous */
+    /** {@code shoot()} but for Autonomous */ //the code crashed if there were not seperate functions for autonomous and teleop. no clue why
     public void autoshoot(){
         isShooting = true;
         flywheelMotor.set(.6);
@@ -621,12 +625,11 @@ public class Shooting extends SubsystemBase {
         vibratorMotor.stopMotor();
 
     }
-    /**Locks the turret */
-     public void lockTurret(){
+     public void lockTurret(){ //this was supposed to turn off autoaim but instead ended up being the function to raise the hood
         //controller.setPID(RobotConstants.kTurretRotationP, RobotConstants.kTurretRotationI, RobotConstants.kTurretRotationD);
         //controller2.setPID(RobotConstants.kTurretHeightP, RobotConstants.kTurretHeightI, RobotConstants.kTurretHeightD);
         //rotationMotor.setControl(rotationoutput.withPosition(0));
-        heightMotor.setControl(heightoutput.withPosition(1.2));
+        heightMotor.setControl(heightoutput.withPosition(1.45));
     }
    
     /** Resets the angle of the turret to 0 */
@@ -634,7 +637,7 @@ public class Shooting extends SubsystemBase {
         heightMotor.setControl(heightoutput.withPosition(0));
     }
     /**Reverses the direction of the Indexer */
-    public void reverseIndexer() {
+    public void reverseIndexer() { // this was useful for when fuel was jammed
         indexerLMotor.set(1);
         feedMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Aligned));
         indexerRMotor.setControl(new Follower(indexerLMotor.getDeviceID(), MotorAlignmentValue.Opposed));
@@ -643,7 +646,7 @@ public class Shooting extends SubsystemBase {
     /** Roughly gets the curret rotation of the turret 
      * @return The rotation of the motor in degrees
     */
-    public Double getCurRotation() {
+    public Double getCurRotation() { //this was used for the LL4 localization and is no longer used
         return rotationMotor.getPosition().getValueAsDouble() * 360.0;
     }
     /** Nudge the turret manually. Automatically switches to manual mode.
