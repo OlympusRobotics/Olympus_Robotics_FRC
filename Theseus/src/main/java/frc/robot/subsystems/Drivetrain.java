@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 // NOTE: Changes to drivetrain behavior or auto config must be reflected in Theseus/README.md (Swerve Drivetrain section).
 
+//This was generated with the CTRE Phoenix X Swerve Drive generator, look at that for explanations of what these things do
+
 import static edu.wpi.first.units.Units.*;
 
 import java.util.Optional;
@@ -131,9 +133,9 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
     );
 
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
-    private SysIdRoutine m_SysIdRoutineApplying = m_sysIdRoutineRotation;
-    private SysIdRoutine m_SysIdRoutineApplied = m_sysIdRoutineSteer;
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation; //Drive motor SysID
+    private SysIdRoutine m_SysIdRoutineApplying = m_sysIdRoutineRotation; //this is actually still drive motor SysID
+    private SysIdRoutine m_SysIdRoutineApplied = m_sysIdRoutineSteer; //this one is SysID for the rotation motors
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -188,37 +190,37 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             startSimThread();
         }
     }
-    public void estimateRobotPose(){
+    public void estimateRobotPose(){ 
     double posex = 0;
     double posey = 0;
     double valid = 0;
 
-    //Updates the limelights position as the turret rotates
-    LimelightHelpers.SetRobotOrientation("limelight-still", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
+    //We used to have a limelight on the side of our robot which we tried field localization withm it was very close to working, none of this ended up being used in the final version of our robot
+    LimelightHelpers.SetRobotOrientation("limelight-still", getState().Pose.getRotation().getDegrees(), 0, 0, 0, 0, 0); //where is the robot facing so the limelight can find its offset from there
     
     //updates the still limelights position
-    LimelightHelpers.setCameraPose_RobotSpace("limelight-still", -.245, .295, .23, 2, 10, -90);
-    //gets the MegaTag1 pose estimation from the limelight
+    LimelightHelpers.setCameraPose_RobotSpace("limelight-still", -.245, .295, .23, 2, 10, -90); 
+    //gets the MegaTag2 pose estimation from the limelight
     LimelightHelpers.PoseEstimate LL2Pose = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-still");
       //System.out.println(LL2Pose.avgTagDist);
-      if (!LimelightHelpers.getTV("limelight-still")) return; //if neither limelight sees a tag, return null
+      if (!LimelightHelpers.getTV("limelight-still")) return; //if there are no valid targets, ignore calculation
       
       //m_drivetrain.setVisionMeasurementStdDevs(VecBuilder.fill(.01,.01,999999999));
       //m_drivetrain.addVisionMeasurement(LL2Pose.pose, LL2Pose.timestampSeconds);
       //if ((LL2Pose.pose.getX() != 0) || (LL4Pose.pose.getX() != 0)) {
         /* averagePose2d = new Pose2d(( LL2Pose.pose.getX()), (LL2Pose.pose.getY()),
         new Rotation2d((LL2Pose.pose.getRotation().getRadians()))); */
-        if (LimelightHelpers.getTV("limelight-still")) {
+        if (LimelightHelpers.getTV("limelight-still")) { //this could have been an else statement and would have saved efficiency in the code
             if (LL2Pose.avgTagDist < 7){
                 posex += LL2Pose.pose.getX();
                 posey += LL2Pose.pose.getY();
                 valid += 1;
-            }
+            } //make sure that its not reading the tags across the field
         }
-            posex /= valid;
+            posex /= valid; //since we tried to use the LL4 for localization as well this averaged the pose, the LL4 was terrible for pose estimation though as it was moving on the robot which had to be accounted for
             posey /= valid;
-        double time = Utils.fpgaToCurrentTime(Timer.getFPGATimestamp() - ((LimelightHelpers.getLatency_Pipeline("limelight-still") + LimelightHelpers.getLatency_Capture("limelight-still"))/ 1000));
-        addVisionMeasurement(LL2Pose.pose, time);
+        double time = Utils.fpgaToCurrentTime(Timer.getFPGATimestamp() - ((LimelightHelpers.getLatency_Pipeline("limelight-still") + LimelightHelpers.getLatency_Capture("limelight-still"))/ 1000)); //gets the time since the last update in milliseconds which is likely our biggest issue in photonvision code
+        addVisionMeasurement(LL2Pose.pose, time); //update the pose
       //}
 
     posex += (posey * 0) + (posex * 0); //some bullcrap that does nothing besides get rid of the yellow syntax errors
@@ -263,7 +265,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             throw new RuntimeException(e);
         }
     }
-    public void configureAutobuilder() {
+    public void configureAutobuilder() { //our auto actually worked pretty well
         AutoBuilder.configure(
                 () -> this.getState().Pose, // Robot pose supplier
                 this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)

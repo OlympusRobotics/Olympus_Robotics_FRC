@@ -53,7 +53,7 @@ public class CameraUsing extends SubsystemBase {
         "Red1",  new Pose2d(FIELD_LENGTH - START_INSET, 7.2, Rotation2d.k180deg),
         "Red2",  new Pose2d(FIELD_LENGTH - START_INSET, 4.1, Rotation2d.k180deg),
         "Red3",  new Pose2d(FIELD_LENGTH - START_INSET, 1.0, Rotation2d.k180deg)
-    );
+    ); //Doug Horner wrote this and this could definitely be another part of why it didn't work
 
     /** @deprecated */
     public CameraUsing(Drivetrain drivetrain) {
@@ -61,7 +61,7 @@ public class CameraUsing extends SubsystemBase {
         SmartDashboard.putBoolean(ENABLE_VISION_KEY, enableVision);
         SmartDashboard.putBoolean(USE_APRIL_ROTATION_KEY, false);
 
-        // Physical camera positions relative to robot center (robot-to-camera transforms)
+        // Physical camera positions relative to robot center and ground (robot-to-camera transforms)
         var robotToCamFL = new Transform3d(
                 new Translation3d(-.15, .3048, .4826),
                 new Rotation3d(0, 0, Math.PI/4));
@@ -75,7 +75,7 @@ public class CameraUsing extends SubsystemBase {
                 new Translation3d(-.3302, -.2286, .152),
                 new Rotation3d(0, Math.toRadians(-14), -3*(Math.PI)/4));
 
-        var camFL = new PhotonCamera("CameraFL");
+        var camFL = new PhotonCamera("CameraFL"); //Defining each camera as a new object
         var camFR = new PhotonCamera("CameraFR");
         var camBL = new PhotonCamera("CameraBL");
         var camBR = new PhotonCamera("CameraBR");
@@ -85,11 +85,11 @@ public class CameraUsing extends SubsystemBase {
             new CameraEntry(camFR, new Camera(camFR, robotToCamFR)),
             new CameraEntry(camBL, new Camera(camBL, robotToCamBL)),
             new CameraEntry(camBR, new Camera(camBR, robotToCamBR))
-        );
+        ); //allows for going through each camera with one list
     }
 
     private void processCamera() {
-        enableVision = SmartDashboard.getBoolean(ENABLE_VISION_KEY, false);
+        enableVision = SmartDashboard.getBoolean(ENABLE_VISION_KEY, false); //checks if the button has been clicked on Smartdashboard/Elastic
 
         // Track first enable time for seed timeout
         if (!hasSeededPose && DriverStation.isEnabled() && firstEnableTimestamp < 0) {
@@ -106,7 +106,7 @@ public class CameraUsing extends SubsystemBase {
             hasSeededPose = true;
         }
 
-        // When vision is disabled, skip all camera processing (seeding + measurements)
+        // When vision is disabled, skip all camera processing (seeding + measurements), allows for code to run much faster
         if (!enableVision) {
             Logger.recordOutput("Vision/EnableVision", false);
             SmartDashboard.putBoolean(ENABLE_VISION_KEY, enableVision);
@@ -116,52 +116,52 @@ public class CameraUsing extends SubsystemBase {
         int measurementCount = 0;
         double bestAmbiguity = 1.0;
         Pose2d bestPose = null;
-        boolean useAprilRotation = SmartDashboard.getBoolean(USE_APRIL_ROTATION_KEY, false);
+        boolean useAprilRotation = SmartDashboard.getBoolean(USE_APRIL_ROTATION_KEY, false); //checks if the button has been clicked on Smartdashboard/Elastic
 
-        for (var entry : cameras) {
+        for (var entry : cameras) { //Goes through every camera
             boolean connected = entry.camera.isConnected();
             Logger.recordOutput("Vision/" + entry.camera.getName() + "/Connected", connected);
             if (!connected) {
                 continue;
-            }
+            } //moves onto the next camera if the current camera can not be found
 
             var result = entry.estimator.update(entry.camera);
             if (result.isEmpty()) {
                 continue;
-            }
+            } //moves onto the next camera if the current camera doesn't have an estimated pose
 
-            EstimatedRobotPose estimate = result.get();
-            Pose2d pose = estimate.estimatedPose.toPose2d();
-            int tagCount = estimate.targetsUsed.size();
+            EstimatedRobotPose estimate = result.get(); //updates the estimated pose to the one just recieved
+            Pose2d pose = estimate.estimatedPose.toPose2d(); //since we don't care about the Z axis translate the pose to 2D
+            int tagCount = estimate.targetsUsed.size(); //gets how many apriltags the camera used to create the estimated pose
 
             // Sanity gate: reject out-of-field poses
             if (pose.getX() < 0 || pose.getX() > 16.54
                     || pose.getY() < 0 || pose.getY() > 8.21) {
                 continue;
-            }
+            } //if out of bounds of the arena move onto the next camera and ignore the collected values
 
             // Sanity gate: reject huge jumps from current odometry
             if (hasSeededPose) {
                 double jump = drivetrain.getState().Pose.getTranslation()
-                        .getDistance(pose.getTranslation());
+                        .getDistance(pose.getTranslation()); //checks the distance from the pose that the drivetrain is recording through kinematics and the pose that the camera is returning
                 if (jump > 5.0) {
-                    continue;
+                    continue; //since the drivetrain is likely more accurate to be within a meter of the actual pose, if the camera is reading 5 meters away from what the drivetrain is reading ignore it and move onto the next camera
                 }
             }
 
             // Compute ambiguity (use 0 for multi-tag, single-tag uses best target ambiguity)
-            double ambiguity = 0.0;
+            double ambiguity = 0.0; //resets the ambiguity to 0 so that the previous cameras isn't used
             if (tagCount == 1) {
-                ambiguity = estimate.targetsUsed.get(0).getPoseAmbiguity();
+                ambiguity = estimate.targetsUsed.get(0).getPoseAmbiguity(); //uses the target farthest to the left, photonvision usually calls this the "best target" even though it has no correlation with how good the target is
                 if (ambiguity > 0.25) {
-                    continue;
+                    continue; //if the camera is unsure of how accurate its pose is (looking at an angle or very far away) by at least 25%, ignore the pose
                 }
             }
 
             // Track best pose for logging
             if (ambiguity < bestAmbiguity) {
-                bestAmbiguity = ambiguity;
-                bestPose = pose;
+                bestAmbiguity = ambiguity; //filter out to find the camera that can see the apriltag to the furthest left the best
+                bestPose = pose; //use the pose of the best camera
             }
 
             if (!hasSeededPose) {
@@ -173,13 +173,13 @@ public class CameraUsing extends SubsystemBase {
                 continue;
             }
 
-            // Scale std devs by tag count and ambiguity
+            // Scale standard deviations (std devs) by tag count and ambiguity
             double xyStdDev;
             double thetaStdDev;
             if (tagCount >= 2) {
                 // Multi-tag: very trusted for translation
                 xyStdDev = 0.01;
-                thetaStdDev = useAprilRotation ? Units.degreesToRadians(2) : Double.MAX_VALUE;
+                thetaStdDev = useAprilRotation ? Units.degreesToRadians(2) : Double.MAX_VALUE; //if its true follow the question mark otherwise follow the colon
 
                 // Hard-reset if multi-tag shows large translation drift from odometry
                 double delta = drivetrain.getState().Pose.getTranslation()
@@ -188,7 +188,7 @@ public class CameraUsing extends SubsystemBase {
                     Pose2d resetPose = useAprilRotation
                             ? pose
                             : new Pose2d(pose.getTranslation(), drivetrain.getState().Pose.getRotation());
-                    drivetrain.resetPose(resetPose);
+                    drivetrain.resetPose(resetPose); //this basically is resetting the position that the wheel kinematics think the robot is to what the camera thinks it is if the camera can be trusted
                     measurementCount++;
                     continue;
                 }
@@ -203,17 +203,17 @@ public class CameraUsing extends SubsystemBase {
             // Replace vision rotation with gyro rotation when not trusting AprilTag heading
             Pose2d visionPose = useAprilRotation
                     ? pose
-                    : new Pose2d(pose.getTranslation(), drivetrain.getState().Pose.getRotation());
+                    : new Pose2d(pose.getTranslation(), drivetrain.getState().Pose.getRotation()); //the gyroscope is known to be extremely accurate in most scenarios while ambiguous apriltags can mess up the rotation a lot so there is an option to stop trusting rotation from apriltags
 
             drivetrain.addVisionMeasurement(
                 visionPose,
-                estimate.timestampSeconds,
-                VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev)
-            );
+                estimate.timestampSeconds, //this line right here is what I think messed up the position estimation, this needs to be time since last update I believe 
+                VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev) //how much do we trust this pose, higher values mean don't update while lower values mean always update
+            ); 
             measurementCount++;
         }
 
-        // Coprocessor-level connection: L = FL+BL, R = FR+BR
+        // Coprocessor-level connection: L = FL+BL, R = FR+BR, logging and debugging mumbo jumbo
         boolean coprocessorL = cameras.get(0).camera.isConnected() || cameras.get(2).camera.isConnected();
         boolean coprocessorR = cameras.get(1).camera.isConnected() || cameras.get(3).camera.isConnected();
         Logger.recordOutput("Vision/CoprocessorL_Connected", coprocessorL);
@@ -246,7 +246,7 @@ public class CameraUsing extends SubsystemBase {
     }
 
     @Override
-    public void periodic() {
+    public void periodic() { //uncomment processCamera and the robot will do the camera calculations every 20 ms unless something is taking too long but most of this stuff happens in microseconds and should be fine.
         //processCamera();
     }
 }

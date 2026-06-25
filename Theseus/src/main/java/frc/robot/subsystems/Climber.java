@@ -2,6 +2,8 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+//Our robot never actually had a climber, this was just translated code from the 2024 robot "Perry"
+
 package frc.robot.subsystems;
 // NOTE: Changes to motor config or setpoints must be reflected in Theseus/README.md (Climber section).
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -31,18 +33,18 @@ public class Climber extends SubsystemBase {
 
     // set PID constants
     m_ClimberController.setPID(kP, kI, kD);
-    m_ClimberController.setIZone(kIz);
+    m_ClimberController.setIZone(kIz); //this does nothing since kIz is 0 but basically tones down how much control I has because it can be a bit controlling
     // m_ClimberController.setFF(kFF);
-    m_ClimberController.setIntegratorRange(kMinOutput, kMaxOutput);
+    m_ClimberController.setIntegratorRange(kMinOutput, kMaxOutput); //more tuning down I control but I is still 0, Jason Wang had no idea what it did and we just translated it since we never actually used it
 
   }
 
   /** Extends the motor */
   public void extend() {
     // check if motors are too hot
-    if (tempProtect(m_Climber) > 0) return;
+    if (tempProtect(m_Climber) > 0) return; //during Perry motor overheating was a concern, this stops the motor from moving if it is too hot, tempProtect returns a value of 1 if overheating
 
-    m_Climber.set(m_ClimberController.calculate(m_Climber.get(), fullyExtended));
+    m_Climber.set(m_ClimberController.calculate(m_Climber.get(), fullyExtended)); //follow the PID controlto move the climber from its current position to the wanted position in rotations usually
   }
 
   /** Retracts the motor */
@@ -66,7 +68,7 @@ public class Climber extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {
+  public void periodic() { //runs every 20 ms but would just debug
     //Logger.recordOutput("Climber/Position", m_Climber.getPosition().getValueAsDouble());
     //Logger.recordOutput("Climber/Temperature", m_Climber.getDeviceTemp().getValueAsDouble());
   }
