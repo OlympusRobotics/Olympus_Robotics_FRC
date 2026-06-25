@@ -652,7 +652,7 @@ public class Shooting extends SubsystemBase {
     /** Nudge the turret manually. Automatically switches to manual mode.
      * Starts slow for precision, ramps up after holding ~1 second.
      * @param direction +1 for right, -1 for left */
-    public void manualRotate(double direction) {
+    public void manualRotate(double direction) { //I can not explain this because however I thought it worked seemed to be wrong
         autoAimEnabled = false;
         headingHoldMode = false;
         manualHoldCycles++;
@@ -715,11 +715,11 @@ public class Shooting extends SubsystemBase {
     }
     /** Toggle heading-hold mode: turret maintains its current field-relative
      *  angle using only the gyro, ignoring AprilTag-corrected field position. */
-    public void toggleHeadingHold() {
+    public void toggleHeadingHold() { //see targetAim()
         if (headingHoldMode) {
             headingHoldMode = false;
         } else {
-            double heading = robotPose != null ? robotPose.getRotation().getRadians() : 0;
+            double heading = robotPose != null ? robotPose.getRotation().getRadians() : 0; 
             heldFieldAngle = heading - rotationSetpoint * 2 * Math.PI;
             headingHoldMode = true;
             dontchangeheight = true;

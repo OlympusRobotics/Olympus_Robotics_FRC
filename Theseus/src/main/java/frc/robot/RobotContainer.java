@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+//this is the file where all of the actual commands are held
+
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -72,7 +74,7 @@ public class RobotContainer {
 
     //Initalize contoller commands
     /** Toggles intake flywheel on/off and deploys arm (LT) */
-    private final Command intakeToggle = intake.startEnd(
+    private final Command intakeToggle = intake.startEnd( //this runs the first command upon toggle on and runs the second command upon toggle off
       () -> { intake.spinflywheel(); },
       () -> { intake.stopspin(); }
     );
@@ -90,7 +92,7 @@ public class RobotContainer {
     /* private final Command shoot = turret.startEnd(() -> turret.shoot(), () -> turret.unshoot())
       .until(() -> joystick.rightBumper().getAsBoolean() == false); //RT button */
     
-    private final Command indexshoot = turret.startEnd(() -> turret.index(), () -> turret.unshoot())
+    private final Command indexshoot = turret.startEnd(() -> turret.index(), () -> turret.unshoot()) //this runs the first command untill the boolean is true where it will finally run the second command
       .until(() -> joystick.rightTrigger().getAsBoolean() == false); //RT button
     
     private final Command reverseIndexer = turret.startEnd(() -> turret.reverseIndexer(), () -> turret.stopMotors())
@@ -145,7 +147,7 @@ public class RobotContainer {
      * @param value the value to apply deadband to
      * @return the value after the deadband
     */
-    private double applyDeadband(double value) {
+    private double applyDeadband(double value) { //just makes it so if the controller is giving a value less than .08, say stick drift, it will ignore that value
         final double deadband = 0.08;
         if (Math.abs(value) <= deadband) {
             return 0.0;
@@ -158,12 +160,12 @@ public class RobotContainer {
       
       //DriverStation.JoystickConnectionWarningSilenced(true);
         //DriverStation.silenceJoystickConnectionWarning(true);
-        drivetrain.configureAutobuilder();
-        turret.setMcpJoystick(mcpJoystick);
-        configureBindings();
+        drivetrain.configureAutobuilder(); //configures auto
+        turret.setMcpJoystick(mcpJoystick); //creates dougs simulated controller
+        configureBindings(); //creates the commands
 
         //Initalize Operator Stuff
-        NamedCommands.registerCommand("Rev", autoRev.withTimeout(3));
+        NamedCommands.registerCommand("Rev", autoRev.withTimeout(3)); //all of these are autonomous commands, runs until the timeout 
         NamedCommands.registerCommand("shoot", autoshoot.withTimeout(5));
         NamedCommands.registerCommand("intake", autoIntake.withTimeout(7));
         NamedCommands.registerCommand("lowerintake", lowerintake.withTimeout(1));
@@ -173,7 +175,7 @@ public class RobotContainer {
 
         //Select Auto
         autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Back up and Shoot", autoChooser);
+        SmartDashboard.putData("Back up and Shoot", autoChooser); //this is a list of every choosable auto, the actual code for the autos are built into PathPlanner
         SmartDashboard.putData("Disrupt", autoChooser);
         SmartDashboard.putData("Full disrupt", autoChooser);
         SmartDashboard.putData("Full Disrupt Right", autoChooser);
@@ -190,10 +192,10 @@ public class RobotContainer {
         }).ignoringDisable(true));
     }
 
-    private void configureBindings() {
+    private void configureBindings() { //controller keybinds
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        drivetrain.setDefaultCommand(
+        drivetrain.setDefaultCommand( //this is how the robot ultimately drives
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(-this.applyDeadband(-joystick.getLeftY()) * MaxSpeed * speedMulti) // Drive forward with negative Y (forward)
@@ -212,15 +214,15 @@ public class RobotContainer {
         //Binds the commands to the controlelr buttons
 
         //joystick.leftBumper().whileTrue(intakingOut);
-        joystick.leftBumper().whileTrue(intakeOut);
+        joystick.leftBumper().whileTrue(intakeOut); //runs as long as the bumper is held
         new Trigger(() -> Math.abs(joystick.getRightTriggerAxis()) > 0.5).whileTrue(indexshoot);
         joystick.rightBumper().whileTrue(reverseIndexer);
         Trigger leftTrigger = new Trigger(() -> Math.abs(joystick.getLeftTriggerAxis()) > 0.5);
         leftTrigger.whileTrue(intakeToggle);
         joystick.b().whileTrue(resetsTurret);
-        joystick.a().toggleOnTrue(limelightAiming);
+        joystick.a().toggleOnTrue(limelightAiming); //changes to the start on press and then the end on a second press
         joystick.x().whileTrue(locksTurret);
-        joystick.y().onTrue(turret.runOnce(() -> turret.toggleHeadingHold()));
+        joystick.y().onTrue(turret.runOnce(() -> turret.toggleHeadingHold())); //runs start on rising edge then switches almost immediately to the end command
         joystick.start().onTrue(turret.runOnce(() -> turret.toggleScoringMode()));
         joystick.back().onTrue(
             drivetrain.runOnce(drivetrain::seedFieldCentric)
@@ -230,7 +232,7 @@ public class RobotContainer {
         // D-pad turret controls: left/right = manual rotate, up/down = manual height
         // MCP simulated joystick is handled directly in TurretAiming.periodic()
        
-        joystick.povLeft().whileTrue(turret.run(() -> turret.manualRotate(-1)).finallyDo(() -> turret.resetManualRamp()));
+        joystick.povLeft().whileTrue(turret.run(() -> turret.manualRotate(-1)).finallyDo(() -> turret.resetManualRamp())); // after running the first command finally run the second command
         joystick.povRight().whileTrue(turret.run(() -> turret.manualRotate(1)).finallyDo(() -> turret.resetManualRamp()));
         joystick.povUp().whileTrue(turret.run(() -> turret.manualHeight(1)).finallyDo(() -> turret.resetManualRamp()));
         joystick.povDown().whileTrue(turret.run(() -> turret.manualHeight(-1)).finallyDo(() -> turret.resetManualRamp()));
@@ -275,7 +277,7 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
-    public Command getAutonomousCommand() {
+    public Command getAutonomousCommand() { //sets the selected auto to whatever is selected on Pathplanner/Elastic
         // Load the path you want to follow using its name in the GUI
           Command selectedAuto = autoChooser.getSelected();
           if (selectedAuto != null) {
@@ -283,7 +285,7 @@ public class RobotContainer {
           }
         return new PathPlannerAuto("New Auto");
     } 
-    public void periodic() {
+    public void periodic() { //you can see battery voltage on driver station no clue why we have it here as well
       SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
     }
 }

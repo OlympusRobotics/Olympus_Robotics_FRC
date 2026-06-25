@@ -1,5 +1,7 @@
 package frc.robot;
 
+//this is auto generated from the phoenix X swerve drive generator, check documentationf rom that to see how it works. This is all just logging as that is what telemetry is
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 

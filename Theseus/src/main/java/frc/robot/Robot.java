@@ -1,5 +1,7 @@
 package frc.robot;
 
+//this is the file that the roborio reads, try to keep it clean
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -46,15 +48,15 @@ public class Robot extends LoggedRobot {
 
         Logger.start();
 
-        m_robotContainer = new RobotContainer();
-        field = new Field2d();
+        m_robotContainer = new RobotContainer(); //defines the robotContainer as a new object, the robotcontainer is where all of the other code is run. This single line is basically what tells the code to run
+        field = new Field2d(); //creates a new field for for smartdashboard
     }
 
     @Override
     public void robotInit() {
-        SignalLogger.start();
+        SignalLogger.start(); //begins logging data on the roborio, basically just motor movements and stuff
         if (isReal()) {
-            pruneOldLogs();
+            pruneOldLogs(); //keeps the roborio from being full
         }
         // The refinery MCP library may be provided by a local composite build
         // or external dependency. In case the library is not present in the
@@ -124,34 +126,34 @@ public class Robot extends LoggedRobot {
     }
 
     @Override
-    public void robotPeriodic() {
+    public void robotPeriodic() { //runs the entire time that the robot is running
         m_timeAndJoystickReplay.update();
         m_robotContainer.mcpJoystick.poll();
-        CommandScheduler.getInstance().run();
-        SmartDashboard.putData("Field", field);
-        field.setRobotPose(m_robotContainer.drivetrain.getState().Pose);
+        CommandScheduler.getInstance().run(); //this command allows all of our commands in robotcontainer to run
+        SmartDashboard.putData("Field", field); //updates the field on smartdashboard
+        field.setRobotPose(m_robotContainer.drivetrain.getState().Pose); //updates the robot on the field in smartdashboard
     }
 
     @Override
-    public void disabledInit() {
+    public void disabledInit() { //runs immediately upon entering disabled mode
         SignalLogger.stop();
         //m_robotContainer.intake.m_inkMot.setPosition(0);
     }
 
     @Override
-    public void disabledPeriodic() {
+    public void disabledPeriodic() { //runs continuously while disabled. If there was time LED code would be in here
     }
 
     @Override
-    public void disabledExit() {
+    public void disabledExit() { //runs upon switching away from disabled
     }
 
     @Override
-    public void autonomousInit() {
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    public void autonomousInit() { //runs immediately upon entering autonomous mode
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand(); //sets the auto to what is selected
 
         if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().schedule(m_autonomousCommand);
+            CommandScheduler.getInstance().schedule(m_autonomousCommand); //this is the line that actually runs it
         } 
         else {
             System.out.println("No autonomous command found!");
@@ -159,45 +161,44 @@ public class Robot extends LoggedRobot {
     }
 
     @Override
-    public void autonomousPeriodic() {
+    public void autonomousPeriodic() { //would run during autonomous mode
     }
 
     @Override
-    public void autonomousExit() {
+    public void autonomousExit() { //would run upon leaving autonomous mode
     }
 
     @Override
-    public void teleopInit() {
+    public void teleopInit() { //runs immediately upon entering teleop mode
         if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().cancel(m_autonomousCommand);
+            CommandScheduler.getInstance().cancel(m_autonomousCommand); //ends auto even if it is in the middle of a command
         }
 
-        m_robotContainer.intake.m_inkMot.setPosition(0);
+        m_robotContainer.intake.m_inkMot.setPosition(0); //this is very redundant and unnecessary but this would change the encoder value of the intake motor to be 0 upon entering teleop, better hope it is actually at 0 when it switches!
     }
 
     @Override
-    public void teleopPeriodic() {
+    public void teleopPeriodic() { //would run while in teleop
     }
 
     @Override
-    public void teleopExit() {
+    public void teleopExit() { //runs upon leaving teleop mode
     }
 
     @Override
-    public void testInit() {
-        CommandScheduler.getInstance().cancelAll();
+    public void testInit() { //runs upon entering test mode
+        CommandScheduler.getInstance().cancelAll(); //stops everything currently running
     }
 
     @Override
-    public void testPeriodic() {
-
+    public void testPeriodic() { //would run during test mode, good for small debugging things
     }
 
     @Override
-    public void testExit() {
+    public void testExit() {//would run upon leaving test mode
     }
 
     @Override
-    public void simulationPeriodic() {
+    public void simulationPeriodic() { //would run while in simulation mode
     }
 }

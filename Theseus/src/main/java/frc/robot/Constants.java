@@ -1,5 +1,7 @@
 package frc.robot;
 
+//this is all constants to make the files look more organized, nothing should need explained here
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 //import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -26,8 +28,8 @@ public final class Constants {
     /** Flywheel duty-cycle speed (0–1). */
     public final double flywheelSpeed;
 
-    ScoringMode(double blueFieldAngle, double redFieldAngle, double height, double flywheelSpeed) {
-      this.blueFieldAngle = blueFieldAngle;
+    ScoringMode(double blueFieldAngle, double redFieldAngle, double height, double flywheelSpeed) { //basically none of this worked
+      this.blueFieldAngle = blueFieldAngle; 
       this.redFieldAngle = redFieldAngle;
       this.height = height;
       this.flywheelSpeed = flywheelSpeed;
